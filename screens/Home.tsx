@@ -311,7 +311,7 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
   const [isModalVisible, setModalVisible] = useState(false);
   const [isSelect, setSelect] = useState([false, false, false]);
   const [number, setNumber] = useState(rand(1, 100));
-
+  const [Loading, setLoading]=useState();
   //현재시간
   let today = new Date("2022-08-03T13:26:43.005981"); // today 객체에 Date()의 결과를 넣어줬다
   let time = {

@@ -14,7 +14,7 @@ const Container = styled.SafeAreaView`
 
 const IntroText = styled.Text`
   text-align: right;
-  padding: 10px 14px 0 0;
+  padding: 5px 14px 0 0;
   font-size: 10px;
   color: #b0b0b0;
 `;
@@ -58,12 +58,12 @@ const ClubArea = styled.TouchableOpacity`
   flex: 1;
   flex-direction: row;
   width: 100%;
-  padding: 10px 20px 0 20px;
+  height: auto;
+  padding: 5px 20px 0 20px;
   border-style: solid;
   border-bottom-color: #e9e9e9;
   border-bottom-width: 1px;
   align-self: flex-start;
-  height: 100%;
 `;
 
 const ClubImg = styled.Image`
@@ -142,29 +142,38 @@ const ReplyDone = styled.Text`
 `;
 
 const CtrgArea = styled.View`
-  width: 50px;
-  height: 15px;
-  flex-grow: 0;
+  width: auto;
+  height: auto;
   margin: 0.1px 6px 13.9px 8px;
   border-radius: 3px;
   background-color: #c4c4c4;
+ 
 `;
 
 const CtgrText = styled.View`
-  margin: 3px 5px 3px 5px;
+display: flex;
+flex-direction: row;
+margin: 3px 5px 3px 5px;
 `;
 
 const ProjectNm = styled.Text`
   width: auto;
-  height: 15px;
-  top: -2px;
-  flex-grow: 0;
-  font-size: 9px;
+  height: auto;
+  font-size: 12px;
   font-weight: 500;
-  font-style: normal;
   text-align: center;
   color: #fff;
 `;
+const CreatorName=styled.Text`
+width: auto;
+height: auto;
+font-size: 12px;
+font-weight: 500;
+text-align: center;
+color: #fff;
+padding-left: 6px; 
+`
+
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { navigate } }) => {
@@ -271,16 +280,10 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
                   <CommentRemainder>
                     <CtrgArea>
                       <CtgrText>
-                        <ProjectNm>{item.clubShortDesc}</ProjectNm>
+                        <ProjectNm>{item.organizationName}</ProjectNm>
+                        <CreatorName>{item.creatorName}</CreatorName>
                       </CtgrText>
                     </CtrgArea>
-                    {/*<CtrgArea>
-                      <CtgrText>
-                        <ProjectNm>
-                          {item.clubLongDesc}
-                        </ProjectNm>
-                      </CtgrText>
-                    </CtrgArea>*/}
                   </CommentRemainder>
                 </ClubMy>
               </ClubArea>

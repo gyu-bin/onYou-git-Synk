@@ -1,15 +1,13 @@
-import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
-import {
-  Alert, Keyboard, Text, TouchableWithoutFeedback,
-  useWindowDimensions,
-  View
-} from "react-native";
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
+import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useState } from 'react';
+import {
+    Alert, Keyboard, Text, TouchableWithoutFeedback,
+    useWindowDimensions,
+    View
+} from "react-native";
 import styled from "styled-components/native";
-import { ImageSelecterProps } from "../../types/home";
 
 interface ValueInfo{
     str: string;
@@ -20,82 +18,6 @@ interface ValueInfo{
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
-
-const Wrapper = styled.View`
-    flex: 1;
-`;
-
-const ImageArea=styled.Button`
-  top: 30px;
-`
-
-const OptionSelector=styled.View`
-`
-
-const MentArea=styled.View`
-  flex-direction: row;
-  position: relative;
-`
-
-const Circle=styled.Image`
-  top: 30px;
-`
-
-const SectionView = styled.View`
-  width: 100%;
-  height: 50px;
-`;
-
-const TextInPut=styled.TextInput`
-  color: black;
-  width: 100%;
-  height: 70px;
-`
-
-const PublicArea=styled.View`
-  flex-direction: row;
-  height: 40px;
-`
-
-const CtgrArea=styled.View`
-  flex-direction: row;
-`
-
-const AllBtn=styled.View`
-  flex: 1;
-  flex-direction: row;
-  padding: 15px;
-  top: 20px;
-`
-
-const ButtonArea=styled.View`
-  flex: 1;
-  justify-content: space-evenly;
-  align-items: center;
-`
-
-const NextButton = styled.TouchableOpacity`
-  width: 150px;
-  height: 40px;
-  background-color: #3a8cc1;
-  border-radius: 10px;
-  justify-content: center;
-  align-items: center;
-  top: 30px;
-`;
-
-const ButtonText = styled.Text`
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
-`;
-
-
-const ContentArea=styled.TextInput`
-  width: 100%;
-  height: 20%;
-`
-
 const ImagePickerView = styled.View`
   width: 100%;
   height: 50%;
@@ -134,40 +56,27 @@ const ImagePickerText = styled.Text`
   padding : 50px 0;
 `;
 
-const PickedImage = styled.Image<{ height: number }>`
-  width: 100%;
-  height: 300px;
-  border-radius: 10px;
-`;
-
 const FeedText=styled.TextInput`
   margin: 13px 15px 15px 30px;
   color: #c0c0c0;
 `
 
-const ImageSelecter: React.FC<ImageSelecterProps> = ({
-                                                         /* route:{
-                                                              params:{
-                                                                  clubId,
-                                                                  content ,
-                                                                  imageUri ,
-                                                              },
-                                                          },*/
-                                                         navigation: { navigate },
-                                                     }) => {
-    const [images, setImages] = useState<string | null>(null);
+const ImageSelecter: React.FC<NativeStackScreenProps> = ({
+                                                             /* route:{
+                                                                  params:{
+                                                                      clubId,
+                                                                      content ,
+                                                                      imageUri ,
+                                                                  },
+                                                              },*/
+                                                             navigation: { navigate },
+                                                         }) => {
     let [text, onChangeText]=useState("사진을 선택하세요")
-    const [selectCategory, setCategory] = useState(null);
-    const[displayName, setDisplayName]=useState('');
     const Stack = createNativeStackNavigator();
     const [refreshing, setRefreshing] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [data,setData]=useState([]);
-    const [isSelect, setSelect] = useState([false, false, false]);
     //사진권한 허용
     const [imageURI, setImageURI] = useState<string | null>(true);
     const [status,requestPermission]= ImagePicker.useMediaLibraryPermissions();
-    const [showImages, setShowImages] = useState([]);
     let [ alert, alertSet ] = useState(true);
 
     const getValueInfos = (value: string): ValueInfo[] => {
@@ -326,30 +235,26 @@ const ImageSelecter: React.FC<ImageSelecterProps> = ({
         },[]);*/
 
     //카테고리 선택
-    const [selectedValue, setSelectedValue]=useState('독서');
-    const category=["독서","자기개발","음식","봉사","운동","문화생활","게임","창작","여행",
-        "경건생활","반려동물","기타"]
-
     const [postText, setPostText]=useState("")
     const onText=(text: React.SetStateAction<string>)=>setPostText(text);
 
     const cancleCreate = () =>
-        Alert.alert(                    // 말그대로 Alert를 띄운다
-            "취소하시겠습니까?",                    // 첫번째 text: 타이틀 제목
-            "게시글이 삭제됩니다.",                         // 두번째 text: 그 밑에 작은 제목
-            [                              // 버튼 배열
-                {
-                    text: "아니요",
-                    // 버튼 제목  //onPress 이벤트시 콘솔창에 로그를 찍는다
-                    style: "cancel"
-                },
-                { text: "네", onPress: () => navigate("Home")
-                }, //버튼 제목
-                // 이벤트 발생시 로그를 찍는다
+      Alert.alert(                    // 말그대로 Alert를 띄운다
+        "취소하시겠습니까?",                    // 첫번째 text: 타이틀 제목
+        "게시글이 삭제됩니다.",                         // 두번째 text: 그 밑에 작은 제목
+        [                              // 버튼 배열
+            {
+                text: "아니요",
+                // 버튼 제목  //onPress 이벤트시 콘솔창에 로그를 찍는다
+                style: "cancel"
+            },
+            { text: "네", onPress: () => navigate("Home")
+            }, //버튼 제목
+            // 이벤트 발생시 로그를 찍는다
 
-            ],
-            { cancelable: false }
-        );
+        ],
+        { cancelable: false }
+      );
 
 
     const pickImage = async () => {
@@ -401,63 +306,69 @@ const ImageSelecter: React.FC<ImageSelecterProps> = ({
             }
         }*/
 
+
+    useEffect(()=>{
+        let timer = setTimeout(()=>{ alertSet(false)}, 3000);
+    });
     return (
-        <Container>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <Wrapper>
-                    <ImagePickerView>
-                        <ImagePickerButton
-                            height={imageHeight}
-                            onPress={pickImage}
-                            activeOpacity={1}
-                        >
-                            {/*  {imageURI ? (
+      <Container>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <>
+                  <ImagePickerView>
+                      <ImagePickerButton
+                        height={imageHeight}
+                        onPress={pickImage}
+                        activeOpacity={1}
+                      >
+                          {/*  {imageURI ? (
                                 // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
                                 <PickedImage height={imageHeight} source={{ uri: imageURI }} />
                             ) : (*/}
-                            <PickBackground
-                                source={{uri: 'https://i.pinimg.com/564x/5c/4b/96/5c4b96e7e16aef00a926b6be209a7e3c.jpg'}}>
+                          <PickBackground
+                            source={{uri: 'https://i.pinimg.com/564x/5c/4b/96/5c4b96e7e16aef00a926b6be209a7e3c.jpg'}}>
+                              {alert === true ? (
                                 <ImageCrop>
                                     <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red"
-                                                            style={{left: 55 , top:40}} />
+                                                            style={{textAlign: 'center', top: 40}} />
                                     <ImagePickerText>손가락을 좌우로{"\n"} 동시에 벌려{"\n"}  이미지 크롭을 해보세요</ImagePickerText>
                                 </ImageCrop>
-                            </PickBackground>
-                            {/*)}*/}
-                        </ImagePickerButton>
-                    </ImagePickerView>
-                    <View>
-                        <Text>
-                            선택된 이미지 영역
-                        </Text>
-                    </View>
+                              ): null}
+                          </PickBackground>
+                          {/*)}*/}
+                      </ImagePickerButton>
+                  </ImagePickerView>
+                  <View>
+                      <Text>
+                          선택된 이미지 영역
+                      </Text>
+                  </View>
 
-                    <FeedText
-                        // key={"FeedCreateRequest"}
-                        placeholder="사진과 함께 남길 게시글을 작성해 보세요."
-                        onChangeText={setTitle}
-                    >
-                        {valueInfos.map(({ str, isHT, idxArr }, idx) => {
-                            const [firstIdx, lastIdx] = idxArr;
-                            let value = title.slice(firstIdx, lastIdx + 1)
-                            const isLast = idx === valueInfos.length - 1;
-                            if (isHT) {
-                                return (
-                                    <Text style={{color: 'skyblue', backgroundColor: 'transparent'}}>
-                                        {value}
-                                        {!isLast && <Text style={{backgroundColor: 'transparent'}}>{" "}</Text>}
-                                    </Text>
-                                );
-                            }
-                            return (
-                                <Text style={{ color: 'black' }}>
+                  <FeedText
+                    // key={"FeedCreateRequest"}
+                    placeholder="사진과 함께 남길 게시글을 작성해 보세요."
+                    onChangeText={setTitle}
+                  >
+                      {valueInfos.map(({ str, isHT, idxArr }, idx) => {
+                          const [firstIdx, lastIdx] = idxArr;
+                          let value = title.slice(firstIdx, lastIdx + 1)
+                          const isLast = idx === valueInfos.length - 1;
+                          if (isHT) {
+                              return (
+                                <Text style={{color: 'skyblue', backgroundColor: 'transparent'}}>
                                     {value}
-                                    {!isLast && <Text>{" "}</Text>}
+                                    {!isLast && <Text style={{backgroundColor: 'transparent'}}>{" "}</Text>}
                                 </Text>
-                            );
-                        })}
-                    </FeedText>
-                    {/*<OptionSelector>
+                              );
+                          }
+                          return (
+                            <Text style={{ color: 'black' }}>
+                                {value}
+                                {!isLast && <Text>{" "}</Text>}
+                            </Text>
+                          );
+                      })}
+                  </FeedText>
+                  {/*<OptionSelector>
                         <CtgrArea>
                             <Text>내 모임</Text>
                             <SelectDropdown
@@ -475,7 +386,7 @@ const ImageSelecter: React.FC<ImageSelecterProps> = ({
 
                         </CtgrArea>
                     </OptionSelector>*/}
-                    {/*<AllBtn>
+                  {/*<AllBtn>
                         <ButtonArea>
                             <NextButton
                                 onPress={cancleCreate}>
@@ -504,10 +415,9 @@ const ImageSelecter: React.FC<ImageSelecterProps> = ({
                             </NextButton>
                         </ButtonArea>
                     </AllBtn>*/}
-
-                </Wrapper>
-            </TouchableWithoutFeedback>
-        </Container>
+              </>
+          </TouchableWithoutFeedback>
+      </Container>
     );
 }
 
