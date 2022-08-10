@@ -103,15 +103,15 @@ const Temp = ({ navigation }) => {
 
   const renderItem = ({ item }) => {
     return (
-      <ResultList
-        onPress={() =>
-          navigation.navigate("ProductDetail", {
-            productId: item.id,
-          })
-        }
-      >
-        <ResultItem>{item.name}</ResultItem>
-      </ResultList>
+        <ResultList
+            onPress={() =>
+                navigation.navigate("ProductDetail", {
+                  productId: item.id,
+                })
+            }
+        >
+          <ResultItem>{item.name}</ResultItem>
+        </ResultList>
     );
   };
 
@@ -122,23 +122,23 @@ const Temp = ({ navigation }) => {
   };
 
   return (
-    <Container>
-      <SearchBarWrap>
-        <SearchIcon
-          source={{
-            uri: "https://webstockreview.net/images/search-icon-png-4.png",
-          }}
-          touch={searchVal}
-        />
-        <SearchBar ref={searchRef} placeholder="검색어를 입력해 주세요" onChangeText={(text) => searchData(text)} touch={searchVal} animation={searchVal.length > 0 ? typed : false} />
-        <Cancel touch={searchVal} animation={searchVal.length > 0 ? btnIn : false} onPress={() => clearInput()}>
-          <Text>취소</Text>
-        </Cancel>
-      </SearchBarWrap>
-      <ResultContainer>
-        <FlatList data={data} renderItem={renderItem} keyExtractor={(item, idx) => idx.toString()} />
-      </ResultContainer>
-    </Container>
+      <Container>
+        <SearchBarWrap>
+          <SearchIcon
+              source={{
+                uri: "https://webstockreview.net/images/search-icon-png-4.png",
+              }}
+              touch={searchVal}
+          />
+          <SearchBar ref={searchRef} placeholder="검색어를 입력해 주세요" onChangeText={(text) => searchData(text)} touch={searchVal} animation={searchVal.length > 0 ? typed : false} />
+          <Cancel touch={searchVal} animation={searchVal.length > 0 ? btnIn : false} onPress={() => clearInput()}>
+            <Text>취소</Text>
+          </Cancel>
+        </SearchBarWrap>
+        <ResultContainer>
+          <FlatList data={data} renderItem={renderItem} keyExtractor={(item, idx) => idx.toString()} />
+        </ResultContainer>
+      </Container>
   );
 };
 export default Temp;
