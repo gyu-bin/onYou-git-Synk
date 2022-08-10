@@ -216,42 +216,42 @@ const ReplyPage: React.FC<NativeStackScreenProps<any, "ReplyPage">> = ({ navigat
   };
 
   return (
-    <Container>
-      <ReplyContainer>
-        {loading ? (
-          <ActivityIndicator />
-        ) : (
-          <FlatList
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            keyExtractor={(item: Reply, index: number) => String(index)}
-            data={replys?.data}
-            renderItem={({ item, index }: { item: Reply; index: number }) => (
-              <CommentArea>
-                {/*<CommentImg source={{uri: 'https://i.pinimg.com/564x/13/05/7c/13057c33d7ad3f50ea99bc44b388ebcb.jpg'}}/>*/}
-                <CommentImg source={{ uri: item.thumbnail }} />
-                <View style={{ marginBottom: 20, top: 7 }}>
-                  <CommentMent>
-                    <CommentId>{item.userName}</CommentId>
-                    <Comment>{item.content}</Comment>
-                  </CommentMent>
-                  <CommentRemainder>
-                    <Time>{rand(1, 60)}분 전</Time>
-                  </CommentRemainder>
-                </View>
-              </CommentArea>
-            )}
-          />
-        )}
-        <ReplyArea>
-          <ReplyImg source={{ uri: "https://i.pinimg.com/564x/13/05/7c/13057c33d7ad3f50ea99bc44b388ebcb.jpg" }} />
-          <ReplyInput>댓글을 입력해보세요...</ReplyInput>
-          <ReplyButton>
-            <ReplyDone>게시</ReplyDone>
-          </ReplyButton>
-        </ReplyArea>
-      </ReplyContainer>
-      {/*<FlatList
+      <Container>
+        <ReplyContainer>
+          {loading ? (
+              <ActivityIndicator />
+          ) : (
+              <FlatList
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  keyExtractor={(item: Reply, index: number) => String(index)}
+                  data={replys?.data}
+                  renderItem={({ item, index }: { item: Reply; index: number }) => (
+                      <CommentArea>
+                        {/*<CommentImg source={{uri: 'https://i.pinimg.com/564x/13/05/7c/13057c33d7ad3f50ea99bc44b388ebcb.jpg'}}/>*/}
+                        <CommentImg source={{ uri: item.thumbnail }} />
+                        <View style={{ marginBottom: 20, top: 7 }}>
+                          <CommentMent>
+                            <CommentId>{item.userName}</CommentId>
+                            <Comment>{item.content}</Comment>
+                          </CommentMent>
+                          <CommentRemainder>
+                            <Time>{rand(1, 60)}분 전</Time>
+                          </CommentRemainder>
+                        </View>
+                      </CommentArea>
+                  )}
+              />
+          )}
+          <ReplyArea>
+            <ReplyImg source={{ uri: "https://i.pinimg.com/564x/13/05/7c/13057c33d7ad3f50ea99bc44b388ebcb.jpg" }} />
+            <ReplyInput>댓글을 입력해보세요...</ReplyInput>
+            <ReplyButton>
+              <ReplyDone>게시</ReplyDone>
+            </ReplyButton>
+          </ReplyArea>
+        </ReplyContainer>
+        {/*<FlatList
                 data={Home}
                 refreshing={refreshing}
                 onRefresh={onRefresh}
@@ -287,7 +287,7 @@ const ReplyPage: React.FC<NativeStackScreenProps<any, "ReplyPage">> = ({ navigat
                     </CommentArea>
                 )}
             />*/}
-      {/*<FieldInput
+        {/*<FieldInput
                 clearButtonMode="always"
                 placeholder="댓글"
                 textAlign="center"
@@ -295,7 +295,7 @@ const ReplyPage: React.FC<NativeStackScreenProps<any, "ReplyPage">> = ({ navigat
                 returnKeyType="done"
                 returnKeyLabel="done" // for Android
             />*/}
-    </Container>
+      </Container>
   );
 };
 export default ReplyPage;
