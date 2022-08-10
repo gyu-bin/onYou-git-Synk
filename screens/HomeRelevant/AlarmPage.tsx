@@ -54,56 +54,56 @@ const AlarmPage = ({ navigation: { navigate } }) => {
   };
 
   return (
-      <Container>
-        <AlarmArea>
-          <AlarmHeader>
-            <AlarmType>가입결과</AlarmType>
-            <AlarmTime>30분전</AlarmTime>
-          </AlarmHeader>
-          <View>
-            <AlarmText>
-              <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
-              <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
-            </AlarmText>
-          </View>
-        </AlarmArea>
-        <AlarmArea>
-          <AlarmHeader>
-            <AlarmType>가입결과</AlarmType>
-            <AlarmTime>30분전</AlarmTime>
-          </AlarmHeader>
-          <View>
-            <AlarmText>
-              <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
-              <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
-            </AlarmText>
-          </View>
-        </AlarmArea>
-        <AlarmArea>
-          <AlarmHeader>
-            <AlarmType>가입결과</AlarmType>
-            <AlarmTime>30분전</AlarmTime>
-          </AlarmHeader>
-          <View>
-            <AlarmText>
-              <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
-              <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
-            </AlarmText>
-          </View>
-        </AlarmArea>
-        <AlarmArea>
-          <AlarmHeader>
-            <AlarmType>가입결과</AlarmType>
-            <AlarmTime>30분전</AlarmTime>
-          </AlarmHeader>
-          <View>
-            <AlarmText>
-              <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
-              <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
-            </AlarmText>
-          </View>
-        </AlarmArea>
-      </Container>
+    <Container>
+      <AlarmArea>
+        <AlarmHeader>
+          <AlarmType>가입결과</AlarmType>
+          <AlarmTime>30분전</AlarmTime>
+        </AlarmHeader>
+        <View>
+          <AlarmText>
+            <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
+            <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
+          </AlarmText>
+        </View>
+      </AlarmArea>
+      <AlarmArea>
+        <AlarmHeader>
+          <AlarmType>가입결과</AlarmType>
+          <AlarmTime>30분전</AlarmTime>
+        </AlarmHeader>
+        <View>
+          <AlarmText>
+            <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
+            <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
+          </AlarmText>
+        </View>
+      </AlarmArea>
+      <AlarmArea>
+        <AlarmHeader>
+          <AlarmType>가입결과</AlarmType>
+          <AlarmTime>30분전</AlarmTime>
+        </AlarmHeader>
+        <View>
+          <AlarmText>
+            <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
+            <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
+          </AlarmText>
+        </View>
+      </AlarmArea>
+      <AlarmArea>
+        <AlarmHeader>
+          <AlarmType>가입결과</AlarmType>
+          <AlarmTime>30분전</AlarmTime>
+        </AlarmHeader>
+        <View>
+          <AlarmText>
+            <AlarmUserName>김재광</AlarmUserName>님의 &nbsp;
+            <AlramUserClub onPress={goToReply}>온유프로젝트</AlramUserClub>가입 요청이 수락되었습니다.
+          </AlarmText>
+        </View>
+      </AlarmArea>
+    </Container>
   );
 };
 

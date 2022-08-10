@@ -1,12 +1,11 @@
-import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, FlatList, TouchableOpacity, Button, Text, Image} from 'react-native';
-import {StatusBar} from "expo-status-bar";
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, TouchableOpacity, Button, Text, Image } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useNavigation } from "@react-navigation/native";
 import PeedSelectPage from "./PeedSelectPage";
 //img
 import styled from "styled-components/native";
 import axios from "axios";
-
 
 const Wrapper = styled.View`
   flex: 1;
@@ -18,69 +17,66 @@ const Container = styled.SafeAreaView`
   height: 100%;
 `;
 
-const Screen=styled.View`
+const Screen = styled.View`
   background: white;
   height: 100%;
-`
+`;
 
-const Header=styled.View`
+const Header = styled.View`
   flex-direction: row;
-`
-const TabHeader=styled.View`
+`;
+const TabHeader = styled.View`
   flex-direction: row;
   justify-content: space-around;
   border-width: 1px;
-`
-const TabName=styled.Text`
+`;
+const TabName = styled.Text`
   font-size: 20px;
   margin: 5px;
   color: black;
-`
-const ImageScroll=styled.ScrollView`
+`;
+const ImageScroll = styled.ScrollView`
   flex: 1;
   width: 100%;
-`
-const ImageVIew=styled.TouchableOpacity`
+`;
+const ImageVIew = styled.TouchableOpacity`
   display: flex;
   flex-direction: column;
   width: 100%;
-`
+`;
 
-const Img=styled.Image`
+const Img = styled.Image`
   width: 130px;
   height: 110px;
   margin: 1px;
-`
-export default function Peed({navigation}){
-
+`;
+const Peed = ({ navigation }) => {
   //const navigation = useNavigation();
 
-  const [text,onChangeText]=React.useState("");
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [text, onChangeText] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [isPress, setIsPress] = React.useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [Search, setSearch] = useState([{}]);
-  const [data,setData]=useState();
+  const [data, setData] = useState();
 
-  const getApi=async ()=>{
-    try{
+  const getApi = async () => {
+    try {
       setLoading(true);
-      const response= await axios.get(
-          `http://3.39.190.23:8080/api/clubs`
-      )
-      setData(response.data.data.values)
-      console.log(data)
+      const response = await axios.get(`http://3.39.190.23:8080/api/clubs`);
+      setData(response.data.content);
+      console.log(data);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     getApi();
-  },[]);
+  }, []);
 
   const getSearch = () => {
     const result = [];
@@ -112,26 +108,26 @@ export default function Peed({navigation}){
     setRefreshing(false);
   };
 
-
   return (
-      <Container>
-        <Screen>
-          <Wrapper>
-            <FlatList
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                data={data}
-                keyExtractor={(item, index) => index + ""}
-                renderItem={({item})=>(
-                    <ImageScroll>
-                      <ImageVIew onPress={()=>navigation.navigate('PeedSelectPage')}>
-                        <Img source={{uri: item.thumbnail}}/>
-                      </ImageVIew>
-                    </ImageScroll>
-                )}
-            />
-          </Wrapper>
-        </Screen>
-      </Container>
-  )
-}
+    <Container>
+      <Screen>
+        <Wrapper>
+          <FlatList
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            data={data}
+            keyExtractor={(item, index) => index + ""}
+            renderItem={({ item }) => (
+              <ImageScroll>
+                <ImageVIew onPress={() => navigation.navigate("PeedSelectPage")}>
+                  <Img source={{ uri: item.thumbnail }} />
+                </ImageVIew>
+              </ImageScroll>
+            )}
+          />
+        </Wrapper>
+      </Screen>
+    </Container>
+  );
+};
+export default Peed;

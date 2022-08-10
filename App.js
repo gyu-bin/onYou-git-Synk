@@ -1,16 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
-import { NavigationContainer } from "@react-navigation/native";
-import AppLoading from "expo-app-loading";
+import React, { useEffect, useState } from "react";
 import * as Font from "expo-font";
-import React, { useState } from "react";
-import { LogBox } from "react-native";
-import { ToastProvider } from "react-native-toast-notifications";
-import { QueryClient, QueryClientProvider } from "react-query";
-import { Provider, useDispatch, useSelector } from "react-redux";
-import LoginStack from "./navigation/LoginStack";
+import AppLoading from "expo-app-loading";
+import { NavigationContainer } from "@react-navigation/native";
 import Root from "./navigation/Root";
+import LoginStack from "./navigation/LoginStack";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { Provider, useSelector, useDispatch } from "react-redux";
 import { store } from "./store";
 import { Init } from "./store/actions";
+import { ToastProvider } from "react-native-toast-notifications";
+import { Ionicons } from "@expo/vector-icons";
+import { LogBox } from "react-native";
 
 LogBox.ignoreLogs(["Setting a timer"]);
 
@@ -34,7 +34,7 @@ const RootNavigation = () => {
     return <AppLoading startAsync={startLoading} onFinish={onFinish} onError={console.error} />;
   }
 
-  return <NavigationContainer>{token === 1 ? <LoginStack /> : <Root />}</NavigationContainer>;
+  return <NavigationContainer>{token === null ? <LoginStack /> : <Root />}</NavigationContainer>;
 };
 
 export default function App() {

@@ -1,12 +1,11 @@
-import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, FlatList, TouchableOpacity, Button, Text, ScrollView, View, Image} from 'react-native';
-import {StatusBar} from "expo-status-bar";
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, TouchableOpacity, Button, Text, ScrollView, View, Image } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 //img
-import {Searchbar} from "react-native-paper";
+import { Searchbar } from "react-native-paper";
 import styled from "styled-components/native";
-import axios from "axios";
 
 const Wrapper = styled.View`
   flex: 1;
@@ -18,70 +17,69 @@ const Container = styled.SafeAreaView`
   height: 100%;
 `;
 
-const Screen=styled.View`
+const Screen = styled.View`
   background: white;
   height: 100%;
-`
+`;
 
-const Header=styled.View`
+const Header = styled.View`
   flex-direction: row;
-`
-const TabHeader=styled.View`
-    flex-direction: row;
-    justify-content: space-around;
+`;
+const TabHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-around;
   border-width: 1px;
-`
-const TabName=styled.Text`
+`;
+const TabName = styled.Text`
   font-size: 20px;
   margin: 5px;
   color: black;
-`
-const ImageScroll=styled.ScrollView`
+`;
+const ImageScroll = styled.ScrollView`
   flex: 1;
   flex-direction: column;
   width: 100%;
-`
-const ImageVIew=styled.View`
+`;
+const ImageVIew = styled.View`
   flex-direction: row;
   width: 100px;
-`
+`;
 
-const Img=styled.Image`
+const Img = styled.Image`
   width: 130px;
   height: 110px;
   margin: 1px;
-`
-export default function IntroduceGroup(){
+`;
 
-  const [text,onChangeText]=React.useState("");
-  const [searchQuery, setSearchQuery] = React.useState('');
+//모임
+const IntroduceGroup = () => {
+  const [text, onChangeText] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [isPress, setIsPress] = React.useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [Search, setSearch] = useState([{}]);
-  const [data,setData]=useState();
+  const [data, setData] = useState();
   const Stack = createNativeStackNavigator();
-  const onChangeSearch = query => setSearchQuery(query);
+  const onChangeSearch = (query) => setSearchQuery(query);
   const [searchVal, setSearchVal] = useState("");
 
-  const getApi=async ()=>{
-    try{
+  const getApi = async () => {
+    try {
       setLoading(true);
-      const response= await axios.get(
-          `http://3.39.190.23:8080/api/clubs`
-      )
-      setData(response.data.data.values)
-      console.log(data)
+      const response = await axios.get(`http://3.39.190.23:8080/api/clubs`);
+      setData(response.data.content);
+      console.log(data);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     getApi();
-  },[]);
+  }, []);
 
   const getSearch = () => {
     const result = [];
@@ -103,9 +101,9 @@ export default function IntroduceGroup(){
     setLoading(false);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     getData();
-  },[]);
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -113,43 +111,32 @@ export default function IntroduceGroup(){
     setRefreshing(false);
   };
 
-  const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
-    const paddingToBottom = 0
-    return (
-        layoutMeasurement.height + contentOffset.y >=
-        contentSize.height - paddingToBottom
-    )
-  }
-
   return (
-      <Container>
-        <StatusBar style="auto"/>
-        <ScrollView >
-          {loading ? <ActivityIndicator/> : (
-              <ScrollView onScrollEndDrag={({nativeEvent})=>{
-                if (isCloseToBottom(nativeEvent)) {
-                  { getApi() }
-                }
-              }}>
-                <FlatList
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                    data={data}
-                    keyExtractor={(item, index) => index + ""}
-                    renderItem={({ item }) => (
-                        <View style={{flexDirection: 'row'}}>
-                          <Image style={{width: 50, height: 50}} source={{uri: item.thumbnail}}/>
-                          <View style={{flexDirection: 'column'}}>
-                            <Text>{item.name}</Text>
-                            <Text>{item.clubShortDesc}</Text>
-                          </View>
-                          {/*<Ment text={text} numberOfLines={3} ellipsizeMode={"tail"}>{item.content}</Ment>*/}
-                        </View>
-                    )}
-                />
-              </ScrollView>
-          )}
-        </ScrollView>
-      </Container>
-  )
-}
+    <Container>
+      <StatusBar style="auto" />
+      <ScrollView>
+        {loading ? (
+          <ActivityIndicator />
+        ) : (
+          <FlatList
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            data={data}
+            keyExtractor={(item, index) => index + ""}
+            renderItem={({ item }) => (
+              <View style={{ flexDirection: "row" }}>
+                <Image style={{ width: 50, height: 50 }} source={{ uri: item.thumbnail }} />
+                <View style={{ flexDirection: "column" }}>
+                  <Text>{item.name}</Text>
+                  <Text>{item.clubShortDesc}</Text>
+                </View>
+                {/*<Ment text={text} numberOfLines={3} ellipsizeMode={"tail"}>{item.content}</Ment>*/}
+              </View>
+            )}
+          />
+        )}
+      </ScrollView>
+    </Container>
+  );
+};
+export default IntroduceGroup;

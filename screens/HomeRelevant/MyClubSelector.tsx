@@ -74,7 +74,8 @@ const ClubImg = styled.Image`
 `;
 
 const ClubMy = styled.View`
-justify-content: center;
+  justify-content: center;
+  padding-top: 3%;
 `;
 const ClubId = styled.Text`
   padding-left: 2%;
@@ -147,16 +148,15 @@ const CtrgArea = styled.View`
   margin: 0.1px 6px 13.9px 8px;
   border-radius: 3px;
   background-color: #c4c4c4;
- 
 `;
 
 const CtgrText = styled.View`
-display: flex;
-flex-direction: row;
-margin: 3px 5px 3px 5px;
+  display: flex;
+  flex-direction: row;
+  margin: 3px 5px 3px 5px;
 `;
 
-const ProjectNm = styled.Text`
+const OrganizationName = styled.Text`
   width: auto;
   height: auto;
   font-size: 12px;
@@ -164,15 +164,15 @@ const ProjectNm = styled.Text`
   text-align: center;
   color: #fff;
 `;
-const CreatorName=styled.Text`
-width: auto;
-height: auto;
-font-size: 12px;
-font-weight: 500;
-text-align: center;
-color: #fff;
-padding-left: 6px; 
-`
+const CreatorName = styled.Text`
+  width: auto;
+  height: auto;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  color: #fff;
+  padding-left: 6px;
+`;
 
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -206,6 +206,7 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
     },
     onSuccess: (res) => {
       setIsPageTransition(false);
+      console.log(res);
     },
     onError: (err) => {
       console.log(err);
@@ -271,8 +272,8 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
             keyExtractor={(item: Club, index: number) => String(index)}
             data={clubs?.pages.map((page) => page.responses.content).flat()}
             renderItem={({ item, index }: { item: Club; index: number }) => (
-              <ClubArea onPress={()=>goToImage()}>
-                <ClubImg source={{uri:item.thumbnail}}/>
+              <ClubArea onPress={() => goToImage()}>
+                <ClubImg source={{ uri: item.thumbnail }} />
                 <ClubMy>
                   <CommentMent>
                     <ClubId>{item.clubShortDesc}</ClubId>
@@ -280,7 +281,7 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
                   <CommentRemainder>
                     <CtrgArea>
                       <CtgrText>
-                        <ProjectNm>{item.organizationName}</ProjectNm>
+                        <OrganizationName>{item.organizationName}</OrganizationName>
                         <CreatorName>{item.creatorName}</CreatorName>
                       </CtgrText>
                     </CtrgArea>

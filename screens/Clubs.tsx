@@ -1,10 +1,12 @@
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
-import { useInfiniteQuery, useQuery, useQueryClient } from "react-query";
+import Swiper from "react-native-swiper";
+import { ActivityIndicator, Alert, Dimensions, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import styled from "styled-components/native";
-import { Category, CategoryResponse, Club, ClubApi, ClubsParams, ClubsResponse } from "../api";
+import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import ClubList from "../components/ClubList";
+import { useInfiniteQuery, useQuery, useQueryClient } from "react-query";
+import { Category, CategoryResponse, ClubApi, Club, ClubsResponse, ClubsParams } from "../api";
 import { ClubListScreenProps } from "../types/club";
 
 const Loader = styled.SafeAreaView`
