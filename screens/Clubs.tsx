@@ -1,13 +1,12 @@
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import Swiper from "react-native-swiper";
-import { ActivityIndicator, Alert, Dimensions, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import styled from "styled-components/native";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import ClubList from "../components/ClubList";
 import { useInfiniteQuery, useQuery, useQueryClient } from "react-query";
 import { Category, CategoryResponse, ClubApi, Club, ClubsResponse, ClubsParams } from "../api";
-import { ClubListScreenProps } from "../types/club";
+import { ClubListScreenProps } from "../Types/Club";
+import { useSelector } from "react-redux";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -35,7 +34,6 @@ const SelectedCategoryName = styled.Text`
 
 const Container = styled.SafeAreaView`
   flex: 1;
-  padding-top: ${Platform.OS === "android" ? StatusBar.currentHeight : 0};
 `;
 
 const HeaderView = styled.View`
@@ -72,7 +70,7 @@ const FloatingButton = styled.TouchableOpacity`
   bottom: 20px;
   width: 50px;
   height: 50px;
-  background-color: #e77f67;
+  background-color: #295af5;
   elevation: 5;
   box-shadow: 1px 1px 3px gray;
   border-radius: 50px;
@@ -83,8 +81,10 @@ const FloatingButton = styled.TouchableOpacity`
 `;
 
 const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
+  const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
   const [params, setParams] = useState<ClubsParams>({
+    token,
     categoryId: null,
     clubState: null,
     minMember: null,
@@ -105,7 +105,9 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
     fetchNextPage,
   } = useInfiniteQuery<ClubsResponse>(["clubs", params], ClubApi.getClubs, {
     getNextPageParam: (currentPage) => {
-      if (currentPage) return currentPage.hasNext === false ? null : currentPage.responses.content[currentPage.responses.content.length - 1].customCursor;
+      if (currentPage) {
+        return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
+      }
     },
     onSuccess: (res) => {
       setIsPageTransition(false);
@@ -140,16 +142,14 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
   const goToClub = (clubData: Club) => {
     return navigate("ClubStack", {
       screen: "ClubTopTabs",
-      params: {
-        clubData,
-      },
+      clubData,
     });
   };
 
   const goToCreation = () => {
     return navigate("ClubCreationStack", {
       screen: "ClubCreationStepOne",
-      params: { category },
+      category,
     });
   };
 
@@ -241,7 +241,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             onEndReached={loadMore}
-            data={clubs?.pages.map((page) => page.responses.content).flat()}
+            data={clubs?.pages.map((page) => page?.responses?.content).flat()}
             columnWrapperStyle={{ justifyContent: "space-between" }}
             numColumns={2}
             keyExtractor={(item: Club, index: number) => String(index)}

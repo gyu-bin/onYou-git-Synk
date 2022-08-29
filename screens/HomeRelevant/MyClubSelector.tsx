@@ -1,6 +1,6 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList } from "react-native";
+import { ActivityIndicator, FlatList, View, Text } from "react-native";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
@@ -30,10 +30,6 @@ const LogoImage = styled.Image`
   left: 10px;
   top: 10px;
 `;
-const ContentMent = styled.View`
-  flex: 1;
-  flex-direction: row;
-`;
 const MentId = styled.Text`
   color: black;
   font-weight: bold;
@@ -55,11 +51,10 @@ const TitleView = styled.SafeAreaView`
 `;
 
 const ClubArea = styled.TouchableOpacity`
-  flex: 1;
   flex-direction: row;
   width: 100%;
   height: auto;
-  padding: 5px 20px 0 20px;
+  padding: 5px 15px 0 15px;
   border-style: solid;
   border-bottom-color: #e9e9e9;
   border-bottom-width: 1px;
@@ -178,7 +173,9 @@ const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min
 
 const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { navigate } }) => {
   const queryClient = useQueryClient();
+  const token = useSelector((state) => state.AuthReducers.authToken);
   const [params, setParams] = useState<ClubsParams>({
+    token,
     categoryId: null,
     clubState: null,
     minMember: null,
@@ -192,7 +189,6 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
-  const token = useSelector((state) => state.AuthReducers.authToken);
 
   const {
     isLoading: clubsLoading,
@@ -253,11 +249,15 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
     });
   };
 
-  const goToImage = () => {
+  const goToImage = (clubData: Club) => {
     navigate("HomeStack", {
       screen: "ImageSelecter",
+      clubData,
     });
   };
+  useEffect(() => {
+    return () => setLoading(false);
+  }, []);
 
   return (
     <Container>
@@ -269,10 +269,11 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
           <FlatList
             refreshing={refreshing}
             onRefresh={onRefresh}
+            onEndReached={loadMore}
             keyExtractor={(item: Club, index: number) => String(index)}
-            data={clubs?.pages.map((page) => page.responses.content).flat()}
+            data={clubs?.pages.map((page) => page?.responses?.content).flat()}
             renderItem={({ item, index }: { item: Club; index: number }) => (
-              <ClubArea onPress={() => goToImage()}>
+              <ClubArea onPress={() => goToImage(item)}>
                 <ClubImg source={{ uri: item.thumbnail }} />
                 <ClubMy>
                   <CommentMent>

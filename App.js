@@ -6,7 +6,7 @@ import Root from "./navigation/Root";
 import LoginStack from "./navigation/LoginStack";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { Provider, useSelector, useDispatch } from "react-redux";
-import { store } from "./store";
+import { store } from "./store/index";
 import { Init } from "./store/actions";
 import { ToastProvider } from "react-native-toast-notifications";
 import { Ionicons } from "@expo/vector-icons";

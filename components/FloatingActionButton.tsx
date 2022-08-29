@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import styled from "styled-components/native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Animated } from "react-native";
-import { ClubHomeFloatingButtonProps } from "../types/club";
+import { ClubHomeFloatingButtonProps } from "../Types/Club";
 
 const FloatingActionView = styled.View`
   position: absolute;
@@ -16,7 +16,7 @@ const FloatingActionView = styled.View`
 const FloatingMainButton = styled.TouchableOpacity<{ join?: boolean }>`
   width: 50px;
   height: 50px;
-  background-color: ${(props) => (props.join ? "#295af5" : "#e77f67")};
+  background-color: ${(props) => (props.join ? "#295af5" : "#ff714b")};
   elevation: 5;
   box-shadow: 1px 1px 3px gray;
   border-radius: 25px;
@@ -49,11 +49,11 @@ const FloatingActionButton: React.FC<ClubHomeFloatingButtonProps> = ({ role, app
   });
   const firstY = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -15],
+    outputRange: [50, -15],
   });
   const secondY = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -25],
+    outputRange: [80, -25],
   });
   const fade = animation.interpolate({
     inputRange: [0, 1],
@@ -72,7 +72,7 @@ const FloatingActionButton: React.FC<ClubHomeFloatingButtonProps> = ({ role, app
   return role ? (
     <FloatingActionView>
       <AnimatedFloatingButton style={{ opacity: fade, transform: [{ translateY: secondY }] }}>
-        <MaterialCommunityIcons name="image-plus" size={18} color="#e77f67" />
+        <MaterialCommunityIcons name="image-plus" size={18} color="#ff714b" />
       </AnimatedFloatingButton>
       <AnimatedFloatingButton
         onPress={() => {
@@ -80,7 +80,7 @@ const FloatingActionButton: React.FC<ClubHomeFloatingButtonProps> = ({ role, app
         }}
         style={{ opacity: fade, transform: [{ translateY: firstY }] }}
       >
-        <MaterialCommunityIcons name="pencil-outline" size={18} color="#e77f67" />
+        <MaterialCommunityIcons name="pencil-outline" size={18} color="#ff714b" />
       </AnimatedFloatingButton>
       <AnimatedFloatingMainButton onPress={toggleMenu} activeOpacity={1} style={{ transform: [{ rotate: rotation }] }}>
         <MaterialCommunityIcons name="plus" size={28} color="white" />

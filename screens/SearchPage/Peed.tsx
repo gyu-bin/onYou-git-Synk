@@ -5,7 +5,6 @@ import { useNavigation } from "@react-navigation/native";
 import PeedSelectPage from "./PeedSelectPage";
 //img
 import styled from "styled-components/native";
-import axios from "axios";
 
 const Wrapper = styled.View`
   flex: 1;
@@ -50,7 +49,7 @@ const Img = styled.Image`
   height: 110px;
   margin: 1px;
 `;
-const Peed = ({ navigation }) => {
+export default function Peed({ navigation }) {
   //const navigation = useNavigation();
 
   const [text, onChangeText] = React.useState("");
@@ -64,8 +63,7 @@ const Peed = ({ navigation }) => {
   const getApi = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://3.39.190.23:8080/api/clubs`);
-      setData(response.data.content);
+      const response = await fetch(`http://3.39.190.23:8080/api/clubs`);
       console.log(data);
     } catch (error) {
       console.error(error);
@@ -83,11 +81,11 @@ const Peed = ({ navigation }) => {
     for (let i = 0; i < 2; ++i) {
       result.push({
         /* id: i,
-         img:
-             "https://i.pinimg.com/564x/96/a1/11/96a111a649dd6d19fbde7bcbbb692216.jpg",
-         name: "문규빈",
-         content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-         memberNum: Math.ceil(Math.random() * 10),*/
+                 img:
+                     "https://i.pinimg.com/564x/96/a1/11/96a111a649dd6d19fbde7bcbbb692216.jpg",
+                 name: "문규빈",
+                 content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+                 memberNum: Math.ceil(Math.random() * 10),*/
       });
     }
 
@@ -111,23 +109,8 @@ const Peed = ({ navigation }) => {
   return (
     <Container>
       <Screen>
-        <Wrapper>
-          <FlatList
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            data={data}
-            keyExtractor={(item, index) => index + ""}
-            renderItem={({ item }) => (
-              <ImageScroll>
-                <ImageVIew onPress={() => navigation.navigate("PeedSelectPage")}>
-                  <Img source={{ uri: item.thumbnail }} />
-                </ImageVIew>
-              </ImageScroll>
-            )}
-          />
-        </Wrapper>
+        <Wrapper>{/* <FlatList refreshing={refreshing} onRefresh={onRefresh} data={data} keyExtractor={(item, index) => index + ""} renderItem={({ item }) => <></>} /> */}</Wrapper>
       </Screen>
     </Container>
   );
-};
-export default Peed;
+}
