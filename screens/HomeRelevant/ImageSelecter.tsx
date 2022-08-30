@@ -1,8 +1,8 @@
-import { MaterialCommunityIcons, AntDesign } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Alert, Keyboard, Text, TouchableWithoutFeedback, useWindowDimensions, View, Image, TouchableOpacity } from "react-native";
+import { Alert, Keyboard, Text, TouchableWithoutFeedback, useWindowDimensions, View, Image } from "react-native";
 import styled from "styled-components/native";
 
 interface ValueInfo {
@@ -13,7 +13,6 @@ interface ValueInfo {
 
 const Container = styled.SafeAreaView`
   flex: 1;
-  padding: 0 20px 0 20px;
 `;
 const ImagePickerView = styled.View`
   width: 100%;
@@ -60,29 +59,21 @@ const ImagePickerText = styled.Text`
 
 const FeedText = styled.TextInput`
   margin: 13px 15px 15px 30px;
-  color: black;
+  color: #c0c0c0;
 `;
 
 const SelectImageView = styled.View`
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: gray;
   height: 70px;
   width: 100%;
   flex-direction: row;
-  justify-content: space-between;
-  padding: 0 19px 0 19px;
+  justify-content: space-around;
 `;
 
 const SelectImage = styled.Image`
   width: 55px;
   height: 55px;
   margin: 8px;
-  background-color: lightgray;
-`;
-
-const CancleIcon = styled.View`
-  position: relative;
-  top: -530%;
-  left: 73%;
 `;
 
 const ImageSelecter: React.FC<NativeStackScreenProps> = ({ navigation: { navigate } }) => {
@@ -117,8 +108,47 @@ const ImageSelecter: React.FC<NativeStackScreenProps> = ({ navigation: { navigat
 
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
+
+  /*    const mutation = useMutation(HomeApi.createPeed, {
+            onMutate: (data) => {
+                console.log("--- Mutate ---");
+                console.log(data);
+            },
+            onSuccess: (data) => {
+                console.log("--- Success ---");
+                console.log(data);
+            },
+            onError: (error) => {
+                console.log("--- Error ---");
+                console.log(error);
+            },
+            onSettled: (data, error) => {
+                console.log("--- Settled ---");
+                console.log(data);
+                console.log(error);
+            },
+        });*/
+  //카테고리 선택
   const [postText, setPostText] = useState("");
   const onText = (text: React.SetStateAction<string>) => setPostText(text);
+
+  const cancleCreate = () =>
+    Alert.alert(
+      // 말그대로 Alert를 띄운다
+      "취소하시겠습니까?", // 첫번째 text: 타이틀 제목
+      "게시글이 삭제됩니다.", // 두번째 text: 그 밑에 작은 제목
+      [
+        // 버튼 배열
+        {
+          text: "아니요",
+          // 버튼 제목  //onPress 이벤트시 콘솔창에 로그를 찍는다
+          style: "cancel",
+        },
+        { text: "네", onPress: () => navigate("Home") }, //버튼 제목
+        // 이벤트 발생시 로그를 찍는다
+      ],
+      { cancelable: false }
+    );
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -197,20 +227,13 @@ const ImageSelecter: React.FC<NativeStackScreenProps> = ({ navigation: { navigat
     }, 3000);
   });
 
-  /**
-   * 이미지 리스트 선택하면 사진 크게보는쪽 사진뜨게
-   */
-  const ImageFIx = () => {};
-
-  /** X선택시 사진 없어지는 태그 */
   const ImageCancle = () => {
-    uri: imageURI === null;
-    console.log(imageURI);
+    source: {
+      {
+        uri: "";
+      }
+    }
   };
-
-  useEffect(() => {
-    return () => setLoading(false);
-  }, []);
 
   return (
     <Container>
@@ -223,6 +246,7 @@ const ImageSelecter: React.FC<NativeStackScreenProps> = ({ navigation: { navigat
                 <PickedImage height={imageHeight} source={{ uri: imageURI }} />
               ) : (
                 <PickBackground>
+                  {/* <PickBackground source={{ uri: "https://i.pinimg.com/564x/5c/4b/96/5c4b96e7e16aef00a926b6be209a7e3c.jpg" }}> */}
                   {alert === true ? (
                     <ImageCrop>
                       <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
@@ -236,53 +260,14 @@ const ImageSelecter: React.FC<NativeStackScreenProps> = ({ navigation: { navigat
             </ImagePickerButton>
           </ImagePickerView>
           <SelectImageView>
-            <TouchableOpacity onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              <TouchableOpacity onPress={ImageCancle}>
-                <CancleIcon>
-                  <AntDesign name="close" size={12} color="white" />
-                </CancleIcon>
-              </TouchableOpacity>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              <TouchableOpacity>
-                <CancleIcon>
-                  <AntDesign name="close" size={12} color="white" />
-                </CancleIcon>
-              </TouchableOpacity>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              <TouchableOpacity>
-                <CancleIcon>
-                  <AntDesign name="close" size={12} color="white" />
-                </CancleIcon>
-              </TouchableOpacity>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              <TouchableOpacity>
-                <CancleIcon>
-                  <AntDesign name="close" size={12} color="white" />
-                </CancleIcon>
-              </TouchableOpacity>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={ImageFIx}>
-              <SelectImage source={{ uri: "https://i.pinimg.com/564x/c5/09/38/c509384458795569b0788a016b0fbc06.jpg" }} />
-              <TouchableOpacity>
-                <CancleIcon>
-                  <AntDesign name="close" size={12} color="white" />
-                </CancleIcon>
-              </TouchableOpacity>
-            </TouchableOpacity>
-            {/* <SelectImage source={{ uri: "https://i.pinimg.com/564x/a6/69/e3/a669e31fdc751d576e1b0260e60022a9.jpg" }} />
+            <SelectImage source={{ uri: "https://i.pinimg.com/564x/5c/4b/96/5c4b96e7e16aef00a926b6be209a7e3c.jpg" }} />
+            <SelectImage source={{ uri: "https://i.pinimg.com/564x/a6/69/e3/a669e31fdc751d576e1b0260e60022a9.jpg" }} />
             <SelectImage source={{ uri: "https://i.pinimg.com/564x/c5/09/38/c509384458795569b0788a016b0fbc06.jpg" }} />
             <SelectImage source={{ uri: "https://i.pinimg.com/564x/9e/d8/4c/9ed84cf3fc04d0011ec4f75c0692c83e.jpg" }} />
-            <SelectImage source={{ uri: "https://i.pinimg.com/564x/aa/26/04/aa2604e4c5e060f97396f3f711de37c1.jpg" }} /> */}
+            <SelectImage source={{ uri: "https://i.pinimg.com/564x/aa/26/04/aa2604e4c5e060f97396f3f711de37c1.jpg" }} />
           </SelectImageView>
           <FeedText
-            key={"FeedCreateRequest"}
+            // key={"FeedCreateRequest"}
             placeholder="사진과 함께 남길 게시글을 작성해 보세요."
             onChangeText={setTitle}
             textContentType="none"
@@ -310,35 +295,53 @@ const ImageSelecter: React.FC<NativeStackScreenProps> = ({ navigation: { navigat
               );
             })}
           </FeedText>
-          {/* <FeedText
-            key={"FeedCreateRequest"}
-            placeholder="사진과 함께 남길 게시글을 작성해 보세요."
-            onChangeText={setTitle}
-            textContentType="none"
-            autoCompleteType="off"
-            autoCapitalize="none"
-            multiline={true}
-          >
-            {valueInfos.map(({ str, isHT, idxArr }, idx) => {
-              const [firstIdx, lastIdx] = idxArr;
-              let value = title.slice(firstIdx, lastIdx + 1);
-              const isLast = idx === valueInfos.length - 1;
-              if (isHT) {
-                return (
-                  <Text style={{ color: "skyblue", backgroundColor: "transparent" }}>
-                    {value}
-                    {!isLast && <Text style={{ backgroundColor: "transparent", color: "black" }}> </Text>}
-                  </Text>
-                );
-              }
-              return (
-                <Text style={{ color: "black" }}>
-                  {value}
-                  {!isLast && <Text> </Text>}
-                </Text>
-              );
-            })}
-          </FeedText> */}
+          {/*<OptionSelector>
+                        <CtgrArea>
+                            <Text>내 모임</Text>
+                            <SelectDropdown
+                                data={category}
+                                onSelect={(selectedItem, index) => {
+                                    console.log(selectedItem, index)
+                                }}
+                                buttonTextAfterSelection={(selectedItem, index) => {
+                                    return selectedItem
+                                }}
+                                rowTextForSelection={(item, index) => {
+                                    return item
+                                }}
+                            />
+
+                        </CtgrArea>
+                    </OptionSelector>*/}
+          {/*<AllBtn>
+                        <ButtonArea>
+                            <NextButton
+                                onPress={cancleCreate}>
+                                <ButtonText>취소하기</ButtonText>
+                            </NextButton>
+                        </ButtonArea>
+                        <ButtonArea>
+                            <NextButton
+                                onPress={() => {
+                                    if(imageURI===null) {
+                                        return Alert.alert("이미지를 선택하세요!");
+                                    }
+                                    else if(title===""){
+                                        return Alert.alert("문구를 입력해라");
+                                    }
+                                    else if(!category){
+                                        return Alert.alert("카테고리를 선택하세요!");
+                                    }
+                                    else{
+                                        createFinish();
+                                    }
+                                    createFinish();
+                                }}
+                            >
+                                <ButtonText>공유하기</ButtonText>
+                            </NextButton>
+                        </ButtonArea>
+                    </AllBtn>*/}
         </>
       </TouchableWithoutFeedback>
     </Container>

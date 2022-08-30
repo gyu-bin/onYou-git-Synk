@@ -8,7 +8,11 @@ import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-ic
 import { useQuery, useInfiniteQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import { Feed, FeedsResponse, FeedsParams, getFeeds, FeedApi, Reply } from "../api";
-import axiosInstance from "axios";
+import { gql } from "apollo-boost";
+import CustomText from "../components/CustomText";
+import { useMutation } from "react-apollo-hooks";
+import * as url from "url";
+
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
@@ -34,10 +38,11 @@ const LogoImage = styled.Image`
   margin-right: 15px;
   border-radius: 14px;
 `;
-const LogoText = styled.Text`
+const LogoText = styled(CustomText)`
   font-size: 26px;
   font-weight: bold;
   color: #020202;
+  line-height: 30px;
 `;
 
 const Loader = styled.View`
@@ -185,7 +190,7 @@ const ModalView = styled.View`
   background-color: white;
   padding: 35px;
   align-items: center;
-  opacity: 1;
+  opacity: 0.6;
   width: 100%;
   height: 30%;
 `;
@@ -292,7 +297,7 @@ const Ment = styled.Text`
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { navigate } }) => {
-  const [Home, setHome] = useState([{}]);
+  const [Home, setHome] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -304,8 +309,10 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
   const token = useSelector((state) => state.AuthReducers.authToken);
 
+  const [isLiked, setIsLiked]=useState();
+  const [likeCount, setLikeCount]=useState();
   /**현재시간*/
-  let today = new Date("2022-08-03T13:26:43.005981"); // today 객체에 Date()의 결과를 넣어줬다
+  let today = new Date("2022-08-03T13:26:43.005981");
   let time = {
     year: today.getFullYear(), //현재 년도
     month: today.getMonth() + 1, // 현재 월
@@ -351,19 +358,35 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
   //   },
   // });
 
+
+
+  const getFeeds = () => {
+    return fetch(`http://3.39.190.23:8080/api/feeds`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((res) => res.json());
+  };
+
   const {
     isLoading: feedsLoading,
     data: feeds,
     isRefetching: isRefetchingClubs,
-  } = useQuery<FeedsResponse>(["getFeeds", token], FeedApi.getFeeds, {
+  } = useQuery<FeedsResponse>(["getFeeds", token], getFeeds, {
     //useQuery(["getFeeds", token], FeedApi.getFeeds, {
     onSuccess: (res) => {
-      console.log(res);
+      console.log(res+'realasdgsdagsdf@@@@@@@@@@@@@@@@@@@@@');
     },
     onError: (err) => {
       console.log(err);
     },
   });
+
+  useEffect(()=>{
+    getFeeds();
+  },[])
+
   //heart선택
   const [heartSelected, setHeartSelected] = useState<boolean>(false);
 
@@ -403,12 +426,6 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
     });
   };
 
-  const goToAlarm = () => {
-    navigate("HomeStack", {
-      screen: "AlarmPage",
-    });
-  };
-
   const goToAccusation = () => {
     navigate("HomeStack", {
       screen: "Accusation",
@@ -437,7 +454,7 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
     setModalVisible(!isModalVisible);
   };
 
-  const getHome = () => {
+/*  const getHome = () => {
     const result = [];
     for (let i = 0; i < 1; ++i) {
       result.push({
@@ -459,16 +476,19 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
 
   useEffect(() => {
     getData();
-  }, []);
+  }, []);*/
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await queryClient.refetchQueries(["feeds"]);
+     await queryClient.refetchQueries(["feeds"]);
     setRefreshing(false);
   };
+
   // const loadMore = () => {
   //   if (hasNextPage) fetchNextPage();
   // };
+
+
 
   return feedsLoading ? (
     <Loader>
@@ -486,22 +506,24 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
           <MaterialIcons name="add-photo-alternate" onPress={goToClub} style={{ paddingLeft: "2.5%" }} size={19} color="black" />
         </SubView>
       </HeaderView>
+
       <FlatList
-        refreshing={refreshing}
-        onRefresh={onRefresh}
+         refreshing={refreshing}
+         onRefresh={onRefresh}
         // onEndReached={loadMore}
         // numColumns={2}
         keyExtractor={(item: Feed, index: number) => String(index)}
         //data={feeds?.pages.map((page) => page?.responses?.content).flat()}
         data={feeds?.data}
-        renderItem={({ item, index }: { item: Feed; index: number }) => (
+        renderItem={({ item, index }: { item: Feed, index: number }) => (
           <FeedContainer>
             <FeedHeader>
               <FeedUser>
                 <UserImage source={{ uri: "https://i.pinimg.com/564x/9e/d8/4c/9ed84cf3fc04d0011ec4f75c0692c83e.jpg" }} />
+                {/** 버그 발생*/}
                 <UserInfo>
                   <UserId>{item.userName}</UserId>
-                  <ClubBox onPress={goToReply}>
+                  <ClubBox>
                     <ClubName>{item.clubName}</ClubName>
                   </ClubBox>
                 </UserInfo>
@@ -519,7 +541,7 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
                           삭제
                         </ModalText>
                         <ModalText onPress={goToAccusation}>신고</ModalText>
-                        <ModalText onPress={closeModal}>Close</ModalText>
+                        {/*<ModalText onPress={closeModal}>Close</ModalText>*/}
                       </ModalView>
                     </CenteredView>
                   </Modal>
@@ -527,6 +549,7 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
               </ModalArea>
             </FeedHeader>
             <FeedMain>
+              {/** 버그 발생*/}
               <FeedImage>
                 <Swiper horizontal dotColor="#E0E0E0" activeDotColor="#FF714B" containerStyle={{ backgroundColor: "black", height: FEED_IMAGE_SIZE }}>
                   <SliderBox images={item.imageUrls} sliderBoxHeight={FEED_IMAGE_SIZE} />
@@ -536,9 +559,9 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
                 <LeftInfo>
                   <InfoArea>
                     <TouchableOpacity onPress={() => setHeartSelected(!heartSelected)}>
-                      {heartSelected ? <Ionicons name="md-heart" size={20} color="red" /> : <Ionicons name="md-heart-outline" size={20} color="black" />}
+                      {heartSelected ? <Ionicons name="md-heart" size={20} color="red"/> : <Ionicons name="md-heart-outline" size={20} color="black"/>}
                     </TouchableOpacity>
-                    <NumberText>{item.likesCount}</NumberText>
+                    {heartSelected? <NumberText>{item.likesCount +1} </NumberText> : <NumberText> {item.likesCount} </NumberText>}
                   </InfoArea>
                   <InfoArea>
                     <TouchableOpacity onPress={goToReply}>
@@ -551,9 +574,9 @@ const Home: React.FC<NativeStackScreenProps<any, "Home">> = ({ navigation: { nav
                   <Timestamp>{timestring}</Timestamp>
                 </RightInfo>
               </FeedInfo>
-              <Content>
+             {/* <Content>
                 <Ment>{item.content}</Ment>
-              </Content>
+              </Content>*/}
             </FeedMain>
           </FeedContainer>
         )}

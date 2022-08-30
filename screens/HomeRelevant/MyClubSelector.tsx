@@ -173,9 +173,8 @@ const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min
 
 const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { navigate } }) => {
   const queryClient = useQueryClient();
-  const token = useSelector((state) => state.AuthReducers.authToken);
   const [params, setParams] = useState<ClubsParams>({
-    token,
+    token: '',
     categoryId: null,
     clubState: null,
     minMember: null,
@@ -189,6 +188,7 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
+  const token = useSelector((state) => state.AuthReducers.authToken);
 
   const {
     isLoading: clubsLoading,
@@ -198,7 +198,7 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
     fetchNextPage,
   } = useInfiniteQuery<ClubsResponse>(["clubs", params], ClubApi.getClubs, {
     getNextPageParam: (currentPage) => {
-      if (currentPage) return currentPage.hasNext === false ? null : currentPage.responses.content[currentPage.responses.content.length - 1].customCursor;
+      if (currentPage) return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
     },
     onSuccess: (res) => {
       setIsPageTransition(false);
@@ -249,19 +249,15 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
     });
   };
 
-  const goToImage = (clubData: Club) => {
+  const goToImage = () => {
     navigate("HomeStack", {
       screen: "ImageSelecter",
-      clubData,
     });
   };
-  useEffect(() => {
-    return () => setLoading(false);
-  }, []);
 
   return (
     <Container>
-      <IntroText>가입한 모임 Lis1t</IntroText>
+      <IntroText>가입한 모임 List</IntroText>
       <ReplyContainer>
         {loading ? (
           <ActivityIndicator />
@@ -269,11 +265,11 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
           <FlatList
             refreshing={refreshing}
             onRefresh={onRefresh}
-            onEndReached={loadMore}
             keyExtractor={(item: Club, index: number) => String(index)}
+            numColumns={2}
             data={clubs?.pages.map((page) => page?.responses?.content).flat()}
             renderItem={({ item, index }: { item: Club; index: number }) => (
-              <ClubArea onPress={() => goToImage(item)}>
+              <ClubArea onPress={() => goToImage()}>
                 <ClubImg source={{ uri: item.thumbnail }} />
                 <ClubMy>
                   <CommentMent>
