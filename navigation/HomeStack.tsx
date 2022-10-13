@@ -1,60 +1,45 @@
-import React from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import Tabs from "./Tabs";
-import Profile from "../screens/Profile";
-import CreateHomePeed from "../screens/HomeRelevant/CreateHomePeed";
-import Accusation from "../screens/HomeRelevant/Accusation";
-import ModifiyPeed from "../screens/HomeRelevant/ModifiyPeed";
-import ImageSelecter from "../screens/HomeRelevant/ImageSelecter";
-import ReportComplete from "../screens/HomeRelevant/ReportComplete";
-import ReplyPage from "../screens/HomeRelevant/ReplyPage";
-import AlarmPage from "../screens/HomeRelevant/AlarmPage";
-import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
-import { Text, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import React from "react";
+import { Alert, Text, TouchableOpacity } from "react-native";
 import { useSelector } from "react-redux";
-import { useQuery } from "react-query";
-import { Feed, FeedsResponse } from "../api";
+import styled from "styled-components/native";
+import Accusation from "../screens/HomeRelevant/Accusation";
+import AlarmPage from "../screens/HomeRelevant/AlarmPage";
+import CreateHomePeed from "../screens/HomeRelevant/CreateHomePeed";
+import FeedCreate from "../screens/HomeRelevant/FeedCreate";
+import ModifiyPeed from "../screens/HomeRelevant/ModifiyPeed";
+import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
+import ReplyPage from "../screens/HomeRelevant/ReplyPage";
+import ReportComplete from "../screens/HomeRelevant/ReportComplete";
+import Profile from "../screens/Profile";
+
+const ImageSelectSave = styled.Text`
+  color: #2995fa;
+  margin-right: 5%;
+`;
 
 const NativeStack = createNativeStackNavigator();
 
 const HomeStack = ({ navigation: { navigate } }) => {
-  //취소 알람
-  const cancleCreate = () =>
+  const token = useSelector((state) => state.AuthReducers.authToken);
+
+  const cancleCreate = () => {
     Alert.alert(
-      // 말그대로 Alert를 띄운다
-      "취소하시겠습니까?", // 첫번째 text: 타이틀 제목
-      "게시글이 삭제됩니다.", // 두번째 text: 그 밑에 작은 제목
+      "게시글을 삭제하시겠어요?",
+      "30일 이내에 내 활동의 최근 삭제 항목에서 이 게시물을 복원할 수 있습니다." + "30일이 지나면 영구 삭제 됩니다. ",
       [
-        // 버튼 배열
         {
           text: "아니요",
+          onPress: () => console.log(""),
           style: "cancel",
         },
-        { text: "네", onPress: () => navigate("Home") },
+        { text: "네", onPress: () => navigate("Tabs", { screen: "Home" }) },
       ],
       { cancelable: false }
     );
-
-  //피드생성
-  const getFeeds = () => {
-    return fetch(`http://3.39.190.23:8080/api/feeds`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => res.json());
   };
-  const token = useSelector((state) => state.AuthReducers.authToken);
-  const { data: feeds, isLoading: feedsLoading } = useQuery<FeedsResponse>(["getFeeds"], getFeeds, {
-    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
-    onSuccess: (res) => {
-      console.log(res);
-    },
-    onError: (err) => {
-      console.log(`[getFeeds error] ${err}`);
-    },
-  });
+
 
   return (
     <NativeStack.Navigator
@@ -62,7 +47,7 @@ const HomeStack = ({ navigation: { navigate } }) => {
         presentation: "card",
         contentStyle: { backgroundColor: "white" },
       }}
-    >
+    >      
       <NativeStack.Screen
         name="Profile"
         component={Profile}
@@ -77,8 +62,8 @@ const HomeStack = ({ navigation: { navigate } }) => {
       />
 
       <NativeStack.Screen
-        name="ImageSelecter"
-        component={ImageSelecter}
+        name="FeedCreate"
+        component={FeedCreate}
         options={{
           title: "",
           headerLeft: () => (
@@ -110,6 +95,7 @@ const HomeStack = ({ navigation: { navigate } }) => {
       <NativeStack.Screen
         name="CreateHomePeed"
         component={CreateHomePeed}
+        initialParams={{clubName}}
         options={{
           title: "새 게시물",
           headerLeft: () => (
@@ -123,6 +109,7 @@ const HomeStack = ({ navigation: { navigate } }) => {
       <NativeStack.Screen
         name="ReplyPage"
         component={ReplyPage}
+        initialParams={{userName, id}}
         options={{
           title: "댓글",
           headerLeft: () => (
@@ -136,10 +123,11 @@ const HomeStack = ({ navigation: { navigate } }) => {
       <NativeStack.Screen
         name="ModifiyPeed"
         component={ModifiyPeed}
+        initialParams={{userName, id, userId, content, imageUrls, clubId, clubName, hashtags}}
         options={{
           title: "수정",
           headerLeft: () => (
-            <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
+            <TouchableOpacity onPress={() => feedUpdate}>
               <Ionicons name="chevron-back" size={20} color="black" />
             </TouchableOpacity>
           ),
@@ -193,5 +181,4 @@ const HomeStack = ({ navigation: { navigate } }) => {
     </NativeStack.Navigator>
   );
 };
-
 export default HomeStack;

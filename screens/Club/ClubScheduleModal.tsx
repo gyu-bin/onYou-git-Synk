@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Modal, useWindowDimensions } from "react-native";
 import Carousel from "react-native-snap-carousel";
-import { RefinedSchedule } from "../../types/Club";
+import { RefinedSchedule } from "../../Types/Club";
 import { Feather, Ionicons, Entypo } from "@expo/vector-icons";
 import styled from "styled-components/native";
 import CustomText from "../../components/CustomText";
@@ -219,7 +219,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ visible, scheduleData, se
                 </ContentItemView>
                 <Break sep={0} />
                 <ContentItemView>
-                  <Feather name="user-check" size={16} color="black" />
+                  <Feather name="users" size={16} color="black" />
                 </ContentItemView>
                 <Break sep={0} />
                 <ContentItemView>

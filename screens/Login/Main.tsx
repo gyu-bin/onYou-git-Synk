@@ -1,3 +1,4 @@
+// import { KakaoOAuthToken, login as kakaoLogin } from "@react-native-seoul/kakao-login";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
@@ -61,7 +62,19 @@ const LoginTitle = styled.Text`
   font-weight: 700;
 `;
 
-const Main: React.FC<NativeStackScreenProps<any, "Main">> = ({ navigation: { navigate } }) => {
+const Main: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate } }) => {
+  const goToLogin = () => {
+    navigate("LoginStack", {
+      screen: "Login",
+    });
+  };
+
+  const goToJoinStepOne = () => {
+    navigate("LoginStack", {
+      screen: "JoinStepOne",
+    });
+  };
+
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -77,26 +90,20 @@ const Main: React.FC<NativeStackScreenProps<any, "Main">> = ({ navigation: { nav
     },
   });
 
-  const goToLogin = () => {
-    navigate("LoginStack", {
-      screen: "Login",
-    });
-  };
+  // const signInWithKakao = async () => {
+  //   const token: KakaoOAuthToken = await kakaoLogin();
 
-  /* const signInWithKakao = async () => {
-    const token: KakaoOAuthToken = await kakaoLogin();
-
-    mutation.mutate({ token: token.accessToken });
-  }; */
+  //   mutation.mutate({ token: token.accessToken });
+  // };
 
   return (
     <Container>
       <Logo source={require("../../assets/logo.png")} resizeMode="cover">
         <BtnWrap>
-          <JoinButton>
+          <JoinButton onPress={goToJoinStepOne}>
             <JoinTitle>회원가입</JoinTitle>
           </JoinButton>
-          <LoginButton>
+          <LoginButton onPress={Login}>
             <LoginTitle>로그인</LoginTitle>
           </LoginButton>
         </BtnWrap>

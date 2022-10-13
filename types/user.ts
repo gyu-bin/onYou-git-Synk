@@ -8,4 +8,12 @@ export type EditStackParamList = {
   };
 };
 
+export type LoginStackParamList = {
+  LoginStack: {
+    userData: User;
+    category: CategoryResponse;
+  };
+};
+
 export type EditProfileScreenProps = NativeStackScreenProps<EditStackParamList, "EditProfile">;
+export type LoginScreenProps = NativeStackScreenProps<LoginStackParamList, "LoginStack">;
