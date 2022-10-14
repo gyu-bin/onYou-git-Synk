@@ -104,11 +104,14 @@ const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min
 // route: {
 //   params: { category1, category2 },
 // },
-const ReplyPage: React.FC<ReplyPageScreenProps> = ({ navigation: { navigate }, route:{params:{userId}} }) => {
+const ReplyPage: React.FC<ReplyPageScreenProps> = ({ navigation: { navigate },
+                                                     route:{params:{userId,id}} }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
+
+  const [content, setContent]=useState<string>("");
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -133,6 +136,18 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({ navigation: { navigate }, r
       },
     }).then((res) => res.json());
   };
+
+  const PostReply=()=>{
+    return fetch(`http://3.39.190.23:8080/api/feeds/${id}/comment`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(content)
+    }).then((res) => res.json());
+  };
+
+
 
   /** 리플 데이터   */
   const { data: replys, isLoading: replysLoading } = useQuery<ReplyResponse>(["getReply"], getReply, {
@@ -188,7 +203,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({ navigation: { navigate }, r
             }}
           />
           <ReplyInput>댓글을 입력해보세요...</ReplyInput>
-          <ReplyButton>
+          <ReplyButton onPress={PostReply}>
             <ReplyDone>게시</ReplyDone>
           </ReplyButton>
         </ReplyArea>

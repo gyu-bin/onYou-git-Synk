@@ -190,7 +190,12 @@ export interface FeedCreationRequest {
 }
 
 export interface FeedUpdateRequest{
-  data: Feed[];
+  data: {
+    id: number;
+    userId: number;
+    content: string;
+    hashtag: string;
+  };
   token: string;
 }
 
@@ -419,7 +424,7 @@ const updateClub = async (req: ClubUpdateRequest) => {
   });
 };
 
-const updateFeed = async (req: FeedUpdateRequest) => {
+ const updateFeed = async (req: FeedUpdateRequest) => {
   const body = new FormData();
 
   if (req.data) {
@@ -554,7 +559,7 @@ const selectMyClubs = ({ queryKey }: any) => {
 };
 
 const reportFeed = (req: FeedReportRequest) => {
-  return fetch(`${BASE_URL}/api/feeds/${req.userId}/report?reason=${req.reason}`, {
+  return fetch(`${BASE_URL}/api/feeds/${req.data.userId}/report?reason=${req.data.reason}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${req.token}`,
