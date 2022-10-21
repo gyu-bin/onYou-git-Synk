@@ -188,7 +188,7 @@ interface HeartType {
   heart: boolean;
 }
 
-const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:{userId}} }) => {
+const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:{userId,userName,content}} }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
@@ -198,7 +198,9 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
   const token = useSelector((state) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-  // const [userId, setUserId] = useState<string>("");
+   const [id, setId] = useState(userId);
+  const [name,setName]=useState(userName)
+  const [PeedContent,setPeedContent] = useState(content)
 
   const [params, setParams] = useState<FeedsParams>({
     token,
@@ -308,6 +310,10 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
   const goToModifiy = () => {
     navigate("HomeStack", {
       screen: "ModifiyPeed",
+      id: userId.id,
+      content: userId.content,
+      userId: userId,
+
     });
     setModalVisible(!isModalVisible);
   };
@@ -315,7 +321,8 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
   const goToClub = () => {
     navigate("HomeStack", {
       screen: "MyClubSelector",
-      userId,
+      id: userId.id,
+      name: userId.name
     });
   };
 

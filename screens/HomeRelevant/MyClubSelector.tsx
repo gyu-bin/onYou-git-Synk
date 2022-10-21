@@ -104,7 +104,7 @@ const CreatorName = styled.Text`
 
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({route:{params:{userId}},navigation: { navigate } }) => {
+const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({route:{params:{id,name,userId}},navigation: { navigate } }) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
   const [params, setParams] = useState<ClubsParams>({
@@ -122,10 +122,11 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({route:{params:{use
   const [loading, setLoading] = useState(false);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-//
-const [clubName, setClubName] = useState<string>("");
-const [clubId, setClubId] = useState<string>("");
-const [userName, setUserName] = useState<string>("");
+  const [feedId, setFeed] = useState(id);
+  const [userName,setUserName] = useState(name);
+  const [clubName, setClubName] = useState("");
+  const [clubId, setClubId] = useState("");
+  const [myUserId, setMyUserId] = useState(userId);
 
   const {
     isLoading: clubsLoading,
@@ -184,11 +185,13 @@ const [userName, setUserName] = useState<string>("");
             renderItem={({ item, index }: { item: Club; index: number }) => (
               <ClubArea
                 onPress={() => {
-                  return navigate("FeedCreate", {
-                    clubName:clubName,
-                    clubId:clubId,
-                    userId:userId,
-                    username:userName,
+                  return navigate("HomeStack", {
+                    screen:"ImageSelecter",
+                    id:feedId.id,
+                    name: feedId.userName,
+                    clubName:feedId.clubName,
+                    clubId: feedId.clubId,
+                    userId: feedId.userId,
                   });
                 }}
               >

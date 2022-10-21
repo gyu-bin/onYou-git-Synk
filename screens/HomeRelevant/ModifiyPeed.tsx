@@ -78,14 +78,17 @@ const ImageSource = styled.Image<{ size: number }>`
   height: ${(props) => props.size}px;
 `;
 
+//id는 feedId
 const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({navigation:{navigate},
-                                                      route:{params: {id, content,userId, hashtag}}})=> {
+                                                      route:{params: {id,userId,content}}})=> {
   const token = useSelector((state) => state.AuthReducers.authToken);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
 
   const [fixContent, setFixContent] = useState(content)
+  const [feedId,setFeedId]=useState(id)
+  const [myUserId,setMyUserId]=useState(userId);
 
   const mutation = useMutation(FeedApi.updateFeed, {
     onSuccess: (res) => {
@@ -142,7 +145,7 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({navigation:{navigate},
       id: id,
       userId: userId,
       content: content,
-      hashtag: hashtag,
+      access: null,
     };
 
     const requestData: FeedUpdateRequest={
@@ -154,38 +157,38 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({navigation:{navigate},
 
   return (
     <Container>
-    <FlatList
-      keyExtractor={(item: Feed, index: number) => String(index)}
-      data={feeds?.data}
-      renderItem={({item}:{item:Feed})=>(
-        <View>
-          <FeedUser>
-            <UserImage source={{ uri: "https://i.pinimg.com/564x/9e/d8/4c/9ed84cf3fc04d0011ec4f75c0692c83e.jpg" }} />
-            <UserInfo>
-              <UserId>{item.userName}</UserId>
-              <ClubBox>
-                <ClubName>{item.clubName}</ClubName>
-              </ClubBox>
-            </UserInfo>
-          </FeedUser>
+      <FlatList
+        keyExtractor={(item: Feed, index: number) => String(index)}
+        data={feeds?.data}
+        renderItem={({item}:{item:Feed})=>(
+          <View>
+            <FeedUser>
+              <UserImage source={{ uri: "https://i.pinimg.com/564x/9e/d8/4c/9ed84cf3fc04d0011ec4f75c0692c83e.jpg" }} />
+              <UserInfo>
+                <UserId>{item.userName}</UserId>
+                <ClubBox>
+                  <ClubName>{item.clubName}</ClubName>
+                </ClubBox>
+              </UserInfo>
+            </FeedUser>
 
-          <FeedImage>
-            {/*<Swiper horizontal dotColor="#E0E0E0" activeDotColor="#FF714B" containerStyle={{ backgroundColor: "black", height: FEED_IMAGE_SIZE }}>
+            <FeedImage>
+              {/*<Swiper horizontal dotColor="#E0E0E0" activeDotColor="#FF714B" containerStyle={{ backgroundColor: "black", height: FEED_IMAGE_SIZE }}>
                   <SliderBox images={item.imageUrls} sliderBoxHeight={FEED_IMAGE_SIZE} />
                 </Swiper>*/}
-            <ImageSource source={item.imageUrls[0] === undefined ? require("../../assets/basic.jpg") : { uri: item.imageUrls[0] }}  size={FEED_IMAGE_SIZE}/>
-          </FeedImage>
-          <Content>
-            <Ment>{item.content}</Ment>
-          </Content>
+              <ImageSource source={item.imageUrls[0] === undefined ? require("../../assets/basic.jpg") : { uri: item.imageUrls[0] }}  size={FEED_IMAGE_SIZE}/>
+            </FeedImage>
+            <Content>
+              <Ment>{item.content}</Ment>
+            </Content>
 
-          <TouchableOpacity onPress={FixComplete}>
-            <Text>수정완료</Text>
-          </TouchableOpacity>
-        </View>
-      )}></FlatList>
+            <TouchableOpacity onPress={FixComplete}>
+              <Text>수정완료</Text>
+            </TouchableOpacity>
+          </View>
+        )}></FlatList>
 
-      </Container>
+    </Container>
   );
 }
 
