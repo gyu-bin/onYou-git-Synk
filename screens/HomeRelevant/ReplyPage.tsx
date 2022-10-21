@@ -111,7 +111,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({ navigation: { navigate },
   const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
 
-  const [content, setContent]=useState<string>("");
+  const [content, setContent] = useState("")
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -202,7 +202,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({ navigation: { navigate },
               uri: userInfo?.data.thumbnail === null ? "http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
             }}
           />
-          <ReplyInput>댓글을 입력해보세요...</ReplyInput>
+          <ReplyInput onChangeText={(content) => setContent(content)}>댓글을 입력해보세요...</ReplyInput>
           <ReplyButton onPress={PostReply}>
             <ReplyDone>게시</ReplyDone>
           </ReplyButton>
