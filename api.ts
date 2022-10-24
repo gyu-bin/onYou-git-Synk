@@ -334,9 +334,23 @@ export interface FeedReplyRequest{
 // Categories
 const getCategories = () => fetch(`${BASE_URL}/api/categories`).then((res) => res.json());
 
+/** 피드호출*/
 const getFeeds = ({ queryKey }: any) => {
   const [_key, feedsParams]: [string, FeedsParams] = queryKey;
   return fetch(`${BASE_URL}/api/feeds`, {
+    headers: {
+      authorization: `${feedsParams.token}`,
+    },
+  }).then(async (res) => {
+    if(res.status === 200) return {status: res.status, ...(await res.json())}
+    else return {status: res.status}
+  });
+};
+
+/**원하는 피드 호출*/
+const getSelectFeeds = ({ queryKey }: any) => {
+  const [_key, id, feedsParams]: [string, number,FeedsParams] = queryKey;
+  return fetch(`${BASE_URL}/api/feeds/${id}`, {
     headers: {
       authorization: `${feedsParams.token}`,
     },
@@ -391,6 +405,7 @@ const getClubRole = ({ queryKey }: any) => {
     });
 };
 
+/**피드생성*/
 const createFeed = async (req: FeedCreationRequest) => {
   const body = new FormData();
 
@@ -418,11 +433,12 @@ const createFeed = async (req: FeedCreationRequest) => {
   });
 };
 
+/**피드수정*/
 const updateFeed = async (req: FeedUpdateRequest) => {
   const body = new FormData();
 
   if (req.data) {
-    body.append("clubUpdateRequest", {
+    body.append("feedUpdateRequest", {
       string: JSON.stringify(req.data),
       type: "application/json",
     });
@@ -609,6 +625,7 @@ const selectMyClubs = ({ queryKey }: any) => {
   }).then((res) => res.json());
 };
 
+/**피드신고*/
 const reportFeed = (req: FeedReportRequest) => {
   return fetch(`${BASE_URL}/api/feeds/${req.data.userId}/report?reason=${req.data.reason}`, {
     method: "PUT",
@@ -618,7 +635,7 @@ const reportFeed = (req: FeedReportRequest) => {
   }).then((res) => res.json());
 };
 
-
+/**피드좋아요*/
 const likeCount = ({mutationkey}:any) =>{
   const [id, token]: [number, string] = mutationkey;
   return fetch(`http://3.39.190.23:8080/api/feeds/${id}/likes`, {
@@ -629,7 +646,7 @@ const likeCount = ({mutationkey}:any) =>{
   }).then((res) => res.json());
 }
 
-
+/**피드 좋아요 취소*/
 const likeCountReverse = ({mutationkey}:any) => {
   const [id, token]: [number, string] = mutationkey;
   return fetch(`http://3.39.190.23:8080/api/feeds/${id}/likes`, {
@@ -640,6 +657,7 @@ const likeCountReverse = ({mutationkey}:any) => {
   }).then((res) => res.json());
 }
 
+/**댓글호출*/
 const getReply = ({ queryKey }: any) => {
   const [_key, token, id]: [string, string, number] = queryKey;
   return fetch(`http://3.39.190.23:8080/api/feeds/${id}/comments`, {
@@ -650,6 +668,7 @@ const getReply = ({ queryKey }: any) => {
   }).then((res) => res.json());
 };
 
+/**댓글달기*/
 const ReplyFeed = ({mutationkey}:any) =>{
   const [id, token]: [number, string] = mutationkey;
   return fetch(`http://3.39.190.23:8080/api/feeds/${id}/comment`, {
@@ -691,6 +710,7 @@ export const FeedApi = {
   likeCountReverse,
   getReply,
   ReplyFeed,
+  getSelectFeeds,
 };
 
 export const CommonApi = { getJWT };
