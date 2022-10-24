@@ -28,11 +28,12 @@ export type RootStackParamList = {
     userName: string;
   }
   ReplyPage: {userId: number, userName: string, id: number};
-  MyClubSelector:{clubId: number, clubName: string, content:string ,userId: number}
+  MyClubSelector:{userId: number}
   FeedCreateSuccess:{feedData: Feed}
   FeedUpdate:{id:number ,userId: number, content: string, hashtag: string}
   FeedReport:{id:number,userId:number}
   Tabs:{}
+  HomeStack:{}
 };
 
 export type HomeScreenProps = NativeStackScreenProps<RootStackParamList,"Home">

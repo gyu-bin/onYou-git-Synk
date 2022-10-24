@@ -110,10 +110,6 @@ const ReplyDone = styled.Text`
 `;
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-//파일전송방법
-// route: {
-//   params: { category1, category2 },
-// },
 const ReplyPage: React.FC<ReplyPageScreenProps> = ({
                                       navigation: {
                                         navigate },
@@ -224,8 +220,18 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({
               uri: userInfo?.data.thumbnail === null ? "http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
             }}
           />
-          <ReplyInput>댓글을 입력해보세요...</ReplyInput>
-          <ReplyButton onPress={()=>RelpyFeed()}>
+          <ReplyInput
+            placeholder=" 댓글을 입력해보세요..."
+            value={content}
+            onChangeText={(value:string) => setContent(value)}
+            textContentType="none"
+            autoCompleteType="off"
+            autoCapitalize="none"
+            multiline={true}
+            maxLength={100}
+            >
+          </ReplyInput>
+          <ReplyButton onPress={RelpyFeed}>
             <ReplyDone>게시</ReplyDone>
           </ReplyButton>
         </ReplyArea>

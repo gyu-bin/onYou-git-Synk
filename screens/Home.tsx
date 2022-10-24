@@ -13,11 +13,12 @@ import {
   UserApi,
   UserInfoResponse,
   likeCount,
-  likeCountReverse, FeedsLikeReponse, ClubApi, ClubCreationRequest, FeedLikeRequest, FeedReverseLikeRequest
+  likeCountReverse,
+  FeedsLikeReponse, ClubApi, ClubCreationRequest, FeedLikeRequest, FeedReverseLikeRequest
 } from "../api";
 import CustomText from "../components/CustomText";
 import ImageSelecter from "./HomeRelevant/ImageSelecter";
-import { HomeScreenProps } from "../types/feed";
+import { HomeScreenProps,HomeStack } from "../types/feed";
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
@@ -199,7 +200,7 @@ interface HeartType {
   heart: boolean;
 }
 
-const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:{id,userId,userName,content}} }) => {
+const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:{id,userId,content}} }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
@@ -210,7 +211,6 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
   const [LoginId, setLoginId] = useState(userId);
-  const [name,setName]=useState(userName)
   const [PeedContent,setPeedContent] = useState(content)
   const [FeedId, setFeedId] = useState(id);
 
@@ -363,7 +363,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const goToClub = () => {
     return navigate("HomeStack", {
       screen: "MyClubSelector",
-      userId: id,
+      userId: userId,
     });
   };
 

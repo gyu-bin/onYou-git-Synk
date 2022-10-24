@@ -322,16 +322,6 @@ export interface SignUp {
   phoneNumber?: string;
 }
 
-export interface FeedReportRequest{
-  token: string;
-  data :{
-    id: number;
-    userId: number;
-    reason: string;
-  }
-}
-
-
 export interface FeedReplyRequest{
   token:string;
   data:{

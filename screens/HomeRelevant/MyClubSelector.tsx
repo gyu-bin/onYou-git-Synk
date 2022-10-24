@@ -5,6 +5,7 @@ import { useInfiniteQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 import { Club, ClubApi, ClubsParams, ClubsResponse, Feed } from "../../api";
+import { MyClubSelectorScreenProps } from "../../types/feed";
 const Container = styled.SafeAreaView`
   flex: 1;
   height: 100%;
@@ -101,9 +102,7 @@ const CreatorName = styled.Text`
   padding-left: 6px;
 `;
 
-const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { navigate } }) => {
+const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { navigate},route:{params:{userId}} }) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
   const [params, setParams] = useState<ClubsParams>({
@@ -116,6 +115,8 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
     showRecruiting: null,
     showMy: null,
   });
+
+  const [clubId,setClubId] = useState("")
   const [clubName, setClubName] = useState<string>("");
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -150,18 +151,6 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
     setRefreshing(false);
   };
 
-  const goToHome = () => {
-    navigate("Tabs", {
-      screen: "Home",
-    });
-  };
-
-  const goToImage = (clubName: Club) => {
-    navigate("HomeStack", {
-      screen: "ImageSelecter",
-    });
-  };
-
   return (
     <Container>
       <IntroText>가입한 모임 List</IntroText>
@@ -178,7 +167,10 @@ const MyClubSelector: React.FC<NativeStackScreenProps> = ({ navigation: { naviga
             renderItem={({ item, index }: { item: Club; index: number }) => (
               <ClubArea
                 onPress={() => {
-                  return navigate("ImageSelecter", {
+                  return navigate("HomeStack", {
+                    screen:'ImageSelecter',
+                    userId,
+                    clubId,
                     clubName,
                   });
                 }}

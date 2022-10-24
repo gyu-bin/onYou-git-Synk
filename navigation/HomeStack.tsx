@@ -7,7 +7,7 @@ import styled from "styled-components/native";
 import Accusation from "../screens/HomeRelevant/Accusation";
 import AlarmPage from "../screens/HomeRelevant/AlarmPage";
 import CreateHomePeed from "../screens/HomeRelevant/CreateHomePeed";
-import FeedCreate from "../screens/HomeRelevant/FeedCreate";
+import ImageSelecter from "../screens/HomeRelevant/ImageSelecter";
 import ModifiyPeed from "../screens/HomeRelevant/ModifiyPeed";
 import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
 import ReplyPage from "../screens/HomeRelevant/ReplyPage";
@@ -65,8 +65,8 @@ const HomeStack = ({navigation: { navigate },
       />
 
       <NativeStack.Screen
-        name="FeedCreate"
-        component={FeedCreate}
+        name="ImageSelecter"
+        component={ImageSelecter}
         options={{
           title: "",
           headerLeft: () => (
@@ -85,6 +85,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="MyClubSelector"
         component={MyClubSelector}
+        initialParams={{userId}}
         options={{
           title: "나의 모임",
           headerLeft: () => (
@@ -145,21 +146,9 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="Accusation"
         component={Accusation}
+        initialParams={{id,userId}}
         options={{
           title: "신고",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
-              <Ionicons name="chevron-back" size={20} color="black" />
-            </TouchableOpacity>
-          ),
-          headerShown: true,
-        }}
-      />
-      <NativeStack.Screen
-        name="AlarmPage"
-        component={AlarmPage}
-        options={{
-          title: "알림",
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
               <Ionicons name="chevron-back" size={20} color="black" />

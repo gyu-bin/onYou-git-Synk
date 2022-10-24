@@ -188,13 +188,13 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
     }
   };
 
-  const createFinish = () => {
+ /* const createFinish = () => {
     Alert.alert("등록되었습니다.");
     setRefreshing(true);
     return navigate("Home");
 
     //홈화면 새로고침 기능 넣기
-  };
+  };*/
 
   const onSubmit = () => {
     const data={
