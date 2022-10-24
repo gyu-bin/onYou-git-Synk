@@ -1,9 +1,10 @@
-import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { useQuery } from "react-query";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import styled from "styled-components/native";
-import { FeedReportRequest, ReportResponse } from "../../api";
+import { useMutation, useQuery } from "react-query";
+import { useSelector } from "react-redux";
+import { ReportPeedScreenProps } from "../../types/feed";
+import { FeedApi, FeedLikeRequest, FeedReportRequest } from "../../api";
 
 const Container = styled.SafeAreaView`
   position: relative;
@@ -42,28 +43,51 @@ const AccText = styled.Text`
   color: red;
 `;
 
-export default function Accusation({ navigation: { navigate } }) {
+const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
+  { navigate},route:{params:{
+  id,userId,
+}} }) =>{
   const token = useSelector((state) => state.AuthReducers.authToken);
-  //Report
 
-  const ReportFeed = (req: FeedReportRequest) => {
-    return fetch(`http://3.39.190.23:8080/api/feeds/${req.data.userId}/report?reason=${req.data.reason}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${req.token}`,
-      },
-    }).then((res) => res.json());
+  let [reason,setReason] = useState("");
+
+  const mutation = useMutation( FeedApi.reportFeed, {
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        console.log(res)
+      } else {
+        console.log(`mutation success but please check status code`);
+        console.log(res);
+        // return navigate("Home", {});
+      }
+    },
+    onError: (error) => {
+      console.log("--- Error ---");
+      console.log(`error: ${error}`);
+      // return navigate("Home", {});
+    },
+    onSettled: (res, error) => {},
+  });
+
+  const LikeFeed=()=>{
+    const data = {
+      userId: userId,
+      id: id,
+      reason:reason,
+    };
+
+    console.log(data);
+    const ReportData: FeedReportRequest=
+      {
+        data,
+        token,
+      }
+
+    mutation.mutate(ReportData);
   };
-  
-  const {
-    isLoading: feedReportLoading, // true or false
-    data: feedReport,
-  } = useQuery<ReportResponse>(["getFeedReport", token], ReportFeed);
-
-  console.log(feedReport?.data);
 
   const ReportComplete = () => {
-    
+    LikeFeed();
     navigate("HomeStack", {
       screen: "ReportComplete",
     });
@@ -95,3 +119,5 @@ export default function Accusation({ navigation: { navigate } }) {
     </Container>
   );
 }
+
+export default Accusation;

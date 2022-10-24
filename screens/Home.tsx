@@ -1,14 +1,23 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Alert, Dimensions, FlatList, Modal, TouchableOpacity, useWindowDimensions, View } from "react-native";
-import MentionHashtagTextView from "react-native-mention-hashtag-text";
-import { useQuery, useQueryClient } from "react-query";
+import { Alert, Dimensions, FlatList, Modal,
+  TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
-import { Feed, FeedsParams, FeedsResponse, ReplyResponse, UserApi, UserInfoResponse } from "../api";
+import {
+  Feed,
+  FeedApi,
+  FeedsParams,
+  FeedsResponse,
+  UserApi,
+  UserInfoResponse,
+  likeCount,
+  likeCountReverse, FeedsLikeReponse, ClubApi, ClubCreationRequest, FeedLikeRequest, FeedReverseLikeRequest
+} from "../api";
 import CustomText from "../components/CustomText";
+import ImageSelecter from "./HomeRelevant/ImageSelecter";
 import { HomeScreenProps } from "../types/feed";
-
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
@@ -157,6 +166,8 @@ const InfoArea = styled.View`
   padding-right: 10px;
 `;
 
+const LikeClick=styled.TouchableOpacity``
+
 const NumberText = styled.Text`
   font-size: 12px;
   font-weight: 300;
@@ -188,7 +199,7 @@ interface HeartType {
   heart: boolean;
 }
 
-const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:{userId,userName,content}} }) => {
+const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:{id,userId,userName,content}} }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
@@ -198,62 +209,29 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
   const token = useSelector((state) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-   const [id, setId] = useState(userId);
+  const [LoginId, setLoginId] = useState(userId);
   const [name,setName]=useState(userName)
   const [PeedContent,setPeedContent] = useState(content)
-
-  const [params, setParams] = useState<FeedsParams>({
-    token,
-  });
-
-  const getFeeds = () => {
-    return fetch(`http://3.39.190.23:8080/api/feeds`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => res.json());
-  };
-
-  const likeCount = () =>{
-    return fetch(`http://3.39.190.23:8080/api/feeds/${userId}/likes`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => res.json());
-  }
-
-  
-  const likeCountReverse = () =>{
-    return fetch(`http://3.39.190.23:8080/api/feeds/${userId}/likes`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => res.json());
-  }
+  const [FeedId, setFeedId] = useState(id);
 
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
-
   //피드
   const {
     isLoading: feedsLoading,
     data: feeds,
     isRefetching: isRefetchingClubs,
-  } = useQuery<FeedsResponse>(["getFeeds"], getFeeds, {
-    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
+  } = useQuery<FeedsResponse>(["getFeeds", token], FeedApi.getFeeds, {
     onSuccess: (res) => {
       setIsPageTransition(false);
 
       let heartDataMap = new Map();
 
-      for (let i = 0; i < res.data.length; ++i) {
+      for (let i = 0; i < res?.data?.length; ++i) {
         heartDataMap.set(res.data[i].id, false);
-        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
       }
       setHeartMap(heartDataMap);
+      // console.log(res.statusCode)
     },
     onError: (err) => {
       console.log(err);
@@ -266,22 +244,88 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
     data: userInfo,
   } = useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo);
 
-  console.log(userInfo?.data);
 
-  //commentCount
+  //Like
+  const LikeMutation = useMutation( FeedApi.likeCount, {
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        console.log(res)
+      } else {
+        console.log(`mutation success but please check status code`);
+        console.log(res);
+        // return navigate("Home", {});
+      }
+    },
+    onError: (error) => {
+      console.log("--- Error ---");
+      console.log(`error: ${error}`);
+      // return navigate("Home", {});
+    },
+    onSettled: (res, error) => {},
+  });
+
+  const LikeFeed=()=>{
+    const data = {
+      userId: userId,
+      id: FeedId,
+    };
+
+    console.log(data);
+    const likeRequestData: FeedLikeRequest=
+      {
+        data,
+        token,
+      }
+
+    LikeMutation.mutate(likeRequestData);
+  };
+
+
+  //ReverseLike
+  const LikeReverseMutation = useMutation( FeedApi.likeCountReverse, {
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        console.log(res)
+      } else {
+        console.log(`mutation success but please check status code`);
+        console.log(res);
+        // return navigate("Home", {});
+      }
+    },
+    onError: (error) => {
+      console.log("--- Error ---");
+      console.log(`error: ${error}`);
+      // return navigate("Home", {});
+    },
+    onSettled: (res, error) => {},
+  });
+
+  const LikeReverseFeed=()=>{
+    const data = {
+      userId: userId,
+      id: FeedId,
+    };
+
+    console.log(data);
+    const likeRequestData: FeedReverseLikeRequest=
+      {
+        data,
+        token,
+      }
+
+    LikeMutation.mutate(likeRequestData);
+  };
+
   const {
     isLoading: commentPlusLoading,
     data: commentPlusCount,
-  }=useQuery<ReplyResponse>(["getCommentCount", token], likeCount)
+  }=useMutation<FeedsLikeReponse>([id, token], FeedApi.likeCount)
 
   const {
     isLoading: commentReverseLoading,
     data: commentReverseCount,
-  }=useQuery<ReplyResponse>(["getCommentCount", token], likeCountReverse)
+  }=useMutation<FeedsLikeReponse>([id, token], FeedApi.likeCountReverse)
 
-
-  console.log(commentPlusCount?.data)
-  console.log(commentReverseCount?.data)
 
   const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
 
@@ -310,25 +354,24 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
   const goToModifiy = () => {
     navigate("HomeStack", {
       screen: "ModifiyPeed",
-      id: userId.id,
-      content: userId.content,
       userId: userId,
-
+      content: PeedContent,
     });
     setModalVisible(!isModalVisible);
   };
 
   const goToClub = () => {
-    navigate("HomeStack", {
+    return navigate("HomeStack", {
       screen: "MyClubSelector",
-      id: userId.id,
-      name: userId.name
+      userId: id,
     });
   };
 
   const goToAccusation = () => {
     navigate("HomeStack", {
       screen: "Accusation",
+      id:id,
+      userId: userId,
     });
     setModalVisible(!isModalVisible);
   };
@@ -380,7 +423,7 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
           data={feeds?.data}
           renderItem={({ item, index }: { item: Feed; index: number }) => (
             <>
-              <FeedHeader>
+              <FeedHeader key={index}>
                 <FeedUser onPress={goToProfile}>
                   <UserImage
                     source={{
@@ -423,7 +466,8 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
                       <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
                         {heartMap.get(item.id) ? <Ionicons name="md-heart" size={20} color="red" likeYn={true} /> : <Ionicons name="md-heart-outline" size={20} color="black" likeYn={false} />}
                       </TouchableOpacity>
-                      {heartMap.get(item.id) ? <NumberText>{commentPlusCount?.data} </NumberText> : <NumberText> {commentReverseCount?.data} </NumberText>}
+                      {heartMap.get(item.id) ? <LikeClick onPress={() => LikeFeed()}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                        : <LikeClick onPress={() => LikeReverseFeed()}><NumberText>{item.likesCount }</NumberText></LikeClick>}
                     </InfoArea>
                     <InfoArea>
                       <TouchableOpacity onPress={() => goToReply()}>
@@ -438,7 +482,7 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
                 </FeedInfo>
                 <Content>
                   <Ment>
-                    <MentionHashtagTextView key={feeds}>{item.content}</MentionHashtagTextView>
+                    {item.content}
                   </Ment>
                 </Content>
               </FeedMain>
@@ -450,3 +494,4 @@ const Home: React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params
   );
 };
 export default Home;
+

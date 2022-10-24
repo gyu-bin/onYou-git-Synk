@@ -21,7 +21,10 @@ const ImageSelectSave = styled.Text`
 
 const NativeStack = createNativeStackNavigator();
 
-const HomeStack = ({ navigation: { navigate } }) => {
+const HomeStack = ({navigation: { navigate },
+                route:{params:{
+                userName, id, userId, content, imageUrls, clubId, clubName, hashtags,
+                  }} }) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
 
   const cancleCreate = () => {
@@ -47,7 +50,7 @@ const HomeStack = ({ navigation: { navigate } }) => {
         presentation: "card",
         contentStyle: { backgroundColor: "white" },
       }}
-    >      
+    >
       <NativeStack.Screen
         name="Profile"
         component={Profile}
@@ -127,7 +130,7 @@ const HomeStack = ({ navigation: { navigate } }) => {
         options={{
           title: "수정",
           headerLeft: () => (
-            <TouchableOpacity onPress={() => feedUpdate}>
+            <TouchableOpacity>
               <Ionicons name="chevron-back" size={20} color="black" />
             </TouchableOpacity>
           ),

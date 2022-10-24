@@ -85,7 +85,7 @@ const CancleIcon = styled.View`
   left: 73%;
 `;
 
-const ImageSelecter: React.FC<NativeStackScreenProps> = ({route:{params:{id,clubName,clubId,name}},navigation: { navigate } }) => {
+const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName,clubId,userId}},navigation: { navigate } }) => {
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
@@ -93,11 +93,10 @@ const ImageSelecter: React.FC<NativeStackScreenProps> = ({route:{params:{id,club
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   let [alert, alertSet] = useState(true);
-
-  const [userId,setUserId] = useState(id);
+  const token = useSelector((state) => state.AuthReducers.authToken);
+  const [createId,setCreateId] = useState(userId);
   const [chClubName,setChClubName]= useState(clubName)
   const [chClubId, setChClubId] = useState(clubId);
-  const [userName,setUserName]=useState(name);
 
   const [imageUrls,setImageUrls]=useState("")
   const [content, setContent] = useState("")
@@ -199,8 +198,7 @@ const ImageSelecter: React.FC<NativeStackScreenProps> = ({route:{params:{id,club
 
   const onSubmit = () => {
     const data={
-      name: userName.name,
-      id: userName.id,
+      userId: userId,
       imageUrls: imageUrls,
       content: content,
       hashTag: hashTag,

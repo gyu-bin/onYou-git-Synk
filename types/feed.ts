@@ -27,10 +27,11 @@ export type RootStackParamList = {
     clubName: string;
     userName: string;
   }
-  ReplyPage: {userId: number, userName: string, content: string,id: number};
-  MyClubSelector:{clubId: number, clubName: string, userId: number}
+  ReplyPage: {userId: number, userName: string, id: number};
+  MyClubSelector:{clubId: number, clubName: string, content:string ,userId: number}
   FeedCreateSuccess:{feedData: Feed}
   FeedUpdate:{id:number ,userId: number, content: string, hashtag: string}
+  FeedReport:{id:number,userId:number}
   Tabs:{}
 };
 
@@ -39,3 +40,4 @@ export type FeedCreateScreenProps = NativeStackScreenProps<RootStackParamList,"F
 export type MyClubSelectorScreenProps = NativeStackScreenProps<RootStackParamList,"MyClubSelector">
 export type ReplyPageScreenProps = NativeStackScreenProps<RootStackParamList,"ReplyPage">
 export type ModifiyPeedScreenProps = NativeStackScreenProps<RootStackParamList,"FeedUpdate">
+export type ReportPeedScreenProps = NativeStackScreenProps<RootStackParamList,"FeedReport">
