@@ -1,7 +1,11 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, View, Text } from "react-native";
-import { useInfiniteQuery, useQueryClient } from "react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient
+} from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 import { Club, ClubApi, ClubsParams, ClubsResponse, Feed } from "../../api";
@@ -102,20 +106,22 @@ const CreatorName = styled.Text`
   padding-left: 6px;
 `;
 
-const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { navigate},route:{params:{userId}} }) => {
+const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { navigate},
+                                                               route:{params:{userId}} }) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
   const [params, setParams] = useState<ClubsParams>({
     token,
-    categoryId: null,
-    clubState: null,
+    categoryId: 0,
     minMember: null,
     maxMember: null,
-    sort: "created",
-    showRecruiting: null,
-    showMy: null,
+    sortType: "created",
+    orderBy: "DESC",
+    showRecruiting: 0,
+    showMy: 0,
   });
-
   const [clubId,setClubId] = useState("")
   const [clubName, setClubName] = useState<string>("");
   const [refreshing, setRefreshing] = useState(false);
@@ -126,24 +132,17 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
     isLoading: clubsLoading,
     data: clubs,
     isRefetching: isRefetchingClubs,
-    hasNextPage,
-    fetchNextPage,
-  } = useInfiniteQuery<ClubsResponse>(["clubs", params], ClubApi.getClubs, {
-    getNextPageParam: (currentPage) => {
-      if (currentPage) return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
-    },
+  } = useQuery<ClubsResponse>(["clubs", params], ClubApi.getClubs, {
     onSuccess: (res) => {
       setIsPageTransition(false);
-      console.log(res);
     },
     onError: (err) => {
       console.log(err);
     },
   });
 
-  const loadMore = () => {
-    if (hasNextPage) fetchNextPage();
-  };
+  let selectClubId = clubs?.responses.content[0].id
+  // console.log(clubs?.responses.content[0].id)
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -161,17 +160,15 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
           <FlatList
             refreshing={refreshing}
             onRefresh={onRefresh}
-            onEndReached={loadMore}
             keyExtractor={(item: Club, index: number) => String(index)}
-            data={clubs?.pages.map((page) => page.responses.content).flat()}
+            data={clubs?.responses.content}
             renderItem={({ item, index }: { item: Club; index: number }) => (
               <ClubArea
                 onPress={() => {
                   return navigate("HomeStack", {
                     screen:'ImageSelecter',
                     userId,
-                    clubId,
-                    clubName,
+                    clubId:selectClubId
                   });
                 }}
               >

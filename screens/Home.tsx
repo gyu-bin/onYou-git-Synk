@@ -167,7 +167,9 @@ const InfoArea = styled.View`
   padding-right: 10px;
 `;
 
-const LikeClick=styled.TouchableOpacity``
+const LikeClick=styled.TouchableOpacity`
+
+`
 
 const NumberText = styled.Text`
   font-size: 12px;
@@ -210,7 +212,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const token = useSelector((state) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-  const [LoginId, setLoginId] = useState(userId);
+  const [loginId, setLoginId] = useState(userId);
   const [PeedContent,setPeedContent] = useState(content)
   const [FeedId, setFeedId] = useState(id);
 
@@ -221,31 +223,35 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
     isLoading: feedsLoading,
     data: feeds,
     isRefetching: isRefetchingClubs,
-  } = useQuery<FeedsResponse>(["getFeeds", token], FeedApi.getFeeds, {
+  } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
+    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
     onSuccess: (res) => {
       setIsPageTransition(false);
-
       let heartDataMap = new Map();
 
       for (let i = 0; i < res?.data?.length; ++i) {
         heartDataMap.set(res.data[i].id, false);
+        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
       }
       setHeartMap(heartDataMap);
-      // console.log(res.statusCode)
     },
     onError: (err) => {
       console.log(err);
     },
   });
 
+  //피드아이디
+  let feedId = feeds?.data[0]?.id;
+
   //User
   const {
     isLoading: userInfoLoading, // true or false
     data: userInfo,
   } = useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo);
+  let myId = userInfo?.data?.id;
+  // console.log(myId)
 
-
-  //Like
+//Like
   const LikeMutation = useMutation( FeedApi.likeCount, {
     onSuccess: (res) => {
       if (res.status === 200) {
@@ -267,9 +273,8 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const LikeFeed=()=>{
     const data = {
       userId: userId,
-      id: FeedId,
+      id: id,
     };
-
     console.log(data);
     const likeRequestData: FeedLikeRequest=
       {
@@ -348,6 +353,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const goToReply = () => {
     navigate("HomeStack", {
       screen: "ReplyPage",
+      id:feedId,
     });
   };
 
@@ -363,7 +369,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const goToClub = () => {
     return navigate("HomeStack", {
       screen: "MyClubSelector",
-      userId: userId,
+      userId: myId,
     });
   };
 
@@ -419,8 +425,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
           refreshing={refreshing}
           onRefresh={onRefresh}
           keyExtractor={(item: Feed, index: number) => String(index)}
-          // data={feeds?.pages.map((page) => page?.responses?.content).flat()}
-          data={feeds?.data}
+          data={feeds?.data.reverse()}
           renderItem={({ item, index }: { item: Feed; index: number }) => (
             <>
               <FeedHeader key={index}>
@@ -466,8 +471,8 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
                       <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
                         {heartMap.get(item.id) ? <Ionicons name="md-heart" size={20} color="red" likeYn={true} /> : <Ionicons name="md-heart-outline" size={20} color="black" likeYn={false} />}
                       </TouchableOpacity>
-                      {heartMap.get(item.id) ? <LikeClick onPress={() => LikeFeed()}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                        : <LikeClick onPress={() => LikeReverseFeed()}><NumberText>{item.likesCount }</NumberText></LikeClick>}
+                      {heartMap.get(item.id) ? <LikeClick onPress={() => {}}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                        : <LikeClick onPress={() => {}}><NumberText>{item.likesCount }</NumberText></LikeClick>}
                     </InfoArea>
                     <InfoArea>
                       <TouchableOpacity onPress={() => goToReply()}>

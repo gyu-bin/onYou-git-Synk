@@ -6,8 +6,8 @@ import { Alert, Keyboard, Text, TouchableOpacity, TouchableWithoutFeedback, useW
 import styled from "styled-components/native";
 import { useMutation } from "react-query";
 import { useSelector } from "react-redux";
-import { FeedApi } from "../../api";
-import { FeedCreateScreenProps, FeedCreationRequest } from '../../types/feed';
+import { FeedApi,FeedCreationRequest } from "../../api";
+import { FeedCreateScreenProps,  } from '../../types/feed';
 
 interface ValueInfo {
   str: string;
@@ -17,6 +17,7 @@ interface ValueInfo {
 
 const Container = styled.SafeAreaView`
   flex: 1;
+  padding: 0 20px 0 20px;
 `;
 const ImagePickerView = styled.View`
   width: 100%;
@@ -63,29 +64,34 @@ const ImagePickerText = styled.Text`
 
 const FeedText = styled.TextInput`
   margin: 13px 15px 15px 30px;
-  color: #c0c0c0;
+  color: black;
 `;
 
 const SelectImageView = styled.View`
-  background-color: gray;
+  background-color: rgba(0, 0, 0, 0.7);
   height: 70px;
   width: 100%;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-between;
+  padding: 0 19px 0 19px;
 `;
 
 const SelectImage = styled.Image`
   width: 55px;
   height: 55px;
   margin: 8px;
+  background-color: lightgray;
 `;
+
 const CancleIcon = styled.View`
   position: relative;
   top: -530%;
   left: 73%;
 `;
 
-const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName,clubId,userId}},navigation: { navigate } }) => {
+const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
+  route:{params:{clubId,userId}},
+  navigation: { navigate } }) => {
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
@@ -93,14 +99,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   let [alert, alertSet] = useState(true);
-  const token = useSelector((state) => state.AuthReducers.authToken);
-  const [createId,setCreateId] = useState(userId);
-  const [chClubName,setChClubName]= useState(clubName)
-  const [chClubId, setChClubId] = useState(clubId);
-
-  const [imageUrls,setImageUrls]=useState("")
-  const [content, setContent] = useState("")
-  const [hashTag, setHashTag] = useState("")
 
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
@@ -125,16 +123,38 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
 
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
+  const [postText, setPostText] = useState("");
+  const token = useSelector((state) => state.AuthReducers.authToken);
+  const onText = (text: React.SetStateAction<string>) => setPostText(text);
+
+  const [createId,setCreateId] = useState(userId);
+  const [chClubId, setChClubId] = useState(clubId);
+
+  // const [imageUrls,setImageUrls]=useState("")
+  const [content, setContent] = useState("")
+  const [hashTag, setHashTag] = useState("")
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      aspect: [16, 9],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setImageURI(result.uri);
+    }
+  };
 
   const mutation = useMutation(FeedApi.createFeed, {
     onSuccess: (res) => {
       if (res.status === 200 && res.json?.resultCode === "OK") {
         setRefreshing(true);
-        console.log(`status: ${res.status}`);
         return navigate("Tabs", {
           screen: "Home",
+          feedData:res.data,
         });
-
       } else {
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
@@ -153,58 +173,14 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
     },
     onSettled: (res, error) => {},
   });
-  //카테고리 선택
-  const [postText, setPostText] = useState("");
-  const onText = (text: React.SetStateAction<string>) => setPostText(text);
-
-  const cancleCreate = () =>
-    Alert.alert(
-      // 말그대로 Alert를 띄운다
-      "취소하시겠습니까?", // 첫번째 text: 타이틀 제목
-      "게시글이 삭제됩니다.", // 두번째 text: 그 밑에 작은 제목
-      [
-        // 버튼 배열
-        {
-          text: "아니요",
-          // 버튼 제목  //onPress 이벤트시 콘솔창에 로그를 찍는다
-          style: "cancel",
-        },
-        { text: "네", onPress: () => navigate("Home") }, //버튼 제목
-        // 이벤트 발생시 로그를 찍는다
-      ],
-      { cancelable: false }
-    );
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      aspect: [16, 9],
-      quality: 1,
-    });
-
-    if (result.cancelled === false) {
-      setImageURI(result.uri);
-    }
-  };
-
- /* const createFinish = () => {
-    Alert.alert("등록되었습니다.");
-    setRefreshing(true);
-    return navigate("Home");
-
-    //홈화면 새로고침 기능 넣기
-  };*/
 
   const onSubmit = () => {
     const data={
-      userId: userId,
-      imageUrls: imageUrls,
-      content: content,
-      hashTag: hashTag,
       clubId: clubId,
-      clubName: clubName,
-    }
+      content: content,
+    };
+
+    console.log(data)
 
     const splitedURI = new String(imageURI).split("/");
 
@@ -233,10 +209,22 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
       alertSet(false);
     }, 3000);
   });
-  const ImageFIx = () => {};
-  const ImageCancle = () => {
 
+  /**
+   * 이미지 리스트 선택하면 사진 크게보는쪽 사진뜨게
+   */
+  const ImageFIx = () => {};
+
+  /** X선택시 사진 없어지는 태그 */
+  const ImageCancle = () => {
+    uri: imageURI === null;
+    imageURI == "";
+    console.log(imageURI);
   };
+
+  useEffect(() => {
+    return () => setLoading(false);
+  }, []);
 
   return (
     <Container>
@@ -272,7 +260,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
             </TouchableOpacity>
             <TouchableOpacity onPress={ImageFIx}>
               <SelectImage source={{ uri: imageURI }} />
-              <TouchableOpacity onPress={ImageCancle}>
+              <TouchableOpacity>
                 <CancleIcon>
                   <AntDesign name="close" size={12} color="white" />
                 </CancleIcon>
@@ -280,7 +268,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
             </TouchableOpacity>
             <TouchableOpacity onPress={ImageFIx}>
               <SelectImage source={{ uri: imageURI }} />
-              <TouchableOpacity onPress={ImageCancle}>
+              <TouchableOpacity>
                 <CancleIcon>
                   <AntDesign name="close" size={12} color="white" />
                 </CancleIcon>
@@ -288,7 +276,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
             </TouchableOpacity>
             <TouchableOpacity onPress={ImageFIx}>
               <SelectImage source={{ uri: imageURI }} />
-              <TouchableOpacity onPress={ImageCancle}>
+              <TouchableOpacity>
                 <CancleIcon>
                   <AntDesign name="close" size={12} color="white" />
                 </CancleIcon>
@@ -296,7 +284,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({route:{params:{clubName
             </TouchableOpacity>
             <TouchableOpacity onPress={ImageFIx}>
               <SelectImage source={{ uri: "https://i.pinimg.com/564x/c5/09/38/c509384458795569b0788a016b0fbc06.jpg" }} />
-              <TouchableOpacity onPress={ImageCancle}>
+              <TouchableOpacity>
                 <CancleIcon>
                   <AntDesign name="close" size={12} color="white" />
                 </CancleIcon>

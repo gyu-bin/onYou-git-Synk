@@ -1,6 +1,7 @@
 import React,{useState} from "react";
 import styled from "styled-components/native";
-import { FlatList, Image, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { FlatList, Image,
+  Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import Swiper from "react-native-swiper";
 import { SliderBox } from "react-native-image-slider-box";
 import { useSelector } from "react-redux";
@@ -125,7 +126,6 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({navigation:{navigate},
   const {
     isLoading: feedsLoading,
     data: feeds,
-    isRefetching: isRefetchingClubs,
   } = useQuery<FeedsResponse>(["getFeeds"], getFeeds, {
     //useQuery(["getFeeds", token], FeedApi.getFeeds, {
     onSuccess: (res) => {

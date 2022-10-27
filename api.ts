@@ -1,4 +1,3 @@
-
 const BASE_URL = "http://3.39.190.23:8080";
 
 interface BaseResponse {
@@ -88,6 +87,7 @@ export interface Feed {
 }
 
 export interface Reply {
+  id:number;
   userId: number;
   userName: string;
   content: string;
@@ -133,7 +133,7 @@ export interface FeedsResponse extends BaseResponse {
   hasNext: boolean;
   data: Feed[];
   responses: {
-    content: Feed[];
+    id: number;
   };
 }
 export interface FeedsLikeReponse extends BaseResponse{
@@ -163,6 +163,10 @@ export interface ClubsParams {
   showMy: number;
 }
 
+export interface ReplyParams{
+  id:number;
+  token: string;
+}
 export interface ClubSchedulesResponse extends BaseResponse {
   data: Schedule[];
 }
@@ -170,20 +174,35 @@ export interface ClubSchedulesResponse extends BaseResponse {
 export interface ClubRoleResponse extends BaseResponse {
   data: ClubRole;
 }
+export interface ClubCreationRequest {
+  image?: {
+    uri: string;
+    type: string;
+    name: string | undefined;
+  } | null;
+  data: {
+    category1Id: number;
+    category2Id: number | null;
+    isApproveRequired: string;
+    clubShortDesc: string;
+    clubLongDesc: string | null;
+    clubName: string;
+    clubMaxMember: number;
+    phoneNumber: string;
+    organizationName: string;
+  };
+  token: string;
+}
 
 export interface FeedCreationRequest {
   image?: {
     uri: string;
     type: string;
     name: string | undefined;
-  };
+  }|null;
   data: {
-    clubName: string;
-    imageUrls: string;
     userId: number;
     content: string;
-    hashtag: string;
-    clubId: number;
   };
   token: string;
 }
@@ -197,7 +216,6 @@ export interface FeedUpdateRequest{
   };
   token: string;
 }
-
 export interface FeedLikeRequest{
   data:{
     id:number,
@@ -223,25 +241,6 @@ export interface FeedReportRequest{
   token: string;
 }
 
-export interface ClubCreationRequest {
-  image?: {
-    uri: string;
-    type: string;
-    name: string | undefined;
-  } | null;
-  data: {
-    category1Id: number;
-    category2Id: number | null;
-    isApproveRequired: string;
-    clubShortDesc: string;
-    clubLongDesc: string | null;
-    clubName: string;
-    clubMaxMember: number;
-    phoneNumber: string;
-    organizationName: string;
-  };
-  token: string;
-}
 
 export interface ClubUpdateRequest {
   image?: {
@@ -322,6 +321,11 @@ export interface SignUp {
   phoneNumber?: string;
 }
 
+export interface getReplyRequest{
+  id: number;
+  token:string;
+}
+
 export interface FeedReplyRequest{
   token:string;
   data:{
@@ -330,11 +334,10 @@ export interface FeedReplyRequest{
     content: string;
   }
 }
-
 // Categories
 const getCategories = () => fetch(`${BASE_URL}/api/categories`).then((res) => res.json());
 
-/** 피드호출*/
+/**피드호출*/
 const getFeeds = ({ queryKey }: any) => {
   const [_key, feedsParams]: [string, FeedsParams] = queryKey;
   return fetch(`${BASE_URL}/api/feeds`, {
@@ -405,7 +408,6 @@ const getClubRole = ({ queryKey }: any) => {
     });
 };
 
-/**피드생성*/
 const createFeed = async (req: FeedCreationRequest) => {
   const body = new FormData();
 
@@ -424,21 +426,19 @@ const createFeed = async (req: FeedCreationRequest) => {
       "content-type": "multipart/form-data",
       authorization: `${req.token}`,
       Accept: "*/*",
-      clubId: '11',
-      content: '112'
     },
     body,
   }).then(async (res) => {
-    return { status: res.status, json: await res.json() };
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
 };
 
-/**피드수정*/
 const updateFeed = async (req: FeedUpdateRequest) => {
   const body = new FormData();
 
   if (req.data) {
-    body.append("feedUpdateRequest", {
+    body.append("clubUpdateRequest", {
       string: JSON.stringify(req.data),
       type: "application/json",
     });
@@ -634,7 +634,6 @@ const reportFeed = (req: FeedReportRequest) => {
     },
   }).then((res) => res.json());
 };
-
 /**피드좋아요*/
 const likeCount = ({mutationkey}:any) =>{
   const [id, token]: [number, string] = mutationkey;
@@ -658,27 +657,30 @@ const likeCountReverse = ({mutationkey}:any) => {
 }
 
 /**댓글호출*/
-const getReply = ({ queryKey }: any) => {
-  const [_key, token, id]: [string, string, number] = queryKey;
+const getReply = ({queryKey}:any) => {
+  const [ token, id]: [  string, number] = queryKey;
+  console.log(id+'getReply');
   return fetch(`http://3.39.190.23:8080/api/feeds/${id}/comments`, {
     method: "GET",
     headers: {
-      Authorization: ` ${token}`,
+      Authorization: `${token}`,
     },
-  }).then((res) => res.json());
+  }).then(async (res) => {
+    if(res.status === 200) return {status: res.status, ...(await res.json())}
+    else return {status: res.status}
+  });
 };
 
 /**댓글달기*/
 const ReplyFeed = ({mutationkey}:any) =>{
   const [id, token]: [number, string] = mutationkey;
-  return fetch(`http://3.39.190.23:8080/api/feeds/${id}/comment`, {
+  return fetch(`${BASE_URL}/api/feeds/${id}/comment`, {
     method: "POST",
     headers: {
       Authorization: `${token}`,
     },
   }).then((res) => res.json());
 }
-
 export const ClubApi = {
   getCategories,
   getClub,

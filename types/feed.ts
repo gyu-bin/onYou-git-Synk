@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Feed } from "../api";
+import { Feed, Reply } from "../api";
 
 export type RootStackParamList = {
   Home: {
@@ -27,7 +27,8 @@ export type RootStackParamList = {
     clubName: string;
     userName: string;
   }
-  ReplyPage: {userId: number, userName: string, id: number};
+  // ReplyPage: {userId: number, userName: string, id: number};
+  ReplyPage: {id:number};
   MyClubSelector:{userId: number}
   FeedCreateSuccess:{feedData: Feed}
   FeedUpdate:{id:number ,userId: number, content: string, hashtag: string}

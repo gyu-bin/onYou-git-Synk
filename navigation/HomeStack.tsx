@@ -1,18 +1,20 @@
-import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React from "react";
-import { Alert, Text, TouchableOpacity } from "react-native";
-import { useSelector } from "react-redux";
-import styled from "styled-components/native";
-import Accusation from "../screens/HomeRelevant/Accusation";
-import AlarmPage from "../screens/HomeRelevant/AlarmPage";
-import CreateHomePeed from "../screens/HomeRelevant/CreateHomePeed";
-import ImageSelecter from "../screens/HomeRelevant/ImageSelecter";
-import ModifiyPeed from "../screens/HomeRelevant/ModifiyPeed";
-import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
-import ReplyPage from "../screens/HomeRelevant/ReplyPage";
-import ReportComplete from "../screens/HomeRelevant/ReportComplete";
+import Tabs from "./Tabs";
 import Profile from "../screens/Profile";
+import CreateHomePeed from "../screens/HomeRelevant/CreateHomePeed";
+import Accusation from "../screens/HomeRelevant/Accusation";
+import ModifiyPeed from "../screens/HomeRelevant/ModifiyPeed";
+import ImageSelecter from "../screens/HomeRelevant/ImageSelecter";
+import ReportComplete from "../screens/HomeRelevant/ReportComplete";
+import ReplyPage from "../screens/HomeRelevant/ReplyPage";
+import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
+import { Text, TouchableOpacity, Alert } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
+import { useQuery, useMutation } from "react-query";
+import { Feed, FeedCreationRequest, FeedsResponse } from "../api";
+import styled from "styled-components/native";
 
 const ImageSelectSave = styled.Text`
   color: #2995fa;
@@ -22,9 +24,9 @@ const ImageSelectSave = styled.Text`
 const NativeStack = createNativeStackNavigator();
 
 const HomeStack = ({navigation: { navigate },
-                route:{params:{
-                userName, id, userId, content, imageUrls, clubId, clubName, hashtags,
-                  }} }) => {
+                     route:{params:{
+                       userName, id, userId, content, imageUrls, clubId, clubName, hashtags,
+                     }} }) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
 
   const cancleCreate = () => {
@@ -42,7 +44,6 @@ const HomeStack = ({navigation: { navigate },
       { cancelable: false }
     );
   };
-
 
   return (
     <NativeStack.Navigator
@@ -67,6 +68,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="ImageSelecter"
         component={ImageSelecter}
+        initialParams={{userId,clubId,clubName}}
         options={{
           title: "",
           headerLeft: () => (
@@ -113,7 +115,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="ReplyPage"
         component={ReplyPage}
-        initialParams={{userName, id}}
+        initialParams={{id,userName}}
         options={{
           title: "댓글",
           headerLeft: () => (
@@ -131,7 +133,7 @@ const HomeStack = ({navigation: { navigate },
         options={{
           title: "수정",
           headerLeft: () => (
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
               <Ionicons name="chevron-back" size={20} color="black" />
             </TouchableOpacity>
           ),
