@@ -98,7 +98,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [imageURI, setImageURI] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
-  let [alert, alertSet] = useState(true);
+  let [alert, setAlert] = useState(true);
 
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
@@ -125,7 +125,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
   const [postText, setPostText] = useState("");
   const token = useSelector((state) => state.AuthReducers.authToken);
-  const onText = (text: React.SetStateAction<string>) => setPostText(text);
 
   const [createId,setCreateId] = useState(userId);
   const [chClubId, setChClubId] = useState(clubId);
@@ -206,7 +205,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   useEffect(() => {
     let timer = setTimeout(() => {
-      alertSet(false);
+      setAlert(false);
     }, 3000);
   });
 
@@ -298,10 +297,12 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
           <FeedText
             placeholder="사진과 함께 남길 게시글을 작성해 보세요."
             onChangeText={(content) => setContent(content)}
-            textContentType="none"
             autoCompleteType="off"
             autoCapitalize="none"
             multiline={true}
+            maxLength={100}
+            returnKeyType="done"
+            returnKeyLabel="done"
           >
             {valueInfos.map(({ str, isHT, idxArr }, idx) => {
               const [firstIdx, lastIdx] = idxArr;

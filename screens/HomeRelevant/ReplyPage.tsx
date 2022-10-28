@@ -110,19 +110,22 @@ const ReplyDone = styled.Text`
 `;
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-const ReplyPage: React.FC<ReplyPageScreenProps> = ({
-                                                     navigation: {
-                                                       navigate },
-                                                     route:{params:{id}} }) => {
+interface ReplyPageScreenProps {
+  feedId: number;
+  userId: number;
+  children: object;
+}
+
+const ReplyPage: React.FC<ReplyPageScreenProps> = ({feedId,userId,children}) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
 
   // const [feedId,setFeedId] = useState(id);
   // const [ReplyUserId, ReplySetUserId] = useState(userId)
   const [content, setContent] = useState("");
-  const [myId, setMyId]= useState(id)
+  const [Id, setId]= useState(feedId)//피드아이디
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -132,7 +135,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({
 
   /** 리플 데이터   */
   const { data: replys, isLoading: replysLoading } =
-    useQuery<ReplyReponse>(["getReply",myId], FeedApi.getReply,{
+    useQuery<ReplyReponse>(["getReply",Id], FeedApi.getReply,{
       onSuccess: (res) => {
         console.log(res);
       },
@@ -147,13 +150,19 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({
     data: userInfo,
   } = useQuery<UserInfoResponse>(["userInfo", token], UserApi.getUserInfo);
 
-  // console.log(userInfo?.data.id);
+  let myId = userInfo?.data.id
+  console.log(myId+"myId")
+  console.log(children+"children")
+  console.log(Id+"Id");
+  console.log(feedId+"feedId");
+  console.log(userId+"userId");
 
   //댓글추가
   const mutation = useMutation( FeedApi.ReplyFeed, {
     onSuccess: (res) => {
       if (res.status === 200) {
         console.log(res)
+        setRefreshing(true);
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -168,14 +177,14 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({
     onSettled: (res, error) => {},
   });
 
-/*  const RelpyFeed=()=>{
+  const RelpyFeed=()=>{
     const data = {
-      // userId: userId,
-      // id: id,
-      // content: content,
+        id: feedId,
+        userId: userId,
+        content: content,
     };
-
     console.log(data);
+
     const likeRequestData: FeedReplyRequest=
       {
         data,
@@ -183,7 +192,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({
       }
 
     mutation.mutate(likeRequestData);
-  };*/
+  };
 
   return (
     <Container>
@@ -217,7 +226,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({
         <ReplyArea>
           <ReplyImg
             source={{
-              uri: userInfo?.data.thumbnail === null ? "http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+              uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
             }}
           />
           <ReplyInput
@@ -231,8 +240,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({
             maxLength={100}
           >
           </ReplyInput>
-          {/*onPress={RelpyFeed}*/}
-          <ReplyButton >
+          <ReplyButton onPress={RelpyFeed}>
             <ReplyDone>게시</ReplyDone>
           </ReplyButton>
         </ReplyArea>

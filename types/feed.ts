@@ -2,7 +2,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Feed, Reply } from "../api";
 
 export type RootStackParamList = {
-  Home: {
+/*  Home: {
     id: number;
     clubId: number;
     clubName: string | undefined;
@@ -16,7 +16,10 @@ export type RootStackParamList = {
     commentCount: number;
     created: string;
     updated: string;
-  };
+  };*/
+  Home:{
+    feedData:Feed
+  }
   FeedCreater:{
     imageUrls: string;
     userId: number;
@@ -43,3 +46,9 @@ export type MyClubSelectorScreenProps = NativeStackScreenProps<RootStackParamLis
 export type ReplyPageScreenProps = NativeStackScreenProps<RootStackParamList,"ReplyPage">
 export type ModifiyPeedScreenProps = NativeStackScreenProps<RootStackParamList,"FeedUpdate">
 export type ReportPeedScreenProps = NativeStackScreenProps<RootStackParamList,"FeedReport">
+
+export interface FeedData extends Feed{
+  id:number;
+  userId: number;
+  isEnd: boolean
+}

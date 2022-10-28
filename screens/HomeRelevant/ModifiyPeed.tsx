@@ -80,19 +80,41 @@ const ImageSource = styled.Image<{ size: number }>`
 `;
 
 const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({navigation:{navigate},
-                                                      route:{params: {id, content,userId, hashtag}}})=> {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+                                                      route:{params: {id, userId}}})=> {
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
+  const [refreshing, setRefreshing] = useState(false);
+  const [fixContent, setFixContent] = useState("")
 
-  const [fixContent, setFixContent] = useState(content)
+  const {
+    isLoading: feedsLoading,
+    data: feeds,
+  } = useQuery<FeedsResponse>(["getFeeds",id], FeedApi.getSelectFeeds, {
+    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
+    onSuccess: (res) => {
+      console.log(res);
+    },
+    onError: (err) => {
+      console.log(err);
+    },
+  });
+
+  //피드아이디우선. 나중에 고치자
+  let feedId = feeds?.data[0]?.id;
+  console.log(feedId)
+  console.log(id)
+  console.log(userId)
 
   const mutation = useMutation(FeedApi.updateFeed, {
     onSuccess: (res) => {
       if (res.status === 200 && res.json?.resultCode === "OK") {
+        setRefreshing(true);
+        console.log(`수정완료`);
         return navigate("Tabs", {
           screen: "Home",
+          feedData:res.data,
         });
       } else {
         console.log(`mutation success but please check status code`);
@@ -113,37 +135,14 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({navigation:{navigate},
     onSettled: (res, error) => {},
   });
 
-  const getFeeds = () => {
-    return fetch(`http://3.39.190.23:8080/api/feeds/${userId}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => res.json());
-  };
-
-  //피드호출
-  const {
-    isLoading: feedsLoading,
-    data: feeds,
-  } = useQuery<FeedsResponse>(["getFeeds"], getFeeds, {
-    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
-    onSuccess: (res) => {
-      console.log(res);
-    },
-    onError: (err) => {
-      console.log(err);
-    },
-  });
-
   //피드업데이트
   const FixComplete =() =>{
     const data={
       id: id,
-      userId: userId,
-      content: content,
-      hashtag: hashtag,
+      content: fixContent,
     };
+
+    console.log(data)
 
     const requestData: FeedUpdateRequest={
       data,

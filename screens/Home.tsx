@@ -18,7 +18,8 @@ import {
 } from "../api";
 import CustomText from "../components/CustomText";
 import ImageSelecter from "./HomeRelevant/ImageSelecter";
-import { HomeScreenProps,HomeStack } from "../types/feed";
+import { FeedData, HomeScreenProps, HomeStack } from "../types/feed";
+import ReplyPage from "./HomeRelevant/ReplyPage";
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
@@ -202,7 +203,8 @@ interface HeartType {
   heart: boolean;
 }
 
-const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:{id,userId,content}} }) => {
+const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
+                                   route:{params:{feedData}} }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
@@ -212,9 +214,9 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const token = useSelector((state) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-  const [loginId, setLoginId] = useState(userId);
-  const [PeedContent,setPeedContent] = useState(content)
-  const [FeedId, setFeedId] = useState(id);
+  const [feedAllData,setFeedAllData]=useState<Array<FeedData>>([]); //정보들
+
+  const [selectFeedId, SetSelectFeedId]=useState<number>();
 
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
@@ -222,17 +224,36 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const {
     isLoading: feedsLoading,
     data: feeds,
-    isRefetching: isRefetchingClubs,
+    isRefetching: isRefetchingFeeds,
   } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
     //useQuery(["getFeeds", token], FeedApi.getFeeds, {
     onSuccess: (res) => {
+      // const result: FeedData[]=[];
       setIsPageTransition(false);
+      //좋아요 숫자 증감
       let heartDataMap = new Map();
-
       for (let i = 0; i < res?.data?.length; ++i) {
         heartDataMap.set(res.data[i].id, false);
         //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+        /*let refined: FeedData={
+          clubId: res?.data[i].clubId,
+          clubName: res.data[i].clubName,
+          commentCount: res.data[i].commentCount,
+          content: res.data[i].content,
+          created: res.data[i].created,
+          hashtags: res.data[i].hashtags,
+          imageUrls: res.data[i].imageUrls,
+          isEnd: false,
+          likeYn: res.data[i].likeYn,
+          likesCount: res.data[i].likesCount,
+          userName: res.data[i].userName,
+          id: res?.data[i].id,
+          userId: res?.data[i].userId
+        }
+        result.push(refined);*/
+
       }
+      // result.push({ isEnd: true });
       setHeartMap(heartDataMap);
     },
     onError: (err) => {
@@ -241,6 +262,15 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   });
 
   //피드아이디
+  for(let i= 0; i < feeds?.data?.length; ++i){
+    let feedId = feeds?.data[i]?.id;
+    SetSelectFeedId(feedId);
+    console.log(feedId+"feedId");
+  }
+  console.log(selectFeedId+"selectFeedId");
+  console.log(feedData.id+"feedData.id");
+  console.log(feedData.userId+"feedData.userId");
+
   let feedId = feeds?.data[0]?.id;
 
   //User
@@ -248,8 +278,8 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
     isLoading: userInfoLoading, // true or false
     data: userInfo,
   } = useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo);
-  let myId = userInfo?.data?.id;
-  // console.log(myId)
+  /**사용자아이디.*/
+  let myId = userInfo?.data?.id; //
 
 //Like
   const LikeMutation = useMutation( FeedApi.likeCount, {
@@ -272,8 +302,8 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
 
   const LikeFeed=()=>{
     const data = {
-      userId: userId,
-      id: id,
+      userId: myId,
+      id: feedId,
     };
     console.log(data);
     const likeRequestData: FeedLikeRequest=
@@ -284,7 +314,6 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
 
     LikeMutation.mutate(likeRequestData);
   };
-
 
   //ReverseLike
   const LikeReverseMutation = useMutation( FeedApi.likeCountReverse, {
@@ -307,8 +336,8 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
 
   const LikeReverseFeed=()=>{
     const data = {
-      userId: userId,
-      id: FeedId,
+      userId: myId,
+      id: feedId,
     };
 
     console.log(data);
@@ -324,13 +353,12 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const {
     isLoading: commentPlusLoading,
     data: commentPlusCount,
-  }=useMutation<FeedsLikeReponse>([id, token], FeedApi.likeCount)
+  }=useMutation<FeedsLikeReponse>([myId, token], FeedApi.likeCount)
 
   const {
     isLoading: commentReverseLoading,
     data: commentReverseCount,
-  }=useMutation<FeedsLikeReponse>([id, token], FeedApi.likeCountReverse)
-
+  }=useMutation<FeedsLikeReponse>([myId, token], FeedApi.likeCountReverse)
 
   const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
 
@@ -350,18 +378,20 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
     });
   };
 
+  /**댓글창 이동*/
   const goToReply = () => {
     navigate("HomeStack", {
       screen: "ReplyPage",
-      id:feedId,
+      id:feedData.id,
+      userId: feedData.userId,
     });
   };
 
   const goToModifiy = () => {
     navigate("HomeStack", {
       screen: "ModifiyPeed",
-      userId: userId,
-      content: PeedContent,
+      id:feedData.id,
+      userId: feedData.userId,
     });
     setModalVisible(!isModalVisible);
   };
@@ -376,8 +406,8 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
   const goToAccusation = () => {
     navigate("HomeStack", {
       screen: "Accusation",
-      id:id,
-      userId: userId,
+      id:feedData.id,
+      userId: myId,
     });
     setModalVisible(!isModalVisible);
   };
@@ -408,6 +438,10 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
     await queryClient.refetchQueries(["feeds"]);
     setRefreshing(false);
   };
+
+  const ReportModal = () =>{
+
+  }
 
   return (
     <Container>
@@ -471,15 +505,17 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},route:{params:
                       <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
                         {heartMap.get(item.id) ? <Ionicons name="md-heart" size={20} color="red" likeYn={true} /> : <Ionicons name="md-heart-outline" size={20} color="black" likeYn={false} />}
                       </TouchableOpacity>
-                      {heartMap.get(item.id) ? <LikeClick onPress={() => {}}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                        : <LikeClick onPress={() => {}}><NumberText>{item.likesCount }</NumberText></LikeClick>}
+                      {heartMap.get(item.id) ? <LikeClick onPress={LikeFeed}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                        : <LikeClick onPress={LikeReverseFeed}><NumberText>{item.likesCount }</NumberText></LikeClick>}
                     </InfoArea>
+                    <ReplyPage feedId={feedData.id} userId={feedData.userId}>
                     <InfoArea>
                       <TouchableOpacity onPress={() => goToReply()}>
                         <Ionicons name="md-chatbox-ellipses-outline" size={20} color="black" />
                       </TouchableOpacity>
                       <NumberText>{item.commentCount}</NumberText>
                     </InfoArea>
+                    </ReplyPage>
                   </LeftInfo>
                   <RightInfo>
                     <Timestamp>{item.created}</Timestamp>

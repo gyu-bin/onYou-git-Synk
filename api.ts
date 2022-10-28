@@ -71,7 +71,7 @@ export interface User {
   interests: [];
 }
 export interface Feed {
-  id: number;
+  id: number | undefined;
   clubId: number;
   clubName: string;
   userId: number;
@@ -149,6 +149,7 @@ export interface ReportResponse extends BaseResponse {
   data: Report[];
 }
 export interface FeedsParams {
+  id:number;
   token: string;
 }
 
@@ -201,33 +202,31 @@ export interface FeedCreationRequest {
     name: string | undefined;
   }|null;
   data: {
-    userId: number;
-    content: string;
+    userId?: number;
+    content?: string;
   };
   token: string;
 }
 
 export interface FeedUpdateRequest{
   data: {
-    id: number;
-    userId: number;
+    id: number | undefined;
     content: string;
-    hashtag: string;
   };
   token: string;
 }
 export interface FeedLikeRequest{
   data:{
-    id:number,
-    userId: number
+    id:number | undefined,
+    userId: number| undefined,
   };
   token: string;
 }
 
 export interface FeedReverseLikeRequest{
   data:{
-    id:number,
-    userId: number
+    id:number |undefined,
+    userId: number| undefined,
   };
   token: string;
 }
@@ -327,40 +326,54 @@ export interface getReplyRequest{
 }
 
 export interface FeedReplyRequest{
-  token:string;
   data:{
-    id:number;
-    userId: number;
-    content: string;
+    id?:number;
+    userId?: number;
+    content?: string;
   }
+  token:string;
 }
 // Categories
 const getCategories = () => fetch(`${BASE_URL}/api/categories`).then((res) => res.json());
 
 /**피드호출*/
-const getFeeds = ({ queryKey }: any) => {
+const getFeeds = async ({ queryKey }: any) => {
   const [_key, feedsParams]: [string, FeedsParams] = queryKey;
-  return fetch(`${BASE_URL}/api/feeds`, {
+  const res = await fetch(`${BASE_URL}/api/feeds`, {
     headers: {
-      authorization: `${feedsParams.token}`,
-    },
-  }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+      authorization: `${feedsParams.token}`
+    }
   });
+  if (res.status === 200)
+    return { status: res.status, ...(await res.json()) };
+  else
+    return { status: res.status };
 };
 
-/**원하는 피드 호출*/
-const getSelectFeeds = ({ queryKey }: any) => {
-  const [_key, id, feedsParams]: [string, number,FeedsParams] = queryKey;
-  return fetch(`${BASE_URL}/api/feeds/${id}`, {
+/**원하는 피드 호출 ex)수정*/
+/*const getSelectFeeds = async ({ queryKey }: any) => {
+  const [_key, token, id]: [string, string, number] = queryKey;
+  const res = await fetch(`${BASE_URL}/api/feeds/${id}`, {
     headers: {
-      authorization: `${feedsParams.token}`,
-    },
-  }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+      authorization: `${token}`
+    }
   });
+  if (res.status === 200)
+    return { status: res.status, ...(await res.json()) };
+  else
+    return { status: res.status };
+};*/
+const getSelectFeeds = async ({ queryKey }: any) => {
+  const [_key, feedsParams]: [string, FeedsParams] = queryKey;
+  const res = await fetch(`${BASE_URL}/api/feeds/${feedsParams.id}`, {
+    headers: {
+      authorization: `${feedsParams.token}`
+    }
+  });
+  if (res.status === 200)
+    return { status: res.status, ...(await res.json()) };
+  else
+    return { status: res.status };
 };
 
 const getClubs = ({ queryKey, pageParam }: any) => {
@@ -438,7 +451,7 @@ const updateFeed = async (req: FeedUpdateRequest) => {
   const body = new FormData();
 
   if (req.data) {
-    body.append("clubUpdateRequest", {
+    body.append("feedUpdateRequest", {
       string: JSON.stringify(req.data),
       type: "application/json",
     });
@@ -632,7 +645,10 @@ const reportFeed = (req: FeedReportRequest) => {
     headers: {
       Authorization: `${req.token}`,
     },
-  }).then((res) => res.json());
+  }).then(async (res) => {
+    if(res.status === 200) return {status: res.status, ...(await res.json())}
+    else return {status: res.status}
+  });
 };
 /**피드좋아요*/
 const likeCount = ({mutationkey}:any) =>{
@@ -642,7 +658,10 @@ const likeCount = ({mutationkey}:any) =>{
     headers: {
       Authorization: `${token}`,
     },
-  }).then((res) => res.json());
+  }).then(async (res) => {
+    if(res.status === 200) return {status: res.status, ...(await res.json())}
+    else return {status: res.status}
+  });
 }
 
 /**피드 좋아요 취소*/
@@ -653,12 +672,15 @@ const likeCountReverse = ({mutationkey}:any) => {
     headers: {
       Authorization: `${token}`,
     },
-  }).then((res) => res.json());
+  }).then(async (res) => {
+    if(res.status === 200) return {status: res.status, ...(await res.json())}
+    else return {status: res.status}
+  });
 }
 
 /**댓글호출*/
 const getReply = ({queryKey}:any) => {
-  const [ token, id]: [  string, number] = queryKey;
+  const [token, id]: [string, number] = queryKey;
   console.log(id+'getReply');
   return fetch(`http://3.39.190.23:8080/api/feeds/${id}/comments`, {
     method: "GET",
@@ -673,14 +695,18 @@ const getReply = ({queryKey}:any) => {
 
 /**댓글달기*/
 const ReplyFeed = ({mutationkey}:any) =>{
-  const [id, token]: [number, string] = mutationkey;
+  const [ token,id]: [string,number] = mutationkey;
   return fetch(`${BASE_URL}/api/feeds/${id}/comment`, {
     method: "POST",
     headers: {
       Authorization: `${token}`,
     },
-  }).then((res) => res.json());
+  }).then(async (res) => {
+    if(res.status === 200) return {status: res.status, ...(await res.json())}
+    else return {status: res.status}
+  });
 }
+
 export const ClubApi = {
   getCategories,
   getClub,

@@ -58,7 +58,9 @@ const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
-        // return navigate("Home", {});
+        return navigate("HomeStack", {
+          ReportComplete
+        });
       }
     },
     onError: (error) => {
@@ -69,7 +71,7 @@ const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
     onSettled: (res, error) => {},
   });
 
-  const LikeFeed=()=>{
+  const ReportFeed=()=>{
     const data = {
       userId: userId,
       id: id,
@@ -87,7 +89,7 @@ const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
   };
 
   const ReportComplete = () => {
-    LikeFeed();
+    ReportFeed();
     navigate("HomeStack", {
       screen: "ReportComplete",
     });
