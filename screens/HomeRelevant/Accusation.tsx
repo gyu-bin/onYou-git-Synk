@@ -43,14 +43,18 @@ const AccText = styled.Text`
   color: red;
 `;
 
+interface ReportReason{
+     title:string,
+    reason:string,
+}
+
 const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
   { navigate},route:{params:{
-  id,userId,
+  feedData
 }} }) =>{
   const token = useSelector((state) => state.AuthReducers.authToken);
 
-  let [reason,setReason] = useState("");
-
+  const[reportReason,setReportReason]=useState<ReportReason[]>();
   const mutation = useMutation( FeedApi.reportFeed, {
     onSuccess: (res) => {
       if (res.status === 200) {
@@ -58,9 +62,7 @@ const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
-        return navigate("HomeStack", {
-          ReportComplete
-        });
+        // return navigate("Home", {});
       }
     },
     onError: (error) => {
@@ -71,15 +73,14 @@ const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
     onSettled: (res, error) => {},
   });
 
-  const ReportFeed=()=>{
-    const data = {
-      userId: userId,
-      id: id,
+  const ReportFeed=(reason:string)=>{
+    const data={
+      userId:feedData.userId,
+      id:feedData.id,
       reason:reason,
     };
-
     console.log(data);
-    const ReportData: FeedReportRequest=
+    const ReportData:FeedReportRequest=
       {
         data,
         token,
@@ -88,11 +89,11 @@ const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
     mutation.mutate(ReportData);
   };
 
-  const ReportComplete = () => {
-    ReportFeed();
-    navigate("HomeStack", {
-      screen: "ReportComplete",
-    });
+  const ReportComplete = (reason:string) => {
+    ReportFeed(reason)
+    // navigate("HomeStack", {
+    //   screen: "ReportComplete",
+    // });
   };
 
   return (
@@ -105,16 +106,16 @@ const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
         </AccTop>
         <AccInfo>
           <TouchableOpacity>
-            <AccText key="SPAM" onPress={ReportComplete}>스팸</AccText>
+            <AccText onPress={()=>ReportComplete('SPAM')}>스팸</AccText>
           </TouchableOpacity>
           <TouchableOpacity>
-            <AccText key="FRAUD" onPress={ReportComplete}>사기 또는 거짓</AccText>
+            <AccText onPress={()=>ReportComplete('FRAUD')}>사기 또는 거짓</AccText>
           </TouchableOpacity>
           <TouchableOpacity>
-            <AccText key="HATE" onPress={ReportComplete}>혐오 발언 또는 상징</AccText>
+            <AccText onPress={()=>ReportComplete('HATE')}>혐오 발언 또는 상징</AccText>
           </TouchableOpacity>
           <TouchableOpacity>
-            <AccText key="PORNO" onPress={ReportComplete}>성인물</AccText>
+            <AccText onPress={()=>ReportComplete('PORNO')}>성인물</AccText>
           </TouchableOpacity>
         </AccInfo>
       </View>

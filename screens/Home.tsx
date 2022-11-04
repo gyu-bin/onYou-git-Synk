@@ -1,7 +1,17 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Alert, Dimensions, FlatList, Modal,
-  TouchableOpacity, useWindowDimensions, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Modal,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+  ActivityIndicator,
+  Platform, StatusBar
+} from "react-native";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
@@ -14,12 +24,27 @@ import {
   UserInfoResponse,
   likeCount,
   likeCountReverse,
-  FeedsLikeReponse, ClubApi, ClubCreationRequest, FeedLikeRequest, FeedReverseLikeRequest
+  FeedsLikeReponse,
+  ClubApi,
+  ClubCreationRequest,
+  FeedLikeRequest,
+  FeedReverseLikeRequest,
+  Club
 } from "../api";
 import CustomText from "../components/CustomText";
 import ImageSelecter from "./HomeRelevant/ImageSelecter";
-import { FeedData, HomeScreenProps, HomeStack } from "../types/feed";
-import ReplyPage from "./HomeRelevant/ReplyPage";
+import {
+  FeedData,
+  HomeScreenProps,
+  HomeStack
+} from "../types/feed";
+
+const Loader = styled.SafeAreaView`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding-top: ${Platform.OS === "android" ? StatusBar.currentHeight : 0}px;
+`;
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
@@ -66,7 +91,7 @@ const UserId = styled.Text`
   padding-bottom: 5px;
 `;
 
-const ClubBox = styled.View`
+const ClubBox = styled.TouchableOpacity`
   padding: 3px 6px 3px 6px;
   background-color: #c4c4c4;
   justify-content: center;
@@ -142,7 +167,7 @@ const FeedHeader = styled.View`
   margin: 20px 0 10px 0;
 `;
 
-const FeedUser = styled.TouchableOpacity`
+const FeedUser = styled.View`
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -203,23 +228,28 @@ interface HeartType {
   heart: boolean;
 }
 
-const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
-                                   route:{params:{feedData}} }) => {
+const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-  const [feedAllData,setFeedAllData]=useState<Array<FeedData>>([]); //정보들
 
-  const [selectFeedId, SetSelectFeedId]=useState<number>();
-
-  //heart선택
+   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
+  const [likeClick, setLikeClick] = useState(new Map());
+  const [FeedId,setFeedId] = useState();
+    /*
+   let selectFeedId = new Map();
+  for (let i = 0; i < res?.data?.length; ++i) {
+        selectFeedId.set(res.data[i].id, res.data[i].id);
+        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+        // setFeedId(selectFeedId);
+   */
   //피드
   const {
     isLoading: feedsLoading,
@@ -228,58 +258,34 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
   } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
     //useQuery(["getFeeds", token], FeedApi.getFeeds, {
     onSuccess: (res) => {
-      // const result: FeedData[]=[];
       setIsPageTransition(false);
-      //좋아요 숫자 증감
+
       let heartDataMap = new Map();
+      let heartClick = new Map();
+
       for (let i = 0; i < res?.data?.length; ++i) {
         heartDataMap.set(res.data[i].id, false);
         //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
-        /*let refined: FeedData={
-          clubId: res?.data[i].clubId,
-          clubName: res.data[i].clubName,
-          commentCount: res.data[i].commentCount,
-          content: res.data[i].content,
-          created: res.data[i].created,
-          hashtags: res.data[i].hashtags,
-          imageUrls: res.data[i].imageUrls,
-          isEnd: false,
-          likeYn: res.data[i].likeYn,
-          likesCount: res.data[i].likesCount,
-          userName: res.data[i].userName,
-          id: res?.data[i].id,
-          userId: res?.data[i].userId
-        }
-        result.push(refined);*/
-
       }
-      // result.push({ isEnd: true });
+      for (let i = 0; i < res?.data?.length; ++i) {
+        heartClick.set(res.data[i].id, res.data[i].id);
+        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+      }
       setHeartMap(heartDataMap);
+      setHeartMap(heartClick);
+      // console.log(res.statusCode)
     },
     onError: (err) => {
       console.log(err);
     },
   });
 
-  //피드아이디
-  for(let i= 0; i < feeds?.data?.length; ++i){
-    let feedId = feeds?.data[i]?.id;
-    SetSelectFeedId(feedId);
-    console.log(feedId+"feedId");
-  }
-  console.log(selectFeedId+"selectFeedId");
-  console.log(feedData.id+"feedData.id");
-  console.log(feedData.userId+"feedData.userId");
-
-  let feedId = feeds?.data[0]?.id;
-
-  //User
+ //User
   const {
     isLoading: userInfoLoading, // true or false
     data: userInfo,
   } = useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo);
-  /**사용자아이디.*/
-  let myId = userInfo?.data?.id; //
+  let myId = userInfo?.data?.id;
 
 //Like
   const LikeMutation = useMutation( FeedApi.likeCount, {
@@ -289,21 +295,18 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
-        // return navigate("Home", {});
       }
     },
     onError: (error) => {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
-      // return navigate("Home", {});
     },
     onSettled: (res, error) => {},
   });
 
   const LikeFeed=()=>{
     const data = {
-      userId: myId,
-      id: feedId,
+      id: myId,
     };
     console.log(data);
     const likeRequestData: FeedLikeRequest=
@@ -314,6 +317,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
 
     LikeMutation.mutate(likeRequestData);
   };
+
 
   //ReverseLike
   const LikeReverseMutation = useMutation( FeedApi.likeCountReverse, {
@@ -336,12 +340,10 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
 
   const LikeReverseFeed=()=>{
     const data = {
-      userId: myId,
-      id: feedId,
+      id: myId,
     };
-
     console.log(data);
-    const likeRequestData: FeedReverseLikeRequest=
+    const likeRequestData: FeedLikeRequest=
       {
         data,
         token,
@@ -360,38 +362,26 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
     data: commentReverseCount,
   }=useMutation<FeedsLikeReponse>([myId, token], FeedApi.likeCountReverse)
 
+
   const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
 
   const toggleModal = () => {
+
     setModalVisible(!isModalVisible);
+    setRefreshing(false);
   };
 
-  const goToProfile = () => {
-    navigate("HomeStack", {
-      screen: "Profile",
-    });
-  };
-
-  const goToContent = () => {
-    navigate("HomeStack", {
-      screen: "ImageSelecter",
-    });
-  };
-
-  /**댓글창 이동*/
-  const goToReply = () => {
+  const goToReply = (feedData: Feed) => {
     navigate("HomeStack", {
       screen: "ReplyPage",
-      id:feedData.id,
-      userId: feedData.userId,
+      feedData,
     });
   };
 
-  const goToModifiy = () => {
+  const goToModifiy = (feedData:Feed) => {
     navigate("HomeStack", {
       screen: "ModifiyPeed",
-      id:feedData.id,
-      userId: feedData.userId,
+      feedData,
     });
     setModalVisible(!isModalVisible);
   };
@@ -403,11 +393,10 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
     });
   };
 
-  const goToAccusation = () => {
+  const goToAccusation = (feedData:Feed) => {
     navigate("HomeStack", {
       screen: "Accusation",
-      id:feedData.id,
-      userId: myId,
+      feedData,
     });
     setModalVisible(!isModalVisible);
   };
@@ -416,14 +405,14 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
     setModalVisible(!isModalVisible);
   };
 
-  const deleteCheck = () => {
+  const deleteCheck = (feedData:Feed) => {
     Alert.alert(
       "게시글을 삭제하시겠어요?",
       "30일 이내에 내 활동의 최근 삭제 항목에서 이 게시물을 복원할 수 있습니다." + "30일이 지나면 영구 삭제 됩니다. ",
       [
         {
           text: "아니요",
-          onPress: () => console.log(""),
+          onPress: () => console.log("삭제 Api 호출"),
           style: "cancel",
         },
         { text: "네", onPress: () => Alert.alert("삭제되었습니다.") },
@@ -439,11 +428,14 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
     setRefreshing(false);
   };
 
-  const ReportModal = () =>{
+  const loading = feedsLoading && userInfoLoading;
 
-  }
-
-  return (
+  return loading ?(
+    <Loader>
+      <ActivityIndicator/>
+    </Loader>
+    ):(
+      <>
     <Container>
       <FeedContainer>
         <HeaderView size={SCREEN_PADDING_SIZE}>
@@ -459,11 +451,11 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
           refreshing={refreshing}
           onRefresh={onRefresh}
           keyExtractor={(item: Feed, index: number) => String(index)}
-          data={feeds?.data.reverse()}
+          data={feeds?.data}
           renderItem={({ item, index }: { item: Feed; index: number }) => (
             <>
               <FeedHeader key={index}>
-                <FeedUser onPress={goToProfile}>
+                <FeedUser>
                   <UserImage
                     source={{
                       uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
@@ -480,15 +472,42 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
                   <ModalIcon onPress={toggleModal}>
                     <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
                   </ModalIcon>
+                  {/*{myId === item.userId ?
+                    <View>
+                      <Modal animationType="slide" transparent={true} visible={isModalVisible}>
+                        <CenteredView onTouchEnd={closeModal}>
+                          <ModalView>
+                            <ModalText onPress={()=>goToModifiy(item)}>
+                              수정
+                            </ModalText>
+                            <ModalText style={{color:"red"}} onPress={deleteCheck}>
+                              삭제
+                            </ModalText>
+                          </ModalView>
+                        </CenteredView>
+                      </Modal>
+                    </View> :
+                    <View>
+                      <Modal animationType="slide"transparent={true}visible={isModalVisible}>
+                        <CenteredView onTouchEnd={closeModal}>
+                          <ModalView>
+                            <ModalText onPress={()=> goToAccusation(item)}>
+                              신고
+                            </ModalText>
+                          </ModalView>
+                        </CenteredView>
+                      </Modal>
+                    </View>
+                  }*/}
                   <View>
                     <Modal animationType="slide" transparent={true} visible={isModalVisible}>
                       <CenteredView onTouchEnd={closeModal}>
                         <ModalView>
-                          <ModalText onPress={goToModifiy}>수정</ModalText>
-                          <ModalText style={{ color: "red" }} onPress={deleteCheck}>
+                          <ModalText onPress={()=>goToModifiy(item)}>수정</ModalText>
+                          <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
                             삭제
                           </ModalText>
-                          <ModalText onPress={goToAccusation}>신고</ModalText>
+                            <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
                         </ModalView>
                       </CenteredView>
                     </Modal>
@@ -497,7 +516,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
               </FeedHeader>
               <FeedMain>
                 <FeedImage>
-                  <ImageSource source={item.imageUrls[0] === undefined ? require("../assets/basic.jpg") : { uri: item.imageUrls[0] }} size={FEED_IMAGE_SIZE} />
+                  <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}}size={FEED_IMAGE_SIZE}/>
                 </FeedImage>
                 <FeedInfo>
                   <LeftInfo>
@@ -505,17 +524,15 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
                       <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
                         {heartMap.get(item.id) ? <Ionicons name="md-heart" size={20} color="red" likeYn={true} /> : <Ionicons name="md-heart-outline" size={20} color="black" likeYn={false} />}
                       </TouchableOpacity>
-                      {heartMap.get(item.id) ? <LikeClick onPress={LikeFeed}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                        : <LikeClick onPress={LikeReverseFeed}><NumberText>{item.likesCount }</NumberText></LikeClick>}
+                      {heartMap.get(item.id) ? <LikeClick onPress={() => {}}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                        : <LikeClick onPress={() => {}}><NumberText>{item.likesCount }</NumberText></LikeClick>}
                     </InfoArea>
-                    <ReplyPage feedId={feedData.id} userId={feedData.userId}>
                     <InfoArea>
-                      <TouchableOpacity onPress={() => goToReply()}>
+                      <TouchableOpacity onPress={() => goToReply(item)}>
                         <Ionicons name="md-chatbox-ellipses-outline" size={20} color="black" />
                       </TouchableOpacity>
                       <NumberText>{item.commentCount}</NumberText>
                     </InfoArea>
-                    </ReplyPage>
                   </LeftInfo>
                   <RightInfo>
                     <Timestamp>{item.created}</Timestamp>
@@ -532,6 +549,7 @@ const Home:React.FC<HomeScreenProps> = ({ navigation: { navigate},
         ></FlatList>
       </FeedContainer>
     </Container>
+        </>
   );
 };
 export default Home;

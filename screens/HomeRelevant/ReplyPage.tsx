@@ -16,7 +16,10 @@ import {
   getReply,
   FeedLikeRequest, FeedReplyRequest
 } from "../../api";
-import { ReplyPageScreenProps } from "../../types/feed";
+import {
+  ModifiyPeedScreenProps,
+  ReplyPageScreenProps
+} from "../../types/feed";
 const Container = styled.SafeAreaView`
   flex: 1;
   height: 100%;
@@ -87,6 +90,13 @@ const ReplyArea = styled.View`
   bottom: 0;
 `;
 
+const ReplyInputArea = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 88%;
+`
+
 const ReplyInput = styled.TextInput`
   color: #b0b0b0;
   left: 15px;
@@ -103,46 +113,39 @@ const ReplyDone = styled.Text`
   color: #63abff;
   font-size: 15px;
   font-weight: bold;
-  left: 550%;
   width: 30px;
   height: 24px;
   top: 15%;
 `;
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-interface ReplyPageScreenProps {
-  feedId: number;
-  userId: number;
-  children: object;
-}
-
-const ReplyPage: React.FC<ReplyPageScreenProps> = ({feedId,userId,children}) => {
+const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
+                     navigation:{navigate},
+                     route: { params: { feedData }},
+                   }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const token = useSelector((state:any) => state.AuthReducers.authToken);
+  const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
 
-  // const [feedId,setFeedId] = useState(id);
-  // const [ReplyUserId, ReplySetUserId] = useState(userId)
   const [content, setContent] = useState("");
-  const [Id, setId]= useState(feedId)//피드아이디
 
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.refetchQueries(["replys"]);
     setRefreshing(false);
   };
-
   /** 리플 데이터   */
   const { data: replys, isLoading: replysLoading } =
-    useQuery<ReplyReponse>(["getReply",Id], FeedApi.getReply,{
+    useQuery<ReplyReponse>(["getReply",token,feedData.id], FeedApi.getReply,{
       onSuccess: (res) => {
-        console.log(res);
+        // console.log(res);
       },
       onError: (err) => {
         console.log(`[getFeeds error] ${err}`);
       },
     });
+
 
   /** 유저 데이터   */
   const {
@@ -150,41 +153,36 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({feedId,userId,children}) => 
     data: userInfo,
   } = useQuery<UserInfoResponse>(["userInfo", token], UserApi.getUserInfo);
 
-  let myId = userInfo?.data.id
-  console.log(myId+"myId")
-  console.log(children+"children")
-  console.log(Id+"Id");
-  console.log(feedId+"feedId");
-  console.log(userId+"userId");
+  // console.log(userInfo?.data.id);
 
   //댓글추가
   const mutation = useMutation( FeedApi.ReplyFeed, {
     onSuccess: (res) => {
       if (res.status === 200) {
         console.log(res)
-        setRefreshing(true);
+        onRefresh();
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
-        // return navigate("Home", {});
       }
     },
     onError: (error) => {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
-      // return navigate("Home", {});
+      // return navigate("Tabs", {
+      //   screen: "Home",
+      // });
     },
     onSettled: (res, error) => {},
   });
 
   const RelpyFeed=()=>{
     const data = {
-        id: feedId,
-        userId: userId,
-        content: content,
+      id: feedData.id,
+      content: content,
     };
-    console.log(data);
 
+    // console.log(data);
     const likeRequestData: FeedReplyRequest=
       {
         data,
@@ -206,7 +204,7 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({feedId,userId,children}) => 
             keyExtractor={(item: Reply, index: number) => String(index)}
             data={replys?.data}
             renderItem={({ item, index }: { item: Reply; index: number }) => (
-              <CommentArea>
+              <CommentArea key={index}>
                 <CommentImg source={{ uri: item.thumbnail }} />
                 <View style={{ marginBottom: 20, top: 7 }}>
                   <CommentMent>
@@ -226,23 +224,26 @@ const ReplyPage: React.FC<ReplyPageScreenProps> = ({feedId,userId,children}) => 
         <ReplyArea>
           <ReplyImg
             source={{
-              uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+              uri: userInfo?.data.thumbnail === null ? "http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
             }}
           />
-          <ReplyInput
-            placeholder=" 댓글을 입력해보세요..."
-            value={content}
-            onChangeText={(value:string) => setContent(value)}
-            textContentType="none"
-            autoCompleteType="off"
-            autoCapitalize="none"
-            multiline={true}
-            maxLength={100}
-          >
-          </ReplyInput>
-          <ReplyButton onPress={RelpyFeed}>
-            <ReplyDone>게시</ReplyDone>
-          </ReplyButton>
+          <ReplyInputArea>
+            <ReplyInput
+              placeholder=" 댓글을 입력해보세요..."
+              value={content}
+              onChangeText={(value:string) => setContent(value)}
+              textContentType="none"
+              autoCompleteType="off"
+              autoCapitalize="none"
+              multiline={true}
+              maxLength={100}
+            >
+            </ReplyInput>
+            <ReplyButton onPress={RelpyFeed}>
+              <ReplyDone>게시</ReplyDone>
+            </ReplyButton>
+          </ReplyInputArea>
+
         </ReplyArea>
       </ReplyWriteArea>
     </Container>

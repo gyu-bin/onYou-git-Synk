@@ -23,10 +23,9 @@ const ImageSelectSave = styled.Text`
 
 const NativeStack = createNativeStackNavigator();
 
-const HomeStack = ({navigation: { navigate },
-                     route:{params:{
-                       userName, id, userId, content, imageUrls, clubId, clubName, hashtags,
-                     }} }) => {
+const HomeStack = ({
+                     navigation: { navigate },
+                     route:{params:{feedData,userId,clubId}} }) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
 
   const cancleCreate = () => {
@@ -68,7 +67,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="ImageSelecter"
         component={ImageSelecter}
-        initialParams={{userId,clubId,clubName}}
+        initialParams={{userId,clubId}}
         options={{
           title: "",
           headerLeft: () => (
@@ -101,7 +100,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="CreateHomePeed"
         component={CreateHomePeed}
-        initialParams={{clubName}}
+        initialParams={{feedData}}
         options={{
           title: "새 게시물",
           headerLeft: () => (
@@ -115,7 +114,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="ReplyPage"
         component={ReplyPage}
-        initialParams={{id,userName}}
+        initialParams={{feedData}}
         options={{
           title: "댓글",
           headerLeft: () => (
@@ -129,7 +128,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="ModifiyPeed"
         component={ModifiyPeed}
-        initialParams={{userName, id, userId, content, imageUrls, clubId, clubName, hashtags}}
+        initialParams={{feedData}}
         options={{
           title: "수정",
           headerLeft: () => (
@@ -148,7 +147,7 @@ const HomeStack = ({navigation: { navigate },
       <NativeStack.Screen
         name="Accusation"
         component={Accusation}
-        initialParams={{id,userId}}
+        initialParams={{feedData}}
         options={{
           title: "신고",
           headerLeft: () => (

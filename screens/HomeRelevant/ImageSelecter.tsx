@@ -8,6 +8,7 @@ import { useMutation } from "react-query";
 import { useSelector } from "react-redux";
 import { FeedApi,FeedCreationRequest } from "../../api";
 import { FeedCreateScreenProps,  } from '../../types/feed';
+import MultiImagePicker from 'react-native-image-crop-picker';
 
 interface ValueInfo {
   str: string;
@@ -98,7 +99,10 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [imageURI, setImageURI] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
-  let [alert, setAlert] = useState(true);
+  let [alert, alertSet] = useState(true);
+
+  console.log(userId+'userId')
+  console.log(clubId+'clubId')
 
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
@@ -124,26 +128,19 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
   const [postText, setPostText] = useState("");
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
+  const onText = (text: React.SetStateAction<string>) => setPostText(text);
 
-  const [createId,setCreateId] = useState(userId);
-  const [chClubId, setChClubId] = useState(clubId);
-
-  // const [imageUrls,setImageUrls]=useState("")
   const [content, setContent] = useState("")
-  const [hashTag, setHashTag] = useState("")
-
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await MultiImagePicker.openPicker({
+      multiple: true,
       allowsEditing: false,
       aspect: [16, 9],
       quality: 1,
+      cropping: true
     });
-
-    if (!result.cancelled) {
-      setImageURI(result.uri);
-    }
+    console.log(result)
   };
 
   const mutation = useMutation(FeedApi.createFeed, {
@@ -205,7 +202,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   useEffect(() => {
     let timer = setTimeout(() => {
-      setAlert(false);
+      alertSet(false);
     }, 3000);
   });
 
@@ -297,12 +294,10 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
           <FeedText
             placeholder="사진과 함께 남길 게시글을 작성해 보세요."
             onChangeText={(content) => setContent(content)}
+            textContentType="none"
             autoCompleteType="off"
             autoCapitalize="none"
             multiline={true}
-            maxLength={100}
-            returnKeyType="done"
-            returnKeyLabel="done"
           >
             {valueInfos.map(({ str, isHT, idxArr }, idx) => {
               const [firstIdx, lastIdx] = idxArr;

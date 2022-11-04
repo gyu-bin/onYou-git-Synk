@@ -122,12 +122,10 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
     showRecruiting: 0,
     showMy: 0,
   });
-  // const [clubId,setClubId] = useState()
   const [clubName, setClubName] = useState<string>("");
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
-
   const {
     isLoading: clubsLoading,
     data: clubs,
@@ -141,8 +139,13 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
     },
   });
 
-  let selectClubId = clubs?.responses.content[0].id
-  // console.log(clubs?.responses.content[0].id)
+  const goToImageSelect = (clubData:Club) =>{
+    return navigate("HomeStack", {
+      screen:'ImageSelecter',
+      userId: userId,
+      clubId:clubData.id
+    });
+  }
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -161,17 +164,9 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
             refreshing={refreshing}
             onRefresh={onRefresh}
             keyExtractor={(item: Club, index: number) => String(index)}
-            data={clubs?.responses.content}
+            data={clubs?.responses?.content}
             renderItem={({ item, index }: { item: Club; index: number }) => (
-              <ClubArea
-                onPress={() => {
-                  return navigate("HomeStack", {
-                    screen:'ImageSelecter',
-                    userId,
-                    clubId:selectClubId
-                  });
-                }}
-              >
+              <ClubArea onPress={() => goToImageSelect(item)}>
                 <ClubImg source={{ uri: item.thumbnail }} />
                 <ClubMy>
                   <CommentMent>

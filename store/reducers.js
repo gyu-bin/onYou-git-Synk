@@ -5,8 +5,8 @@
 // };
 
 const initialState = {
-  authToken:
-   "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyYnFsczY2NTFAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTY2NjQwNzI2MywiZXhwIjoxMTY2NjQwNzI2M30.pBXahhVB9fLpXQ4P1zh1zNCmIw_y6lRHPRb9G3Ac-fM",
+  authToken: null,
+  // "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiLsnqXspIDsmqkiLCJzb2NpYWxJZCI6IjIxOTAwMzc4NTAiLCJpZCI6NCwiZXhwIjoxMDAwMDAxNjU0NjA3MDA4fQ.m8OBIZEcB5dZ339YvhnWgJIRatKoF-DVPk2RrbXirsQRnYdFaALwnjR4oNmHGE-OZDfhDfOITaYzWLqYnU2vcQ",
 };
 
 export default (state = initialState, action) => {

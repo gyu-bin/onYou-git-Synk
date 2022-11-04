@@ -1,25 +1,8 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Feed, Reply } from "../api";
+import { Club, Feed, Reply } from "../api";
 
 export type RootStackParamList = {
-/*  Home: {
-    id: number;
-    clubId: number;
-    clubName: string | undefined;
-    userId: number;
-    userName: string | undefined;
-    content: string | undefined;
-    imageUrls: string;
-    hashtag: string | undefined;
-    likeYn: boolean | undefined;
-    likeCount: number;
-    commentCount: number;
-    created: string;
-    updated: string;
-  };*/
-  Home:{
-    feedData:Feed
-  }
+  Home:{feedData:Feed}
   FeedCreater:{
     imageUrls: string;
     userId: number;
@@ -29,13 +12,14 @@ export type RootStackParamList = {
     clubId: number;
     clubName: string;
     userName: string;
+    clubData:Club
   }
   // ReplyPage: {userId: number, userName: string, id: number};
-  ReplyPage: {id:number};
-  MyClubSelector:{userId: number}
+  ReplyPage: {feedData:Feed};
+  MyClubSelector:{id:number,userId:number}
   FeedCreateSuccess:{feedData: Feed}
-  FeedUpdate:{id:number ,userId: number, content: string, hashtag: string}
-  FeedReport:{id:number,userId:number}
+  FeedUpdate:{feedData:Feed}
+  FeedReport:{feedData:Feed}
   Tabs:{}
   HomeStack:{}
 };
@@ -48,7 +32,7 @@ export type ModifiyPeedScreenProps = NativeStackScreenProps<RootStackParamList,"
 export type ReportPeedScreenProps = NativeStackScreenProps<RootStackParamList,"FeedReport">
 
 export interface FeedData extends Feed{
-  id:number;
+  id:number | undefined;
   userId: number;
   isEnd: boolean
 }
