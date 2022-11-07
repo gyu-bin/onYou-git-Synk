@@ -217,6 +217,7 @@ export interface FeedUpdateRequest{
   };
   token: string;
 }
+/**좋아요*/
 export interface FeedLikeRequest{
   data:{
     id?:number,
@@ -227,8 +228,8 @@ export interface FeedLikeRequest{
 
 export interface FeedReverseLikeRequest{
   data:{
-    id:number,
-    userId: number
+    id?:number,
+    userId?: number,
   };
   token: string;
 }
@@ -334,6 +335,7 @@ export interface FeedReplyRequest{
   }
   token: string;
 }
+
 // Categories
 const getCategories = () => fetch(`${BASE_URL}/api/categories`).then((res) => res.json());
 
@@ -643,13 +645,11 @@ const reportFeed = (req: FeedReportRequest) => {
 };
 
 /**피드좋아요*/
-const likeCount = ({mutationkey}:any) =>{
-  const [id, token]: [number, string] = mutationkey;
-  console.log(id)
-  return fetch(`${BASE_URL}/api/feeds/${id}/likes`, {
+const likeCount = (req:FeedLikeRequest) =>{
+  return fetch(`${BASE_URL}/api/feeds/${req.data.id}/likes`, {
     method: "POST",
     headers: {
-      Authorization: `${token}`,
+      Authorization: `${req.token}`,
     },
   }).then(async (res) => {
     if(res.status === 200) return {status: res.status, ...(await res.json())}
@@ -658,12 +658,11 @@ const likeCount = ({mutationkey}:any) =>{
 }
 
 /**피드 좋아요 취소*/
-const likeCountReverse = ({mutationkey}:any) => {
-  const [id, token]: [number, string] = mutationkey;
-  return fetch(`${BASE_URL}/api/feeds/${id}/likes`, {
+const likeCountReverse = (req:FeedReverseLikeRequest) => {
+  return fetch(`${BASE_URL}/api/feeds/${req.data.id}/likes`, {
     method: "PUT",
     headers: {
-      Authorization: `${token}`,
+      Authorization: `${req.token}`,
     },
   }).then(async (res) => {
     if(res.status === 200) return {status: res.status, ...(await res.json())}

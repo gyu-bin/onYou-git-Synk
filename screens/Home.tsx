@@ -238,18 +238,9 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-
    //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
-  const [likeClick, setLikeClick] = useState(new Map());
-  const [FeedId,setFeedId] = useState();
-    /*
-   let selectFeedId = new Map();
-  for (let i = 0; i < res?.data?.length; ++i) {
-        selectFeedId.set(res.data[i].id, res.data[i].id);
-        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
-        // setFeedId(selectFeedId);
-   */
+
   //피드
   const {
     isLoading: feedsLoading,
@@ -304,9 +295,10 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
     onSettled: (res, error) => {},
   });
 
-  const LikeFeed=()=>{
+  /**좋아요 누름*/
+  const LikeFeed=(feedData:Feed)=>{
     const data = {
-      id: myId,
+      id: feedData.id,
     };
     console.log(data);
     const likeRequestData: FeedLikeRequest=
@@ -338,9 +330,10 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
     onSettled: (res, error) => {},
   });
 
-  const LikeReverseFeed=()=>{
+  /**좋아요 취소*/
+  const LikeReverseFeed=(feedData:Feed)=>{
     const data = {
-      id: myId,
+      id: feedData.id,
     };
     console.log(data);
     const likeRequestData: FeedLikeRequest=
@@ -351,17 +344,6 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
 
     LikeMutation.mutate(likeRequestData);
   };
-
-  const {
-    isLoading: commentPlusLoading,
-    data: commentPlusCount,
-  }=useMutation<FeedsLikeReponse>([myId, token], FeedApi.likeCount)
-
-  const {
-    isLoading: commentReverseLoading,
-    data: commentReverseCount,
-  }=useMutation<FeedsLikeReponse>([myId, token], FeedApi.likeCountReverse)
-
 
   const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
 
@@ -404,6 +386,14 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
   const closeModal = () => {
     setModalVisible(!isModalVisible);
   };
+  /**삭제하기*/
+  const deleteClear = (feedData:Feed) =>{
+    const data={
+      id: feedData.id
+    }
+
+    setModalVisible(!isModalVisible);
+  }
 
   const deleteCheck = (feedData:Feed) => {
     Alert.alert(
@@ -412,10 +402,10 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
       [
         {
           text: "아니요",
-          onPress: () => console.log("삭제 Api 호출"),
+          onPress: () => console.log("삭제취소"),
           style: "cancel",
         },
-        { text: "네", onPress: () => Alert.alert("삭제되었습니다.") },
+        { text: "네", onPress: () => deleteClear(feedData)  },
       ],
       { cancelable: false }
     );
@@ -472,6 +462,7 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
                   <ModalIcon onPress={toggleModal}>
                     <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
                   </ModalIcon>
+                  {/*조건부호출*/}
                   {/*{myId === item.userId ?
                     <View>
                       <Modal animationType="slide" transparent={true} visible={isModalVisible}>
@@ -499,6 +490,7 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
                       </Modal>
                     </View>
                   }*/}
+                  {/*일단 호출*/}
                   <View>
                     <Modal animationType="slide" transparent={true} visible={isModalVisible}>
                       <CenteredView onTouchEnd={closeModal}>
@@ -524,8 +516,8 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
                       <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
                         {heartMap.get(item.id) ? <Ionicons name="md-heart" size={20} color="red" likeYn={true} /> : <Ionicons name="md-heart-outline" size={20} color="black" likeYn={false} />}
                       </TouchableOpacity>
-                      {heartMap.get(item.id) ? <LikeClick onPress={() => {}}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                        : <LikeClick onPress={() => {}}><NumberText>{item.likesCount }</NumberText></LikeClick>}
+                      {heartMap.get(item.id) ? <LikeClick onPress={() => LikeFeed(item)}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                        : <LikeClick onPress={() => LikeReverseFeed(item)}><NumberText>{item.likesCount }</NumberText></LikeClick>}
                     </InfoArea>
                     <InfoArea>
                       <TouchableOpacity onPress={() => goToReply(item)}>

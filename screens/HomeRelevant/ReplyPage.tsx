@@ -1,5 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Platform, StatusBar, FlatList, Button, TextInput, Alert, Animated, ActivityIndicator, Image } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  StatusBar,
+  FlatList,
+  Button,
+  TextInput,
+  Alert,
+  Animated,
+  ActivityIndicator,
+  Image,
+  Keyboard, TouchableWithoutFeedback
+} from "react-native";
 import styled from "styled-components/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -125,7 +140,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                    }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
 
   const [content, setContent] = useState("");
@@ -160,7 +175,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
     onSuccess: (res) => {
       if (res.status === 200) {
         console.log(res)
-        onRefresh();
+        onRefresh
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -194,6 +209,8 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
 
   return (
     <Container>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={10} style={{ flex: 1 }}>
       <ReplyContainer>
         {loading ? (
           <ActivityIndicator />
@@ -246,6 +263,8 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
 
         </ReplyArea>
       </ReplyWriteArea>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </Container>
   );
 };

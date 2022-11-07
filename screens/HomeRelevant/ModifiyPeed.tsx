@@ -156,6 +156,7 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
       id: feedData.id,
       content: content,
     };
+    console.log(data);
 
     const requestData: FeedUpdateRequest={
       data,
@@ -199,8 +200,8 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
               <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
             </FeedImage>
             <Content>
-              {/*<Ment value={fixContent} onChangeText={(value:string)=>setFixContent(value)}>*/}
-              <Ment>
+              <Ment value={fixContent} onChangeText={(value:string)=>setFixContent(value)}>
+              {/*<Ment>*/}
                 {item.content}
               </Ment>
             </Content>
