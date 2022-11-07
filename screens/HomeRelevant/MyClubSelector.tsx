@@ -110,7 +110,7 @@ const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min
 
 const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { navigate},
                                                                route:{params:{userId}} }) => {
-  const token = useSelector((state:any) => state.AuthReducers.authToken);
+  const token = useSelector((state) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
   const [params, setParams] = useState<ClubsParams>({
     token,
@@ -122,6 +122,7 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
     showRecruiting: 0,
     showMy: 0,
   });
+  const [clubId,setClubId] = useState("")
   const [clubName, setClubName] = useState<string>("");
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);

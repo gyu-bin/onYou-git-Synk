@@ -11,14 +11,16 @@ import {
   View
 } from "react-native";
 import { useSelector } from "react-redux";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import {
+  Club,
   Feed,
   FeedApi,
   FeedsResponse, FeedUpdateRequest, ModifiedReponse,
-  updateFeed
+  updateFeed, UserApi, UserInfoResponse
 } from "../../api";
 import { ModifiyPeedScreenProps } from "../../types/feed";
+import { RootStackParamList } from "../../types/Club";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -77,6 +79,7 @@ const Content = styled.View`
 
 const Ment = styled.TextInput`
   width: 100%;
+  height: 15%;
   color: black;
   font-size: 12px;
 `;
@@ -86,25 +89,30 @@ const ImageSource = styled.Image<{ size: number }>`
   height: ${(props) => props.size}px;
 `;
 
+const FixCompleteArea = styled.View``
+const FixCompleteBtn = styled.TouchableOpacity``
+const FixCompleteText = styled.Text`
+  font-size: 20px;
+  text-align: center;
+`
+
 interface FeedEditItem{
   id:number
   content:string;
+  screen: keyof RootStackParamList;
 }
 
 const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
                                                       navigation:{navigate},
                                                       route:{params: {feedData}}})=> {
-  const token = useSelector((state:any) => state.AuthReducers.authToken);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const queryClient = useQueryClient();
+  const token = useSelector((state) => state.AuthReducers.authToken);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false)
-  const [fixContent, setFixContent]=useState("");
-  const [items, setItems] = useState<FeedEditItem[]>();
-
   const [content, setContent] = useState("")
+  const [data, setData] = useState<Feed>(feedData);
+  const [items, setItems] = useState<FeedEditItem[]>();
   //피드호출
   const {
     isLoading: feedsLoading,
@@ -113,47 +121,48 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   } = useQuery<ModifiedReponse>(["getFeeds",token,feedData.id], FeedApi.getSelectFeeds, {
     onSuccess: (res) => {
       setIsPageTransition(false);
-      // console.log(res);
+      console.log(res);
     },
     onError: (err) => {
       console.log(err);
     },
   });
 
+  const {
+    isLoading: userInfoLoading, // true or false
+    data: userInfo,
+  } = useQuery<UserInfoResponse>(["userInfo", token], UserApi.getUserInfo);
+
   const mutation = useMutation(FeedApi.updateFeed, {
-    onSuccess: async (res) => {
+    onSuccess: (res) => {
       if (res.status === 200 && res.json?.resultCode === "OK") {
-        setRefreshing(true);
-        await queryClient.refetchQueries(["modify"]);
-        setRefreshing(false);
-        /* return navigate("Tabs", {
-           screen: "Home",
-         });*/
+        return navigate("Tabs", {
+          screen: "Home",
+        });
       } else {
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
         console.log(res.json);
-        /*  return navigate("Tabs", {
-            screen: "Home",
-          });*/
+      /*  return navigate("Tabs", {
+          screen: "Home",
+        });*/
       }
     },
     onError: (error) => {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
-    /*  return navigate("Tabs", {
+   /*   return navigate("Tabs", {
         screen: "Home",
       });*/
     },
     onSettled: (res, error) => {},
   });
 
-
-
   //피드업데이트
   const FixComplete =() =>{
     const data={
       id: feedData.id,
+      access: "PRIVATE",
       content: content,
     };
     console.log(data);
@@ -164,6 +173,8 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
     };
     mutation.mutate(requestData);
   };
+
+  // @ts-ignore
   return feedsLoading ?(
     <Loader>
       <ActivityIndicator/>
@@ -171,16 +182,44 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
     ):(
       <>
     <Container>
-{/*      <View>
-        {items?.map((item,index)=>(
-          <View key={index}>
-            <View>
-              <Text>{item.content}</Text>
-            </View>
+      <View>
+        <View>
+          <FeedUser >
+            <UserImage source={{ uri: userInfo?.data.thumbnail }} />
+            <UserInfo>
+              <UserId>{data.userName}</UserId>
+              <UserId>{data.id}</UserId>
+              <ClubBox>
+                <ClubName>{data.clubName}</ClubName>
+              </ClubBox>
+            </UserInfo>
+          </FeedUser>
+
+          <FeedImage>
+            <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+          </FeedImage>
+          <Content>
+            <Ment onChangeText={(content) => setContent(content)}>
+              {/*<Ment>*/}
+                {data.content}
+              </Ment>
+          </Content>
+        <FixCompleteArea>
+          <FixCompleteBtn onPress={FixComplete}>
+            {/*<TouchableOpacity>*/}
+              <FixCompleteText>수정완료</FixCompleteText>
+            </FixCompleteBtn>
+        </FixCompleteArea>
+        </View>
+      </View>
+      {/*{items?.map((item,index)=>(
+        <View key={index}>
+          <View>
+            {item.content}
           </View>
-        ))}
-      </View>*/}
-      <FlatList
+        </View>
+      ))}*/}
+      {/*<FlatList
         keyExtractor={(item: Feed, index: number) => String(index)}
         data={feeds?.data}
         renderItem={({ item, index }: { item: Feed; index: number }) => (
@@ -197,22 +236,22 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
             </FeedUser>
 
             <FeedImage>
-              <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+              <ImageSource source={item.imageUrls[0] === undefined ? require("../../assets/basic.jpg") : { uri: item.imageUrls[0] }}  size={FEED_IMAGE_SIZE}/>
             </FeedImage>
             <Content>
-              <Ment value={fixContent} onChangeText={(value:string)=>setFixContent(value)}>
-              {/*<Ment>*/}
+              <Ment onChangeText={(content) => setContent(content)}>
+              <Ment>
                 {item.content}
               </Ment>
             </Content>
 
             <TouchableOpacity onPress={FixComplete}>
-            {/*<TouchableOpacity>*/}
+            <TouchableOpacity>
               <Text>수정완료</Text>
             </TouchableOpacity>
           </View>
           </>
-        )}></FlatList>
+        )}></FlatList>*/}
     </Container>
     </>
   );

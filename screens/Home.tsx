@@ -223,24 +223,35 @@ const ImageSource = styled.Image<{ size: number }>`
   height: ${(props) => props.size}px;
 `;
 
+
 interface HeartType {
   feedId: number;
   heart: boolean;
 }
 
-const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
+const Home:React.FC<HomeScreenProps> = ({
+                                          navigation:{navigate},
+                                          })=> {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
-  const token = useSelector((state:any) => state.AuthReducers.authToken);
+  const token = useSelector((state) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
+
 
    //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
-
+  const [modalMap, setModaltMap] = useState(new Map());
+    /*
+   let selectFeedId = new Map();
+  for (let i = 0; i < res?.data?.length; ++i) {
+        selectFeedId.set(res.data[i].id, res.data[i].id);
+        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+        // setFeedId(selectFeedId);
+   */
   //피드
   const {
     isLoading: feedsLoading,
@@ -252,19 +263,18 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
       setIsPageTransition(false);
 
       let heartDataMap = new Map();
-      let heartClick = new Map();
+      let modalMap = new Map();
 
       for (let i = 0; i < res?.data?.length; ++i) {
         heartDataMap.set(res.data[i].id, false);
         //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
       }
       for (let i = 0; i < res?.data?.length; ++i) {
-        heartClick.set(res.data[i].id, res.data[i].id);
+        modalMap.set(res.data[i].id, res.data[i].id);
         //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
       }
       setHeartMap(heartDataMap);
-      setHeartMap(heartClick);
-      // console.log(res.statusCode)
+      setModaltMap(modalMap);
     },
     onError: (err) => {
       console.log(err);
@@ -276,6 +286,7 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
     isLoading: userInfoLoading, // true or false
     data: userInfo,
   } = useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo);
+  let myName = userInfo?.data?.name;
   let myId = userInfo?.data?.id;
 
 //Like
@@ -295,7 +306,6 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
     onSettled: (res, error) => {},
   });
 
-  /**좋아요 누름*/
   const LikeFeed=(feedData:Feed)=>{
     const data = {
       id: feedData.id,
@@ -330,7 +340,6 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
     onSettled: (res, error) => {},
   });
 
-  /**좋아요 취소*/
   const LikeReverseFeed=(feedData:Feed)=>{
     const data = {
       id: feedData.id,
@@ -347,10 +356,10 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
 
   const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
 
-  const toggleModal = () => {
-
+  const toggleModal = (feedData:Feed) => {
     setModalVisible(!isModalVisible);
-    setRefreshing(false);
+    setModaltMap((prev) => new Map(prev).set(feedData.id, prev.get(feedData.id)))
+    console.log(feedData.id,feedData.userName,modalMap.get(feedData.id))
   };
 
   const goToReply = (feedData: Feed) => {
@@ -386,14 +395,6 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
   const closeModal = () => {
     setModalVisible(!isModalVisible);
   };
-  /**삭제하기*/
-  const deleteClear = (feedData:Feed) =>{
-    const data={
-      id: feedData.id
-    }
-
-    setModalVisible(!isModalVisible);
-  }
 
   const deleteCheck = (feedData:Feed) => {
     Alert.alert(
@@ -402,10 +403,10 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
       [
         {
           text: "아니요",
-          onPress: () => console.log("삭제취소"),
+          onPress: () => console.log("삭제 Api 호출"),
           style: "cancel",
         },
-        { text: "네", onPress: () => deleteClear(feedData)  },
+        { text: "네", onPress: () => Alert.alert("삭제되었습니다.") },
       ],
       { cancelable: false }
     );
@@ -413,7 +414,6 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
     await queryClient.refetchQueries(["feeds"]);
     setRefreshing(false);
   };
@@ -453,53 +453,28 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
                   />
                   <UserInfo>
                     <UserId>{item.userName}</UserId>
+                    <UserId>{myName}</UserId>
+                    <UserId>{item.id}</UserId>
                     <ClubBox>
                       <ClubName>{item.clubName}</ClubName>
                     </ClubBox>
                   </UserInfo>
                 </FeedUser>
                 <ModalArea>
-                  <ModalIcon onPress={toggleModal}>
+                  <ModalIcon onPress={()=>toggleModal(item)}>
                     <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
+                    <Text>{item.userName},{myName},{item.id},{modalMap.get(item.id)}</Text>
                   </ModalIcon>
-                  {/*조건부호출*/}
-                  {/*{myId === item.userId ?
-                    <View>
-                      <Modal animationType="slide" transparent={true} visible={isModalVisible}>
-                        <CenteredView onTouchEnd={closeModal}>
-                          <ModalView>
-                            <ModalText onPress={()=>goToModifiy(item)}>
-                              수정
-                            </ModalText>
-                            <ModalText style={{color:"red"}} onPress={deleteCheck}>
-                              삭제
-                            </ModalText>
-                          </ModalView>
-                        </CenteredView>
-                      </Modal>
-                    </View> :
-                    <View>
-                      <Modal animationType="slide"transparent={true}visible={isModalVisible}>
-                        <CenteredView onTouchEnd={closeModal}>
-                          <ModalView>
-                            <ModalText onPress={()=> goToAccusation(item)}>
-                              신고
-                            </ModalText>
-                          </ModalView>
-                        </CenteredView>
-                      </Modal>
-                    </View>
-                  }*/}
-                  {/*일단 호출*/}
-                  <View>
+                  <View key={index}>
                     <Modal animationType="slide" transparent={true} visible={isModalVisible}>
                       <CenteredView onTouchEnd={closeModal}>
                         <ModalView>
-                          <ModalText onPress={()=>goToModifiy(item)}>수정</ModalText>
+                          <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
                           <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
                             삭제
                           </ModalText>
                             <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
+                          <Text>{item.userName},{myName},{item.id}</Text>
                         </ModalView>
                       </CenteredView>
                     </Modal>
@@ -508,16 +483,18 @@ const Home:React.FC<HomeScreenProps> = ({navigation:{navigate}})=> {
               </FeedHeader>
               <FeedMain>
                 <FeedImage>
-                  <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}}size={FEED_IMAGE_SIZE}/>
+                  <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
                 </FeedImage>
                 <FeedInfo>
                   <LeftInfo>
                     <InfoArea>
+                      {/*onPress={()=>LikeFeed(item)} onPress={()=>LikeReverseFeed(item)}*/}
                       <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
-                        {heartMap.get(item.id) ? <Ionicons name="md-heart" size={20} color="red" likeYn={true} /> : <Ionicons name="md-heart-outline" size={20} color="black" likeYn={false} />}
+                        {heartMap.get(item.id) ? <TouchableOpacity onPress={()=>LikeFeed(item)}><Ionicons name="md-heart" size={20} color="red" /></TouchableOpacity> :
+                          <TouchableOpacity onPress={()=>LikeReverseFeed(item)}><Ionicons  name="md-heart-outline" size={20} color="black"/></TouchableOpacity>}
                       </TouchableOpacity>
-                      {heartMap.get(item.id) ? <LikeClick onPress={() => LikeFeed(item)}><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                        : <LikeClick onPress={() => LikeReverseFeed(item)}><NumberText>{item.likesCount }</NumberText></LikeClick>}
+                      {heartMap.get(item.id) ? <LikeClick ><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                        : <LikeClick><NumberText>{item.likesCount }</NumberText></LikeClick>}
                     </InfoArea>
                     <InfoArea>
                       <TouchableOpacity onPress={() => goToReply(item)}>

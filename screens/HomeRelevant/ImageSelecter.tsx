@@ -2,16 +2,8 @@ import { MaterialCommunityIcons,AntDesign } from "@expo/vector-icons";
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  useWindowDimensions,View
-} from "react-native";
+import { Alert, Keyboard,
+  KeyboardAvoidingView, Text, TouchableOpacity, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { useMutation } from "react-query";
 import { useSelector } from "react-redux";
@@ -75,6 +67,7 @@ const ImagePickerText = styled.Text`
 const FeedText = styled.TextInput`
   margin: 13px 15px 15px 30px;
   color: black;
+  height: 100px;
 `;
 
 const SelectImageView = styled.View`
@@ -85,9 +78,7 @@ const SelectImageView = styled.View`
   justify-content: space-between;
   padding: 0 19px 0 19px;
 `;
-
 const SelectImageArea = styled.TouchableOpacity``
-
 const SelectImage = styled.Image`
   width: 55px;
   height: 55px;
@@ -100,9 +91,8 @@ const CancleIcon = styled.View`
   top: -530%;
   left: 73%;
 `;
-
 const FeedCreateArea = styled.View`
-  
+  left: 70%;
 `
 
 const FeedCreateBtn = styled.TouchableOpacity`
@@ -112,7 +102,6 @@ const FeedCreateText = styled.Text`
   font-size: 20px;
 `
 const ImageCancleBtn = styled.TouchableOpacity``
-
 const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   route:{params:{clubId,userId}},
   navigation: { navigate } }) => {
@@ -121,12 +110,12 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   //사진권한 허용
   const [imageURI, setImageURI] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   let [alert, alertSet] = useState(true);
 
   console.log(userId+'userId')
   console.log(clubId+'clubId')
   console.log(imageURI+'imageURI')
-
 
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
@@ -151,10 +140,24 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
-  const token = useSelector((state:any) => state.AuthReducers.authToken);
+  const [postText, setPostText] = useState("");
+  const token = useSelector((state) => state.AuthReducers.authToken);
+  const onText = (text: React.SetStateAction<string>) => setPostText(text);
 
-  const [content, setContent] = useState<string>("")
+  const [content, setContent] = useState("")
   const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      aspect: [16, 9],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setImageURI(result.uri);
+    }
+  };
+/*  const pickImage = async () => {
     const result = await MultiImagePicker.openPicker({
       multiple: true,
       allowsEditing: false,
@@ -163,7 +166,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       cropping: true
     });
     console.log(result)
-  };
+  };*/
 
   const mutation = useMutation(FeedApi.createFeed, {
     onSuccess: (res) => {
@@ -235,9 +238,9 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   /** X선택시 사진 없어지는 태그 */
   const ImageCancle = () => {
-   /* uri: imageURI === null;
+    uri: imageURI === null;
     imageURI == "";
-    console.log(imageURI);*/
+    console.log(imageURI);
   };
 
   useEffect(() => {
@@ -355,11 +358,10 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
               <FeedCreateText>저장</FeedCreateText>
             </FeedCreateBtn>
           </FeedCreateArea>
-
         </>
     </Container>
       </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
+    </TouchableWithoutFeedback>
   );
 };
 
