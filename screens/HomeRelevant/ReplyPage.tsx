@@ -137,13 +137,13 @@ const ReplyDone = styled.Text`
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
-                     navigation:{navigate},
-                     route: { params: { feedData }},
-                   }) => {
+                                                      navigation:{navigate},
+                                                      route: { params: { feedData }},
+                                                    }) => {
   const toast = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
 
   const [content, setContent] = useState("");
@@ -218,56 +218,67 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
     mutation.mutate(likeRequestData);
   };
   return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <KeyboardAvoidingView
-            behavior={Platform.select({ios: 'padding', android: undefined})} style={{ flex: 1 }}>
-          <Container>
-         <ReplyContainer>
-           <FlatList
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            keyExtractor={(item: Reply, index: number) => String(index)}
-            data={replys?.data}
-            renderItem={({ item, index }: { item: Reply; index: number }) => (
-              <CommentArea key={index}>
-                <CommentImg source={{ uri: item.thumbnail }} />
-                <View style={{ marginBottom: 20, top: 7 }}>
-                  <CommentMent>
-                    <CommentId>{item.userName}</CommentId>
-                    <Comment>{item.content}</Comment>
-                  </CommentMent>
-                  <CommentRemainder>
-                    <Time>{item.created}</Time>
-                  </CommentRemainder>
-                </View>
-              </CommentArea>
-            )}
-          />
-      </ReplyContainer>
-      <ReplyWriteArea>
-        <ReplyArea>
-          <ReplyImg
-            source={{
-              uri: userInfo?.data.thumbnail === null ? "http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
-            }}
-          />
-          <ReplyInputArea>
-            <ReplyInput
-              placeholder=" 댓글을 입력해보세요..."
-              onChangeText={(content) => setContent(content)}
-              autoCapitalize="none"
-              multiline={true}
-              returnKeyType="done"
-              returnKeyLabel="done"
-            >
-            </ReplyInput>
-            <ReplyButton onPress={RelpyFeed}>
-              <ReplyDone>게시</ReplyDone>
-            </ReplyButton>
-          </ReplyInputArea>
-        </ReplyArea>
-      </ReplyWriteArea>
-    </Container>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.select({ios: 'padding', android: undefined})} style={{ flex: 1 }}>
+        <Container>
+          <ReplyContainer>
+            <FlatList
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              keyExtractor={(item: Reply, index: number) => String(index)}
+              data={replys?.data}
+              renderItem={({ item, index }: { item: Reply; index: number }) => (
+                <CommentArea key={index}>
+                  <CommentImg source={{ uri: item.thumbnail }} />
+                  <View style={{ marginBottom: 20, top: 7 }}>
+                    <CommentMent>
+                      <CommentId>{item.userName}</CommentId>
+                      <Comment>{item.content}</Comment>
+                    </CommentMent>
+                    <CommentRemainder>
+                      <Time>{item.created}</Time>
+                    </CommentRemainder>
+                  </View>
+                </CommentArea>
+              )}
+            />
+          </ReplyContainer>
+          <ReplyWriteArea>
+            <ReplyArea>
+              <ReplyImg
+                source={{
+                  uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+                }}
+              />
+              <ReplyInputArea>
+                {replys?.data.length === null ?
+                  <ReplyInput
+                    placeholder=" 댓글을 입력해보세요..."
+                    onChangeText={(content) => setContent(content)}
+                    autoCompleteType="off"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    multiline={true}
+                    returnKeyType="done"
+                    returnKeyLabel="done"></ReplyInput>:
+                  <ReplyInput
+                    placeholder=" 댓글을 입력해보세요..."
+                    onChangeText={(content) => setContent(content)}
+                    autoCompleteType="off"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    multiline={true}
+                    returnKeyType="done"
+                    returnKeyLabel="done"></ReplyInput>
+                }
+                <ReplyButton onPress={RelpyFeed}>
+                  <ReplyDone>게시</ReplyDone>
+                </ReplyButton>
+              </ReplyInputArea>
+            </ReplyArea>
+          </ReplyWriteArea>
+        </Container>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

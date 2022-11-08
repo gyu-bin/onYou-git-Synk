@@ -86,7 +86,7 @@ export interface Feed {
 }
 
 export interface Reply {
-  id:number;
+  id: number;
   userId: number;
   userName: string;
   content: string;
@@ -95,14 +95,14 @@ export interface Reply {
   thumbnail: string;
 }
 
-export interface Report{
+export interface Report {
   userId: number;
   reason: string;
 }
 export interface ClubRole {
   clubId: number;
   userId: number;
-  role: "MASTER" | "MANAGER" | "MEMBER" | undefined;
+  role: "MASTER" | "MANAGER" | "MEMBER" | "PENDING" | undefined;
   applyStatus: "APPLIED" | "APPROVED" | undefined;
 }
 
@@ -135,11 +135,11 @@ export interface FeedsResponse extends BaseResponse {
     content: Feed[];
   };
 }
-export interface ModifiedReponse extends BaseResponse{
+export interface ModifiedReponse extends BaseResponse {
   data: Feed;
 }
-export interface FeedsLikeReponse extends BaseResponse{
-  data:Feed[]
+export interface FeedsLikeReponse extends BaseResponse {
+  data: Feed[];
 }
 export interface UserInfoResponse extends BaseResponse {
   data: User;
@@ -151,7 +151,7 @@ export interface ReportResponse extends BaseResponse {
   data: Report[];
 }
 export interface FeedsParams {
-  id:number;
+  id: number;
   token: string;
 }
 
@@ -166,8 +166,8 @@ export interface ClubsParams {
   showMy: number;
 }
 
-export interface ReplyParams{
-  id:number;
+export interface ReplyParams {
+  id: number;
   token: string;
 }
 export interface ClubSchedulesResponse extends BaseResponse {
@@ -202,7 +202,7 @@ export interface FeedCreationRequest {
     uri: string;
     type: string;
     name: string | undefined;
-  }|null;
+  } | null;
   data: {
     userId?: number;
     content?: string;
@@ -223,31 +223,30 @@ export interface FeedUpdateRequest{
   };
   token: string;
 }
-export interface FeedLikeRequest{
-  data:{
-    id?:number,
-    userId?: number,
+export interface FeedLikeRequest {
+  data: {
+    id?: number;
+    userId?: number;
   };
   token: string;
 }
 
-export interface FeedReverseLikeRequest{
-  data:{
-    id:number,
-    userId: number
+export interface FeedReverseLikeRequest {
+  data: {
+    id: number;
+    userId: number;
   };
   token: string;
 }
 
-export interface FeedReportRequest{
-  data:{
-    id:number | undefined,
-    userId:number,
-    reason: string,
+export interface FeedReportRequest {
+  data: {
+    id: number | undefined;
+    userId: number;
+    reason: string;
   };
   token: string;
 }
-
 
 export interface ClubUpdateRequest {
   image?: {
@@ -335,13 +334,14 @@ export interface getFeedLike{
   token:string;
 }
 
-export interface FeedReplyRequest{
+export interface FeedReplyRequest {
   data: {
     id?: number;
     content?: string;
-  }
+  };
   token: string;
 }
+
 // Categories
 const getCategories = () => fetch(`${BASE_URL}/api/categories`).then((res) => res.json());
 
@@ -353,8 +353,8 @@ const getFeeds = ({ queryKey }: any) => {
       authorization: `${feedsParams.token}`,
     },
   }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
 };
 
@@ -362,15 +362,15 @@ const getFeeds = ({ queryKey }: any) => {
 const getSelectFeeds = ({ queryKey }: any) => {
   const [_key, token, id]: [string, string, number] = queryKey;
   console.log(id+'id')
-return fetch(`${BASE_URL}/api/feeds/${id}`, {
-  method: "GET",
-  headers: {
+  return fetch(`${BASE_URL}/api/feeds/${id}`, {
+    method: "GET",
+    headers: {
       authorization: `${token}`
     }
   }).then(async (res) => {
-  if(res.status === 200) return {status: res.status, ...(await res.json())}
-  else return {status: res.status}
-});
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
+  });
 };
 
 const getClubs = ({ queryKey, pageParam }: any) => {
@@ -455,8 +455,8 @@ const updateFeed = async (req: FeedUpdateRequest) => {
     },
     body: JSON.stringify(req.data),
   }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
 };
 
@@ -630,20 +630,19 @@ const selectMyClubs = ({ queryKey }: any) => {
 
 /**피드신고*/
 const reportFeed = (req: FeedReportRequest) => {
-  console.log(req.data.id)
-  console.log(req.data.reason)
+  console.log(req.data.id);
+  console.log(req.data.reason);
   return fetch(`${BASE_URL}/api/feeds/${req.data.id}/report?reason=${req.data.reason}`, {
     method: "PUT",
     headers: {
       Authorization: `${req.token}`,
     },
   }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
 };
 
-/**피드좋아요*/
 const likeCount = (req:getFeedLike) =>{
   console.log('LikeFeed')
   return fetch(`${BASE_URL}/api/feeds/${req.data.id}/likes`, {
@@ -653,10 +652,10 @@ const likeCount = (req:getFeedLike) =>{
       Authorization: `${req.token}`,
     },
   }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
-}
+};
 
 /**피드 좋아요 취소*/
 const likeCountReverse = (req:getFeedLike) => {
@@ -668,20 +667,21 @@ const likeCountReverse = (req:getFeedLike) => {
       Authorization: `${req.token}`,
     },
   }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
-}
+};
 
 /**댓글호출*/
-const getReply = ({queryKey}:any) => {
+const getReply = ({ queryKey }: any) => {
   const [_key, token, id]: [string, string, number] = queryKey;
   return fetch(`${BASE_URL}/api/feeds/${id}/comments`, {
     method: "GET",
     headers: {
       Authorization: `${token}`,
     },
-  }) .then((res) => res.json())
+  })
+    .then((res) => res.json())
     .then((res) => {
       if (res.resultCode !== "OK") new Error("API Response Error.");
       else {
@@ -693,7 +693,7 @@ const getReply = ({queryKey}:any) => {
 };
 
 /**댓글달기*/
-const ReplyFeed = (req:FeedReplyRequest) =>{
+const ReplyFeed = (req: FeedReplyRequest) => {
   return fetch(`${BASE_URL}/api/feeds/${req.data.id}/comment`, {
     method: "POST",
     headers: {
@@ -702,10 +702,10 @@ const ReplyFeed = (req:FeedReplyRequest) =>{
     },
     body: JSON.stringify(req.data),
   }).then(async (res) => {
-    if(res.status === 200) return {status: res.status, ...(await res.json())}
-    else return {status: res.status}
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
-}
+};
 
 export const ClubApi = {
   getCategories,
@@ -742,6 +742,3 @@ export const FeedApi = {
 };
 
 export const CommonApi = { getJWT };
-
-
-

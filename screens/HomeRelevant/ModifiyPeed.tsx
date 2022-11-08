@@ -87,7 +87,6 @@ const Ment = styled.TextInput`
   height: 30%;
   color: black;
   font-size: 20px;
-  background-color: aquamarine;
   padding-left: 20px;
 `;
 
@@ -98,7 +97,6 @@ const ImageSource = styled.Image<{ size: number }>`
 
 const FixCompleteArea = styled.View`
   width: 100%;
-  background-color: red;
   text-align: center;
   height: 50px;
   top: 20px;
@@ -156,17 +154,17 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
         console.log(res.json);
-      /*  return navigate("Tabs", {
-          screen: "Home",
-        });*/
+        /*  return navigate("Tabs", {
+            screen: "Home",
+          });*/
       }
     },
     onError: (error) => {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
-   /*   return navigate("Tabs", {
-        screen: "Home",
-      });*/
+      /*   return navigate("Tabs", {
+           screen: "Home",
+         });*/
     },
     onSettled: (res, error) => {},
   });
@@ -190,40 +188,41 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-              <Container>
-                <ScrollView>
-                  <FeedUser >
-                    <UserImage source={{ uri: userInfo?.data.thumbnail }} />
-                    <UserInfo>
-                      <UserId>{data.userName}</UserId>
-                      <UserId>{data.id}</UserId>
-                      <ClubBox>
-                        <ClubName>{data.clubName}</ClubName>
-                      </ClubBox>
-                    </UserInfo>
-                  </FeedUser>
-                  <FeedImage>
-                    <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
-                  </FeedImage>
-                  <Ment
-                    onChangeText={(content) => setContent(content)}
-                    autoCompleteType="off"
-                    autoCapitalize="none"
-                    multiline={true}
-                    returnKeyType="done"
-                    returnKeyLabel="done"
-                  >
-                    {data.content}
-                  </Ment>
-                  <FixCompleteArea>
-                    <FixCompleteBtn onPress={FixComplete}>
-                      <FixCompleteText>수정완료</FixCompleteText>
-                    </FixCompleteBtn>
-                  </FixCompleteArea>
-                </ScrollView>
-              </Container>
-            </KeyboardAvoidingView>
-          </TouchableWithoutFeedback>
-    );
+        <Container>
+          <ScrollView>
+            <FeedUser >
+              <UserImage source={{ uri: userInfo?.data.thumbnail }} />
+              <UserInfo>
+                <UserId>{data.userName}</UserId>
+                <UserId>{data.id}</UserId>
+                <ClubBox>
+                  <ClubName>{data.clubName}</ClubName>
+                </ClubBox>
+              </UserInfo>
+            </FeedUser>
+            <FeedImage>
+              <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+            </FeedImage>
+            <Ment
+              onChangeText={(content) => setContent(content)}
+              autoCompleteType="off"
+              autoCapitalize="none"
+              autoCorrect={false}
+              multiline={true}
+              returnKeyType="done"
+              returnKeyLabel="done"
+            >
+              {data.content}
+            </Ment>
+            <FixCompleteArea>
+              <FixCompleteBtn onPress={FixComplete}>
+                <FixCompleteText>수정완료</FixCompleteText>
+              </FixCompleteBtn>
+            </FixCompleteArea>
+          </ScrollView>
+        </Container>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
+  );
 };
 export default ModifiyPeed;

@@ -32,7 +32,7 @@ const Container = styled.SafeAreaView`
 `;
 const ImagePickerView = styled.View`
   width: 100%;
-  height: 60%;
+  height: 55%;
   align-items: center;
 `;
 
@@ -105,15 +105,15 @@ const FeedCreateArea = styled.View`
 `
 
 const FeedCreateBtn = styled.TouchableOpacity`
-  
+
 `
 const FeedCreateText = styled.Text`
   font-size: 20px;
 `
 const ImageCancleBtn = styled.TouchableOpacity``
 const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
-  route:{params:{clubId,userId}},
-  navigation: { navigate } }) => {
+                                                          route:{params:{clubId,userId}},
+                                                          navigation: { navigate } }) => {
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
@@ -150,7 +150,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
   const [postText, setPostText] = useState("");
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const onText = (text: React.SetStateAction<string>) => setPostText(text);
 
   const [content, setContent] = useState("")
@@ -166,16 +166,16 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       setImageURI(result.uri);
     }
   };
-/*  const pickImage = async () => {
-    const result = await MultiImagePicker.openPicker({
-      multiple: true,
-      allowsEditing: false,
-      aspect: [16, 9],
-      quality: 1,
-      cropping: true
-    });
-    console.log(result)
-  };*/
+  /*  const pickImage = async () => {
+      const result = await MultiImagePicker.openPicker({
+        multiple: true,
+        allowsEditing: false,
+        aspect: [16, 9],
+        quality: 1,
+        cropping: true
+      });
+      console.log(result)
+    };*/
 
   const mutation = useMutation(FeedApi.createFeed, {
     onSuccess: (res) => {
@@ -256,116 +256,116 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         behavior={Platform.select({ios: 'padding', android: undefined})} style={{ flex: 1 }}>
-             <Container>
-               <>
-                  <ImagePickerView>
-                    <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
-                      {imageURI ? (
-                        // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
-                        <PickedImage height={imageHeight} source={{ uri: imageURI }} />
-                      ) : (
-                        <PickBackground>
-                          {alert ? (
-                            <ImageCrop>
-                              <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
-                              <ImagePickerText>
-                                손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
-                              </ImagePickerText>
-                            </ImageCrop>
-                          ) : null}
-                        </PickBackground>
-                      )}
-                    </ImagePickerButton>
-                  </ImagePickerView>
-                  <SelectImageView>
-                    <SelectImageArea onPress={ImageFIx}>
-                      <SelectImage source={{ uri: imageURI }} />
-                      {imageURI === null ? null :
-                        <ImageCancleBtn onPress={ImageCancle}>
-                          <CancleIcon>
-                            <AntDesign name="close" size={12} color="white" />
-                          </CancleIcon>
-                        </ImageCancleBtn>
-                      }
-                    </SelectImageArea>
-                    <SelectImageArea onPress={ImageFIx}>
-                      <SelectImage source={{ uri: imageURI }} />
-                      {imageURI === null ? null :
-                        <ImageCancleBtn onPress={ImageCancle}>
-                          <CancleIcon>
-                            <AntDesign name="close" size={12} color="white" />
-                          </CancleIcon>
-                        </ImageCancleBtn>
-                      }
-                    </SelectImageArea>
-                    <SelectImageArea onPress={ImageFIx}>
-                      <SelectImage source={{ uri: imageURI }} />
-                      {imageURI === null ? null :
-                        <ImageCancleBtn onPress={ImageCancle}>
-                          <CancleIcon>
-                            <AntDesign name="close" size={12} color="white" />
-                          </CancleIcon>
-                        </ImageCancleBtn>
-                      }
-                    </SelectImageArea>
-                    <SelectImageArea onPress={ImageFIx}>
-                      <SelectImage source={{ uri: imageURI }} />
-                      {imageURI === null ? null :
-                        <ImageCancleBtn onPress={ImageCancle}>
-                          <CancleIcon>
-                            <AntDesign name="close" size={12} color="white" />
-                          </CancleIcon>
-                        </ImageCancleBtn>
-                      }
-                    </SelectImageArea>
-                    <SelectImageArea onPress={ImageFIx}>
-                      <SelectImage source={{ uri: imageURI }} />
-                      {imageURI === null ? null :
-                        <ImageCancleBtn onPress={ImageCancle}>
-                          <CancleIcon>
-                            <AntDesign name="close" size={12} color="white" />
-                          </CancleIcon>
-                        </ImageCancleBtn>
-                      }
-                    </SelectImageArea>
-                  </SelectImageView>
-                  <FeedText
-                    placeholder="사진과 함께 남길 게시글을 작성해 보세요."
-                    onChangeText={(content) => setContent(content)}
-                    textContentType="none"
-                    autoCompleteType="off"
-                    autoCapitalize="none"
-                    multiline={true}
-                    returnKeyType="done"
-                    returnKeyLabel="done"
-                  >
-                    {valueInfos.map(({ str, isHT, idxArr }, idx) => {
-                      const [firstIdx, lastIdx] = idxArr;
-                      let value = title.slice(firstIdx, lastIdx + 1);
-                      const isLast = idx === valueInfos.length - 1;
-                      if (isHT) {
-                        return (
-                          <Text style={{ color: "skyblue", backgroundColor: "transparent" }}>
-                            {value}
-                            {!isLast && <Text style={{ backgroundColor: "transparent" }}> </Text>}
-                          </Text>
-                        );
-                      }
-                      return (
-                        <Text style={{ color: "black" }}>
-                          {value}
-                          {!isLast && <Text> </Text>}
-                        </Text>
-                      );
-                    })}
-                  </FeedText>
-                  <FeedCreateArea>
-                    <FeedCreateBtn onPress={onSubmit}>
-                      <FeedCreateText>저장</FeedCreateText>
-                    </FeedCreateBtn>
-                  </FeedCreateArea>
-               </>
-             </Container>
+        <Container>
+          <>
+            <ImagePickerView>
+              <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
+                {imageURI ? (
+                  // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
+                  <PickedImage height={imageHeight} source={{ uri: imageURI }} />
+                ) : (
+                  <PickBackground>
+                    {alert ? (
+                      <ImageCrop>
+                        <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
+                        <ImagePickerText>
+                          손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
+                        </ImagePickerText>
+                      </ImageCrop>
+                    ) : null}
+                  </PickBackground>
+                )}
+              </ImagePickerButton>
+            </ImagePickerView>
+            <SelectImageView>
+              <SelectImageArea onPress={ImageFIx}>
+                <SelectImage source={{ uri: imageURI }} />
+                {imageURI === null ? null :
+                  <ImageCancleBtn onPress={ImageCancle}>
+                    <CancleIcon>
+                      <AntDesign name="close" size={12} color="white" />
+                    </CancleIcon>
+                  </ImageCancleBtn>
+                }
+              </SelectImageArea>
+              <SelectImageArea onPress={ImageFIx}>
+                <SelectImage source={{ uri: imageURI }} />
+                {imageURI === null ? null :
+                  <ImageCancleBtn onPress={ImageCancle}>
+                    <CancleIcon>
+                      <AntDesign name="close" size={12} color="white" />
+                    </CancleIcon>
+                  </ImageCancleBtn>
+                }
+              </SelectImageArea>
+              <SelectImageArea onPress={ImageFIx}>
+                <SelectImage source={{ uri: imageURI }} />
+                {imageURI === null ? null :
+                  <ImageCancleBtn onPress={ImageCancle}>
+                    <CancleIcon>
+                      <AntDesign name="close" size={12} color="white" />
+                    </CancleIcon>
+                  </ImageCancleBtn>
+                }
+              </SelectImageArea>
+              <SelectImageArea onPress={ImageFIx}>
+                <SelectImage source={{ uri: imageURI }} />
+                {imageURI === null ? null :
+                  <ImageCancleBtn onPress={ImageCancle}>
+                    <CancleIcon>
+                      <AntDesign name="close" size={12} color="white" />
+                    </CancleIcon>
+                  </ImageCancleBtn>
+                }
+              </SelectImageArea>
+              <SelectImageArea onPress={ImageFIx}>
+                <SelectImage source={{ uri: imageURI }} />
+                {imageURI === null ? null :
+                  <ImageCancleBtn onPress={ImageCancle}>
+                    <CancleIcon>
+                      <AntDesign name="close" size={12} color="white" />
+                    </CancleIcon>
+                  </ImageCancleBtn>
+                }
+              </SelectImageArea>
+            </SelectImageView>
+            <FeedText
+              placeholder="사진과 함께 남길 게시글을 작성해 보세요."
+              onChangeText={(content) => setContent(content)}
+              autoCompleteType="off"
+              autoCapitalize="none"
+              autoCorrect={false}
+              multiline={true}
+              returnKeyType="done"
+              returnKeyLabel="done"
+            >
+              {valueInfos.map(({ str, isHT, idxArr }, idx) => {
+                const [firstIdx, lastIdx] = idxArr;
+                let value = title.slice(firstIdx, lastIdx + 1);
+                const isLast = idx === valueInfos.length - 1;
+                if (isHT) {
+                  return (
+                    <Text style={{ color: "skyblue", backgroundColor: "transparent" }}>
+                      {value}
+                      {!isLast && <Text style={{ backgroundColor: "transparent" }}> </Text>}
+                    </Text>
+                  );
+                }
+                return (
+                  <Text style={{ color: "black" }}>
+                    {value}
+                    {!isLast && <Text> </Text>}
+                  </Text>
+                );
+              })}
+            </FeedText>
+            <FeedCreateArea>
+              <FeedCreateBtn onPress={onSubmit}>
+                <FeedCreateText>저장</FeedCreateText>
+              </FeedCreateBtn>
+            </FeedCreateArea>
+          </>
+        </Container>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
