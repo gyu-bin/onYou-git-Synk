@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import styled from "styled-components/native";
 import {
   ActivityIndicator,
-  FlatList,
-  Platform,
+  FlatList, Keyboard,
+  KeyboardAvoidingView,
+  Platform, SafeAreaView, ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   useWindowDimensions,
   View
 } from "react-native";
@@ -21,6 +23,7 @@ import {
 } from "../../api";
 import { ModifiyPeedScreenProps } from "../../types/feed";
 import { RootStackParamList } from "../../types/Club";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -28,7 +31,7 @@ const Loader = styled.SafeAreaView`
   align-items: center;
   padding-top: ${Platform.OS === "android" ? StatusBar.currentHeight : 0}px;
 `;
-const Container=styled.View`
+const Container=styled.SafeAreaView`
   flex: 1;
 `
 const FeedUser = styled.View`
@@ -66,7 +69,9 @@ const ClubName = styled.Text`
   color: white;
 `;
 const FeedImage = styled.View`
-  padding: 20px;
+  padding: 10px 10px;
+  justify-content: center;
+  align-items: center;
 `;
 
 const FeedImageUrl=styled.Image`
@@ -79,9 +84,11 @@ const Content = styled.View`
 
 const Ment = styled.TextInput`
   width: 100%;
-  height: 15%;
+  height: 30%;
   color: black;
-  font-size: 12px;
+  font-size: 20px;
+  background-color: aquamarine;
+  padding-left: 20px;
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
@@ -89,11 +96,17 @@ const ImageSource = styled.Image<{ size: number }>`
   height: ${(props) => props.size}px;
 `;
 
-const FixCompleteArea = styled.View``
+const FixCompleteArea = styled.View`
+  width: 100%;
+  background-color: red;
+  text-align: center;
+  height: 50px;
+  top: 20px;
+`
 const FixCompleteBtn = styled.TouchableOpacity``
 const FixCompleteText = styled.Text`
   font-size: 20px;
-  text-align: center;
+  padding-left: 20px;
 `
 
 interface FeedEditItem{
@@ -174,87 +187,43 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
     mutation.mutate(requestData);
   };
 
-  // @ts-ignore
-  return feedsLoading ?(
-    <Loader>
-      <ActivityIndicator/>
-    </Loader>
-    ):(
-      <>
-    <Container>
-      <View>
-        <View>
-          <FeedUser >
-            <UserImage source={{ uri: userInfo?.data.thumbnail }} />
-            <UserInfo>
-              <UserId>{data.userName}</UserId>
-              <UserId>{data.id}</UserId>
-              <ClubBox>
-                <ClubName>{data.clubName}</ClubName>
-              </ClubBox>
-            </UserInfo>
-          </FeedUser>
-
-          <FeedImage>
-            <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
-          </FeedImage>
-          <Content>
-            <Ment onChangeText={(content) => setContent(content)}>
-              {/*<Ment>*/}
-                {data.content}
-              </Ment>
-          </Content>
-        <FixCompleteArea>
-          <FixCompleteBtn onPress={FixComplete}>
-            {/*<TouchableOpacity>*/}
-              <FixCompleteText>수정완료</FixCompleteText>
-            </FixCompleteBtn>
-        </FixCompleteArea>
-        </View>
-      </View>
-      {/*{items?.map((item,index)=>(
-        <View key={index}>
-          <View>
-            {item.content}
-          </View>
-        </View>
-      ))}*/}
-      {/*<FlatList
-        keyExtractor={(item: Feed, index: number) => String(index)}
-        data={feeds?.data}
-        renderItem={({ item, index }: { item: Feed; index: number }) => (
-          <>
-          <View key={index}>
-            <FeedUser >
-              <UserImage source={{ uri: "https://i.pinimg.com/564x/9e/d8/4c/9ed84cf3fc04d0011ec4f75c0692c83e.jpg" }} />
-              <UserInfo>
-                <UserId>{item.userName}</UserId>
-                <ClubBox>
-                  <ClubName>{item.clubName}</ClubName>
-                </ClubBox>
-              </UserInfo>
-            </FeedUser>
-
-            <FeedImage>
-              <ImageSource source={item.imageUrls[0] === undefined ? require("../../assets/basic.jpg") : { uri: item.imageUrls[0] }}  size={FEED_IMAGE_SIZE}/>
-            </FeedImage>
-            <Content>
-              <Ment onChangeText={(content) => setContent(content)}>
-              <Ment>
-                {item.content}
-              </Ment>
-            </Content>
-
-            <TouchableOpacity onPress={FixComplete}>
-            <TouchableOpacity>
-              <Text>수정완료</Text>
-            </TouchableOpacity>
-          </View>
-          </>
-        )}></FlatList>*/}
-    </Container>
-    </>
-  );
-}
-
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+              <Container>
+                <ScrollView>
+                  <FeedUser >
+                    <UserImage source={{ uri: userInfo?.data.thumbnail }} />
+                    <UserInfo>
+                      <UserId>{data.userName}</UserId>
+                      <UserId>{data.id}</UserId>
+                      <ClubBox>
+                        <ClubName>{data.clubName}</ClubName>
+                      </ClubBox>
+                    </UserInfo>
+                  </FeedUser>
+                  <FeedImage>
+                    <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+                  </FeedImage>
+                  <Ment
+                    onChangeText={(content) => setContent(content)}
+                    autoCompleteType="off"
+                    autoCapitalize="none"
+                    multiline={true}
+                    returnKeyType="done"
+                    returnKeyLabel="done"
+                  >
+                    {data.content}
+                  </Ment>
+                  <FixCompleteArea>
+                    <FixCompleteBtn onPress={FixComplete}>
+                      <FixCompleteText>수정완료</FixCompleteText>
+                    </FixCompleteBtn>
+                  </FixCompleteArea>
+                </ScrollView>
+              </Container>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
+    );
+};
 export default ModifiyPeed;

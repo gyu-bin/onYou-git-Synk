@@ -2,14 +2,23 @@ import { MaterialCommunityIcons,AntDesign } from "@expo/vector-icons";
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Alert, Keyboard,
-  KeyboardAvoidingView, Text, TouchableOpacity, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView, ScrollView,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View
+} from "react-native";
 import styled from "styled-components/native";
 import { useMutation } from "react-query";
 import { useSelector } from "react-redux";
 import { FeedApi,FeedCreationRequest } from "../../api";
 import { FeedCreateScreenProps,  } from '../../types/feed';
-import MultiImagePicker from 'react-native-image-crop-picker';
 
 interface ValueInfo {
   str: string;
@@ -23,7 +32,7 @@ const Container = styled.SafeAreaView`
 `;
 const ImagePickerView = styled.View`
   width: 100%;
-  height: 50%;
+  height: 60%;
   align-items: center;
 `;
 
@@ -237,11 +246,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const ImageFIx = () => {};
 
   /** X선택시 사진 없어지는 태그 */
-  const ImageCancle = () => {
-    uri: imageURI === null;
-    imageURI == "";
-    console.log(imageURI);
-  };
+  const ImageCancle = () => {};
 
   useEffect(() => {
     return () => setLoading(false);
@@ -249,117 +254,118 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={10} style={{ flex: 1 }}>
-    <Container>
-        <>
-          <ImagePickerView>
-            <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
-              {imageURI ? (
-                // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
-                <PickedImage height={imageHeight} source={{ uri: imageURI }} />
-              ) : (
-                <PickBackground>
-                  {alert === true ? (
-                    <ImageCrop>
-                      <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
-                      <ImagePickerText>
-                        손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
-                      </ImagePickerText>
-                    </ImageCrop>
-                  ) : null}
-                </PickBackground>
-              )}
-            </ImagePickerButton>
-          </ImagePickerView>
-          <SelectImageView>
-            <SelectImageArea onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              {imageURI === null ? null :
-                <ImageCancleBtn onPress={ImageCancle}>
-                  <CancleIcon>
-                    <AntDesign name="close" size={12} color="white" />
-                  </CancleIcon>
-                </ImageCancleBtn>
-              }
-            </SelectImageArea>
-            <SelectImageArea onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              {imageURI === null ? null :
-                <ImageCancleBtn onPress={ImageCancle}>
-                  <CancleIcon>
-                    <AntDesign name="close" size={12} color="white" />
-                  </CancleIcon>
-                </ImageCancleBtn>
-              }
-            </SelectImageArea>
-            <SelectImageArea onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              {imageURI === null ? null :
-                <ImageCancleBtn onPress={ImageCancle}>
-                  <CancleIcon>
-                    <AntDesign name="close" size={12} color="white" />
-                  </CancleIcon>
-                </ImageCancleBtn>
-              }
-            </SelectImageArea>
-            <SelectImageArea onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              {imageURI === null ? null :
-                <ImageCancleBtn onPress={ImageCancle}>
-                  <CancleIcon>
-                    <AntDesign name="close" size={12} color="white" />
-                  </CancleIcon>
-                </ImageCancleBtn>
-              }
-            </SelectImageArea>
-            <SelectImageArea onPress={ImageFIx}>
-              <SelectImage source={{ uri: imageURI }} />
-              {imageURI === null ? null :
-                <ImageCancleBtn onPress={ImageCancle}>
-                  <CancleIcon>
-                    <AntDesign name="close" size={12} color="white" />
-                  </CancleIcon>
-                </ImageCancleBtn>
-              }
-            </SelectImageArea>
-          </SelectImageView>
-          <FeedText
-            placeholder="사진과 함께 남길 게시글을 작성해 보세요."
-            onChangeText={(content) => setContent(content)}
-            textContentType="none"
-            autoCompleteType="off"
-            autoCapitalize="none"
-            multiline={true}
-            returnKeyType="done"
-            returnKeyLabel="done"
-          >
-            {valueInfos.map(({ str, isHT, idxArr }, idx) => {
-              const [firstIdx, lastIdx] = idxArr;
-              let value = title.slice(firstIdx, lastIdx + 1);
-              const isLast = idx === valueInfos.length - 1;
-              if (isHT) {
-                return (
-                  <Text style={{ color: "skyblue", backgroundColor: "transparent" }}>
-                    {value}
-                    {!isLast && <Text style={{ backgroundColor: "transparent" }}> </Text>}
-                  </Text>
-                );
-              }
-              return (
-                <Text style={{ color: "black" }}>
-                  {value}
-                  {!isLast && <Text> </Text>}
-                </Text>
-              );
-            })}
-          </FeedText>
-          <FeedCreateArea>
-            <FeedCreateBtn onPress={onSubmit}>
-              <FeedCreateText>저장</FeedCreateText>
-            </FeedCreateBtn>
-          </FeedCreateArea>
-        </>
-    </Container>
+      <KeyboardAvoidingView
+        behavior={Platform.select({ios: 'padding', android: undefined})} style={{ flex: 1 }}>
+             <Container>
+               <>
+                  <ImagePickerView>
+                    <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
+                      {imageURI ? (
+                        // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
+                        <PickedImage height={imageHeight} source={{ uri: imageURI }} />
+                      ) : (
+                        <PickBackground>
+                          {alert ? (
+                            <ImageCrop>
+                              <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
+                              <ImagePickerText>
+                                손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
+                              </ImagePickerText>
+                            </ImageCrop>
+                          ) : null}
+                        </PickBackground>
+                      )}
+                    </ImagePickerButton>
+                  </ImagePickerView>
+                  <SelectImageView>
+                    <SelectImageArea onPress={ImageFIx}>
+                      <SelectImage source={{ uri: imageURI }} />
+                      {imageURI === null ? null :
+                        <ImageCancleBtn onPress={ImageCancle}>
+                          <CancleIcon>
+                            <AntDesign name="close" size={12} color="white" />
+                          </CancleIcon>
+                        </ImageCancleBtn>
+                      }
+                    </SelectImageArea>
+                    <SelectImageArea onPress={ImageFIx}>
+                      <SelectImage source={{ uri: imageURI }} />
+                      {imageURI === null ? null :
+                        <ImageCancleBtn onPress={ImageCancle}>
+                          <CancleIcon>
+                            <AntDesign name="close" size={12} color="white" />
+                          </CancleIcon>
+                        </ImageCancleBtn>
+                      }
+                    </SelectImageArea>
+                    <SelectImageArea onPress={ImageFIx}>
+                      <SelectImage source={{ uri: imageURI }} />
+                      {imageURI === null ? null :
+                        <ImageCancleBtn onPress={ImageCancle}>
+                          <CancleIcon>
+                            <AntDesign name="close" size={12} color="white" />
+                          </CancleIcon>
+                        </ImageCancleBtn>
+                      }
+                    </SelectImageArea>
+                    <SelectImageArea onPress={ImageFIx}>
+                      <SelectImage source={{ uri: imageURI }} />
+                      {imageURI === null ? null :
+                        <ImageCancleBtn onPress={ImageCancle}>
+                          <CancleIcon>
+                            <AntDesign name="close" size={12} color="white" />
+                          </CancleIcon>
+                        </ImageCancleBtn>
+                      }
+                    </SelectImageArea>
+                    <SelectImageArea onPress={ImageFIx}>
+                      <SelectImage source={{ uri: imageURI }} />
+                      {imageURI === null ? null :
+                        <ImageCancleBtn onPress={ImageCancle}>
+                          <CancleIcon>
+                            <AntDesign name="close" size={12} color="white" />
+                          </CancleIcon>
+                        </ImageCancleBtn>
+                      }
+                    </SelectImageArea>
+                  </SelectImageView>
+                  <FeedText
+                    placeholder="사진과 함께 남길 게시글을 작성해 보세요."
+                    onChangeText={(content) => setContent(content)}
+                    textContentType="none"
+                    autoCompleteType="off"
+                    autoCapitalize="none"
+                    multiline={true}
+                    returnKeyType="done"
+                    returnKeyLabel="done"
+                  >
+                    {valueInfos.map(({ str, isHT, idxArr }, idx) => {
+                      const [firstIdx, lastIdx] = idxArr;
+                      let value = title.slice(firstIdx, lastIdx + 1);
+                      const isLast = idx === valueInfos.length - 1;
+                      if (isHT) {
+                        return (
+                          <Text style={{ color: "skyblue", backgroundColor: "transparent" }}>
+                            {value}
+                            {!isLast && <Text style={{ backgroundColor: "transparent" }}> </Text>}
+                          </Text>
+                        );
+                      }
+                      return (
+                        <Text style={{ color: "black" }}>
+                          {value}
+                          {!isLast && <Text> </Text>}
+                        </Text>
+                      );
+                    })}
+                  </FeedText>
+                  <FeedCreateArea>
+                    <FeedCreateBtn onPress={onSubmit}>
+                      <FeedCreateText>저장</FeedCreateText>
+                    </FeedCreateBtn>
+                  </FeedCreateArea>
+               </>
+             </Container>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

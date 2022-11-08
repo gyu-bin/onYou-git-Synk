@@ -1,5 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Platform, StatusBar, FlatList, Button, TextInput, Alert, Animated, ActivityIndicator, Image } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  StatusBar,
+  FlatList,
+  Button,
+  TextInput,
+  Alert,
+  Animated,
+  ActivityIndicator,
+  Image,
+  Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, SafeAreaView
+} from "react-native";
 import styled from "styled-components/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -20,6 +35,7 @@ import {
   ModifiyPeedScreenProps,
   ReplyPageScreenProps
 } from "../../types/feed";
+import { useToast } from "react-native-toast-notifications";
 const Container = styled.SafeAreaView`
   flex: 1;
   height: 100%;
@@ -27,7 +43,7 @@ const Container = styled.SafeAreaView`
   width: 100%;
 `;
 
-const ReplyContainer = styled.View`
+const ReplyContainer = styled.ScrollView`
   height: 100%;
   flex-basis: 90%;
 `;
@@ -40,7 +56,6 @@ const CommentArea = styled.View`
   flex: 1;
   flex-direction: row;
   width: 100%;
-  top: 6px;
   margin: 10px 20px 0 20px;
 `;
 
@@ -85,9 +100,9 @@ const Time = styled.Text`
 const ReplyArea = styled.View`
   display: flex;
   flex-direction: row;
-  padding: 10px 0 10px 20px;
+  padding: 5px 0 5px 20px;
   border: solid 0.5px #c4c4c4;
-  bottom: 0;
+  top: 3%;
 `;
 
 const ReplyInputArea = styled.View`
@@ -100,6 +115,8 @@ const ReplyInputArea = styled.View`
 const ReplyInput = styled.TextInput`
   color: #b0b0b0;
   left: 15px;
+  width: 80%;
+  height: 35px;
 `;
 
 const ReplyImg = styled.Image`
@@ -123,6 +140,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                      navigation:{navigate},
                      route: { params: { feedData }},
                    }) => {
+  const toast = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const token = useSelector((state) => state.AuthReducers.authToken);
@@ -178,11 +196,18 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
   });
 
   const RelpyFeed=()=>{
+    if(content === ''){
+      /* toast.show("댓글 공백으로 하지 마세요",{
+         type: 'warning'
+       })*/
+      Alert.alert('공백임')
+
+    }
     const data = {
       id: feedData.id,
       content: content,
     };
-
+    Keyboard.dismiss();
     // console.log(data);
     const likeRequestData: FeedReplyRequest=
       {
@@ -192,14 +217,13 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
 
     mutation.mutate(likeRequestData);
   };
-
   return (
-    <Container>
-      <ReplyContainer>
-        {loading ? (
-          <ActivityIndicator />
-        ) : (
-          <FlatList
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <KeyboardAvoidingView
+            behavior={Platform.select({ios: 'padding', android: undefined})} style={{ flex: 1 }}>
+          <Container>
+         <ReplyContainer>
+           <FlatList
             refreshing={refreshing}
             onRefresh={onRefresh}
             keyExtractor={(item: Reply, index: number) => String(index)}
@@ -213,13 +237,12 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                     <Comment>{item.content}</Comment>
                   </CommentMent>
                   <CommentRemainder>
-                    <Time>{rand(1, 60)}분 전</Time>
+                    <Time>{item.created}</Time>
                   </CommentRemainder>
                 </View>
               </CommentArea>
             )}
           />
-        )}
       </ReplyContainer>
       <ReplyWriteArea>
         <ReplyArea>
@@ -231,23 +254,22 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
           <ReplyInputArea>
             <ReplyInput
               placeholder=" 댓글을 입력해보세요..."
-              value={content}
-              onChangeText={(value:string) => setContent(value)}
-              textContentType="none"
-              autoCompleteType="off"
+              onChangeText={(content) => setContent(content)}
               autoCapitalize="none"
               multiline={true}
-              maxLength={100}
+              returnKeyType="done"
+              returnKeyLabel="done"
             >
             </ReplyInput>
             <ReplyButton onPress={RelpyFeed}>
               <ReplyDone>게시</ReplyDone>
             </ReplyButton>
           </ReplyInputArea>
-
         </ReplyArea>
       </ReplyWriteArea>
     </Container>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 export default ReplyPage;
