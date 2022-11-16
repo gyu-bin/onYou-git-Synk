@@ -47,6 +47,7 @@ const ReplyContainer = styled.ScrollView`
   height: 100%;
   flex-basis: 90%;
 `;
+
 const ReplyWriteArea = styled.View`
   height: 100%;
   flex-basis: 10%;
@@ -100,9 +101,9 @@ const Time = styled.Text`
 const ReplyArea = styled.View`
   display: flex;
   flex-direction: row;
-  padding: 5px 0 5px 20px;
+  padding: 5px 0 0 20px;
   border: solid 0.5px #c4c4c4;
-  top: 3%;
+  position: relative;
 `;
 
 const ReplyInputArea = styled.View`
@@ -116,7 +117,6 @@ const ReplyInput = styled.TextInput`
   color: #b0b0b0;
   left: 15px;
   width: 80%;
-  height: 35px;
 `;
 
 const ReplyImg = styled.Image`
@@ -219,10 +219,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView
-        behavior={Platform.select({ios: 'padding', android: undefined})} style={{ flex: 1 }}>
         <Container>
-          <ReplyContainer>
             <FlatList
               refreshing={refreshing}
               onRefresh={onRefresh}
@@ -243,7 +240,8 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                 </CommentArea>
               )}
             />
-          </ReplyContainer>
+          {/*keyboardStatus android: clear 근데 아래 공백생김, ios: ?*/}
+          <KeyboardAvoidingView behavior={Platform.select({ios: 'padding', android: 'height'})}>
           <ReplyWriteArea>
             <ReplyArea>
               <ReplyImg
@@ -254,23 +252,25 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
               <ReplyInputArea>
                 {replys?.data.length === null ?
                   <ReplyInput
-                    placeholder=" 댓글을 입력해보세요..."
+                    placeholder="댓글을 입력해보세요..."
                     onChangeText={(content) => setContent(content)}
                     autoCompleteType="off"
                     autoCapitalize="none"
                     autoCorrect={false}
                     multiline={true}
                     returnKeyType="done"
-                    returnKeyLabel="done"></ReplyInput>:
+                    returnKeyLabel="done"
+                  />:
                   <ReplyInput
-                    placeholder=" 댓글을 입력해보세요..."
+                    placeholder="댓글을 입력해보세요..."
                     onChangeText={(content) => setContent(content)}
                     autoCompleteType="off"
                     autoCapitalize="none"
                     autoCorrect={false}
                     multiline={true}
                     returnKeyType="done"
-                    returnKeyLabel="done"></ReplyInput>
+                    returnKeyLabel="done"
+                  />
                 }
                 <ReplyButton onPress={RelpyFeed}>
                   <ReplyDone>게시</ReplyDone>
@@ -278,8 +278,8 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
               </ReplyInputArea>
             </ReplyArea>
           </ReplyWriteArea>
+          </KeyboardAvoidingView>
         </Container>
-      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };

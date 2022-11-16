@@ -1,5 +1,5 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import { Feather, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Alert,
   Dimensions,
@@ -10,9 +10,14 @@ import {
   useWindowDimensions,
   View,
   ActivityIndicator,
-  Platform, StatusBar, ScrollView, VirtualizedList
+  Platform, StatusBar, ScrollView, VirtualizedList,RefreshControl
 } from "react-native";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient
+} from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 import {
@@ -32,11 +37,12 @@ import {
   Club
 } from "../api";
 import CustomText from "../components/CustomText";
-import ImageSelecter from "./HomeRelevant/ImageSelecter";
 import {
   FeedData,
   HomeScreenProps,
 } from "../types/feed";
+import { Modalize, useModalize } from "react-native-modalize";
+import { Portal } from "react-native-portalize";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -46,7 +52,8 @@ const Loader = styled.SafeAreaView`
 `;
 const Container = styled.SafeAreaView`
   flex: 1;
-  top: ${Platform.OS === 'android' ? 3 : 0}%;
+  top: ${Platform.OS === 'android' ? 5 : 0}%;
+  margin-bottom: ${Platform.OS === 'android' ? 3 : 0}%;
 `;
 
 const HeaderView = styled.View<{ size: number }>`
@@ -107,7 +114,9 @@ const ClubName = styled.Text`
 
 //ModalStyle
 //ModalStyle
-const ModalArea = styled.View``;
+const ModalArea = styled.View`
+  flex: 1;
+`;
 
 const ModalIcon = styled.TouchableOpacity``;
 const CenteredView = styled.View`
@@ -118,9 +127,12 @@ const CenteredView = styled.View`
   opacity: 0.8;
 `;
 
+const ModalContainer = styled.View`
+  flex: 1;
+`;
+
 const ModalView = styled.View`
   background-color: white;
-  padding: 35px;
   align-items: center;
   opacity: 1;
   width: 100%;
@@ -241,20 +253,17 @@ const Home:React.FC<HomeScreenProps> = ({
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
+  const { ref: modalSheetRef, open: openModalSheet, close: closeFilteringSheet } = useModalize();
+  const modalizeRef = useRef<Modalize>(null);
 
+  const onOpen = (feedData:Feed) => {
+    modalizeRef.current?.open();
+  };
 
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
-  const [modalMap, setModaltMap] = useState(new Map());
-  /*
- let selectFeedId = new Map();
-for (let i = 0; i < res?.data?.length; ++i) {
-      selectFeedId.set(res.data[i].id, res.data[i].id);
-      //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
-      // setFeedId(selectFeedId);
- */
   //피드
   const {
     isLoading: feedsLoading,
@@ -264,26 +273,53 @@ for (let i = 0; i < res?.data?.length; ++i) {
     //useQuery(["getFeeds", token], FeedApi.getFeeds, {
     onSuccess: (res) => {
       setIsPageTransition(false);
-
       let heartDataMap = new Map();
-      let modalMap = new Map();
 
       for (let i = 0; i < res?.data?.length; ++i) {
-        heartDataMap.set(res.data[i].id, false);
-        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
-      }
-      for (let i = 0; i < res?.data?.length; ++i) {
-        modalMap.set(res.data[i].id, res.data[i].id);
+        heartDataMap.set(res?.data[i].id, false);
         //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
       }
       setHeartMap(heartDataMap);
-      setModaltMap(modalMap);
     },
     onError: (err) => {
       console.log(err);
     },
   });
+  //무한스크롤
+  /*const {
+    isLoading: feedsLoading,
+    data: feeds,
+    isRefetching: isRefetchingFeeds,
+    hasNextPage,
+    refetch: feedRefetch,
+  } = useInfiniteQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
+    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
+    getNextPageParam: (currentPage) => {
+      if (currentPage) {
+        return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
+      }
+    },
+    onSuccess: (res) => {
+      setIsPageTransition(false);
 
+      /!*let heartDataMap = new Map();
+      let modalMap = new Map();*!/
+      console.log(res+'ress')
+      /!*for (let i = 0; i < res?.pages..length; ++i) {
+        heartDataMap.set(res?.responses?.content[i].id, false);
+        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+      }
+      for (let i = 0; i < res?.responses?.content?.length; ++i) {
+        modalMap.set(res?.responses?.content[i]?.id, res?.responses?.content[i].id);
+        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+      }*!/
+      /!*setHeartMap(heartDataMap);
+      setModaltMap(modalMap);*!/
+    },
+    onError: (err) => {
+      console.log(err);
+    },
+  });*/
   //User
   const {
     isLoading: userInfoLoading, // true or false
@@ -296,7 +332,6 @@ for (let i = 0; i < res?.data?.length; ++i) {
   const LikeMutation = useMutation( FeedApi.likeCount, {
     onSuccess: (res) => {
       if (res.status === 200) {
-        console.log(res)
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -359,21 +394,12 @@ for (let i = 0; i < res?.data?.length; ++i) {
 
   const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
 
-  /*  const ModalInfo = (feedData:Feed)=>{
-      setModalInfo(!ModalInfo);
-      toggleModal(feedData)
-      console.log(feedData.id)
-    }
-
-    const toggleModal = (feedData:Feed) => {
-      setModaltMap((prev) => new Map(prev).set(feedData.id, prev.get(feedData.id)))
-      console.log(feedData.id,feedData.userName,modalMap.get(feedData.id))
-    };*/
-
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
     setRefreshing(false);
   };
+
+
   const goToReply = (feedData: Feed) => {
     navigate("HomeStack", {
       screen: "ReplyPage",
@@ -426,9 +452,11 @@ for (let i = 0; i < res?.data?.length; ++i) {
   };
 
   const onRefresh = async () => {
-    await queryClient.refetchQueries(["feeds"]);
+    setRefreshing(true);
+    await queryClient.refetchQueries([feeds]);
     setRefreshing(false);
   };
+
 
   const loading = feedsLoading && userInfoLoading;
 
@@ -439,7 +467,6 @@ for (let i = 0; i < res?.data?.length; ++i) {
   ):(
     <>
       <Container>
-        <ScrollView>
           <FeedContainer>
             <HeaderView size={SCREEN_PADDING_SIZE}>
               <SubView>
@@ -455,6 +482,9 @@ for (let i = 0; i < res?.data?.length; ++i) {
               onRefresh={onRefresh}
               keyExtractor={(item: Feed, index: number) => String(index)}
               data={feeds?.data}
+              /*refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
+              }*/
               renderItem={({ item, index }: { item: Feed; index: number }) => (
                 <>
                   <FeedHeader key={index}>
@@ -466,32 +496,48 @@ for (let i = 0; i < res?.data?.length; ++i) {
                       />
                       <UserInfo>
                         <UserId>{item.userName}</UserId>
-                        {/*<UserId>{myName}</UserId>*/}
-                        {/*<UserId>{item.id}</UserId>*/}
+                        <UserId>{myName}</UserId>
+                        <UserId>{item.id}</UserId>
                         <ClubBox>
                           <ClubName>{item.clubName}</ClubName>
                         </ClubBox>
                       </UserInfo>
                     </FeedUser>
-                    <ModalArea>
-                      <ModalIcon onPress={()=>toggleModal()}>
-                        <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
-                      </ModalIcon>
                       <View>
-                        <Modal animationType="slide" transparent={true} visible={isModalVisible}>
-                          <CenteredView onTouchEnd={closeModal}>
+                        <ModalIcon
+                          onPress={()=>onOpen(item)}>
+                          <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
+                          <Text>{item.id}</Text>
+                        </ModalIcon>
+                      </View>
+                      <Portal>
+                        <Modalize
+                          ref={modalizeRef}
+                          modalHeight={250}
+                          handlePosition="inside"
+                          modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
+                        >
+                          <ModalContainer key={item.id} >
+                            {userInfo?.data.id===item.userId ?
                             <ModalView>
                               <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
                               <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
                                 삭제
                               </ModalText>
-                              <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
-                              {/*<Text>{item.userName},{myName},{item.id}</Text>*/}
+                              <Text>{item.userName},{myName},{item.id}</Text>
                             </ModalView>
-                          </CenteredView>
-                        </Modal>
-                      </View>
-                    </ModalArea>
+                              :
+                              <ModalView>
+                                <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
+                                <Text>{item.userName},{myName},{item.id}</Text>
+                              </ModalView>
+                            }
+                            <ModalView>
+                            </ModalView>
+                          </ModalContainer>
+                        </Modalize>
+                      </Portal>
+
                   </FeedHeader>
                   <FeedMain>
                     <FeedImage>
@@ -501,11 +547,13 @@ for (let i = 0; i < res?.data?.length; ++i) {
                       <LeftInfo>
                         <InfoArea>
                           <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
-                            {heartMap.get(item.id) ? <TouchableOpacity onPress={()=>LikeFeed(item)}><Ionicons name="md-heart" size={20} color="red" /></TouchableOpacity> :
+                            {heartMap.get(item.id)?
+                              <TouchableOpacity onPress={()=>LikeFeed(item)}><Ionicons name="md-heart" size={20} color="red" /></TouchableOpacity>
+                              :
                               <TouchableOpacity onPress={()=>LikeReverseFeed(item)}><Ionicons  name="md-heart-outline" size={20} color="black"/></TouchableOpacity>}
                           </TouchableOpacity>
-                          {heartMap.get(item.id) ? <LikeClick ><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                            : <LikeClick><NumberText>{item.likesCount }</NumberText></LikeClick>}
+                          {heartMap.get(item.id) === true? <LikeClick ><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                            : <LikeClick><NumberText>{item.likesCount}</NumberText></LikeClick>}
                         </InfoArea>
                         <InfoArea>
                           <TouchableOpacity onPress={() => goToReply(item)}>
@@ -528,10 +576,8 @@ for (let i = 0; i < res?.data?.length; ++i) {
               )}
             />
           </FeedContainer>
-        </ScrollView>
       </Container>
     </>
   );
 };
 export default Home;
-

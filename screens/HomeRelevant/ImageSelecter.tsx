@@ -34,6 +34,7 @@ const ImagePickerView = styled.View`
   width: 100%;
   height: 55%;
   align-items: center;
+  top: 3%;
 `;
 
 const PickBackground = styled.ImageBackground`
@@ -254,9 +255,9 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView
-        behavior={Platform.select({ios: 'padding', android: undefined})} style={{ flex: 1 }}>
         <Container>
+          <KeyboardAvoidingView
+            behavior={Platform.select({ios: 'padding', android: 'position'})} style={{ flex: 1 }}>
           <>
             <ImagePickerView>
               <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
@@ -365,8 +366,8 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
               </FeedCreateBtn>
             </FeedCreateArea>
           </>
+          </KeyboardAvoidingView>
         </Container>
-      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };
