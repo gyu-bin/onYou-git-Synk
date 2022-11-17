@@ -43,6 +43,8 @@ import {
 } from "../types/feed";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
+import { SliderBox } from "react-native-image-slider-box";
+import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -53,7 +55,7 @@ const Loader = styled.SafeAreaView`
 const Container = styled.SafeAreaView`
   flex: 1;
   top: ${Platform.OS === 'android' ? 5 : 0}%;
-  margin-bottom: ${Platform.OS === 'android' ? 3 : 0}%;
+  padding-bottom:  ${Platform.OS === 'android' ? 5 : 0}%;
 `;
 
 const HeaderView = styled.View<{ size: number }>`
@@ -248,18 +250,17 @@ const Home:React.FC<HomeScreenProps> = ({
                                         })=> {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [modalInfo, setModalInfo] = useState(false);
   const queryClient = useQueryClient();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
-  const { ref: modalSheetRef, open: openModalSheet, close: closeFilteringSheet } = useModalize();
-  const modalizeRef = useRef<Modalize>(null);
 
+  //모달
+  const modalizeRef = useRef<Modalize>(null);
   const onOpen = (feedData:Feed) => {
-    modalizeRef.current?.open();
+    modalizeRef.current?.open(feedData);
   };
 
   //heart선택
@@ -450,13 +451,11 @@ const Home:React.FC<HomeScreenProps> = ({
     );
     setModalVisible(!isModalVisible);
   };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await queryClient.refetchQueries([feeds]);
+    await queryClient.refetchQueries(["feeds"]);
     setRefreshing(false);
   };
-
 
   const loading = feedsLoading && userInfoLoading;
 
@@ -482,11 +481,8 @@ const Home:React.FC<HomeScreenProps> = ({
               onRefresh={onRefresh}
               keyExtractor={(item: Feed, index: number) => String(index)}
               data={feeds?.data}
-              /*refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
-              }*/
               renderItem={({ item, index }: { item: Feed; index: number }) => (
-                <>
+                <ScrollView>
                   <FeedHeader key={index}>
                     <FeedUser>
                       <UserImage
@@ -517,12 +513,12 @@ const Home:React.FC<HomeScreenProps> = ({
                           handlePosition="inside"
                           modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
                         >
-                          <ModalContainer key={item.id} >
+                          <ModalContainer >
                             {userInfo?.data.id===item.userId ?
                             <ModalView>
                               <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
                               <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
-                                삭제
+                                삭제2
                               </ModalText>
                               <Text>{item.userName},{myName},{item.id}</Text>
                             </ModalView>
@@ -537,11 +533,12 @@ const Home:React.FC<HomeScreenProps> = ({
                           </ModalContainer>
                         </Modalize>
                       </Portal>
-
                   </FeedHeader>
                   <FeedMain>
                     <FeedImage>
-                      <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+                      <SliderBox images={item.imageUrls[0]===undefined? ["https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg","https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"]
+                        : ["item.imageUrls[0]","item.imageUrls[1]"]} sliderBoxHeight={FEED_IMAGE_SIZE}/>
+                      {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
                     </FeedImage>
                     <FeedInfo>
                       <LeftInfo>
@@ -572,7 +569,7 @@ const Home:React.FC<HomeScreenProps> = ({
                       </Ment>
                     </Content>
                   </FeedMain>
-                </>
+                </ScrollView>
               )}
             />
           </FeedContainer>

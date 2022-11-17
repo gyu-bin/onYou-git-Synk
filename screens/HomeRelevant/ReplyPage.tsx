@@ -1,57 +1,45 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-  StatusBar,
-  FlatList,
-  Button,
-  TextInput,
-  Alert,
-  Animated,
   ActivityIndicator,
-  Image,
-  Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, SafeAreaView
+  Alert,
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
 import styled from "styled-components/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
-import { Dimensions } from "react-native";
 import {
+  FeedApi,
+  FeedReplyRequest,
+  getReply,
+  getUserInfo,
   Reply,
   ReplyReponse,
-  User,
-  FeedApi,
-  UserInfoResponse,
-  getUserInfo,
   UserApi,
-  getReply,
-  FeedLikeRequest, FeedReplyRequest
+  UserInfoResponse
 } from "../../api";
-import {
-  ModifiyPeedScreenProps,
-  ReplyPageScreenProps
-} from "../../types/feed";
+import { ModifiyPeedScreenProps } from "../../types/feed";
 import { useToast } from "react-native-toast-notifications";
-const Container = styled.SafeAreaView`
+
+const Loader = styled.SafeAreaView`
   flex: 1;
+`;
+
+const Container = styled.SafeAreaView`
   height: 100%;
-  position: absolute;
+  position: relative;
   width: 100%;
 `;
 
-const ReplyContainer = styled.ScrollView`
-  height: 100%;
-  flex-basis: 90%;
-`;
-
-const ReplyWriteArea = styled.View`
-  height: 100%;
-  flex-basis: 10%;
-`;
+const CommentList = styled.View`
+  height: 95%;
+`
 
 const CommentArea = styled.View`
   flex: 1;
@@ -101,9 +89,9 @@ const Time = styled.Text`
 const ReplyArea = styled.View`
   display: flex;
   flex-direction: row;
-  padding: 5px 0 0 20px;
+  padding: 1% 0 0 20px;
   border: solid 0.5px #c4c4c4;
-  position: relative;
+  height: 100%;
 `;
 
 const ReplyInputArea = styled.View`
@@ -141,18 +129,13 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                                                       route: { params: { feedData }},
                                                     }) => {
   const toast = useToast();
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
 
   const [content, setContent] = useState("");
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await queryClient.refetchQueries(["replys"]);
-    setRefreshing(false);
-  };
+
   /** 리플 데이터   */
   const { data: replys, isLoading: replysLoading } =
     useQuery<ReplyReponse>(["getReply",token,feedData.id], FeedApi.getReply,{
@@ -217,32 +200,46 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
 
     mutation.mutate(likeRequestData);
   };
-  return (
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.refetchQueries(["replys"]);
+    setRefreshing(false);
+  };
+
+  return replysLoading ? (
+    <Loader>
+      <ActivityIndicator/>
+    </Loader>
+    ):(
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <Container>
+          <CommentList>
             <FlatList
               refreshing={refreshing}
               onRefresh={onRefresh}
               keyExtractor={(item: Reply, index: number) => String(index)}
               data={replys?.data}
               renderItem={({ item, index }: { item: Reply; index: number }) => (
-                <CommentArea key={index}>
-                  <CommentImg source={{ uri: item.thumbnail }} />
-                  <View style={{ marginBottom: 20, top: 7 }}>
-                    <CommentMent>
-                      <CommentId>{item.userName}</CommentId>
-                      <Comment>{item.content}</Comment>
-                    </CommentMent>
-                    <CommentRemainder>
-                      <Time>{item.created}</Time>
-                    </CommentRemainder>
-                  </View>
-                </CommentArea>
+                <ScrollView>
+                  <CommentArea key={index}>
+                    <CommentImg source={{ uri: item.thumbnail }} />
+                    <View style={{ marginBottom: 20, top: 7 }}>
+                      <CommentMent>
+                        <CommentId>{item.userName}</CommentId>
+                        <Comment>{item.content}</Comment>
+                      </CommentMent>
+                      <CommentRemainder>
+                        <Time>{item.created}</Time>
+                      </CommentRemainder>
+                    </View>
+                  </CommentArea>
+                </ScrollView>
               )}
             />
-          {/*keyboardStatus android: clear 근데 아래 공백생김, ios: ?*/}
-          <KeyboardAvoidingView behavior={Platform.select({ios: 'padding', android: 'height'})}>
-          <ReplyWriteArea>
+          </CommentList>
+          {/*keyboardStatus android: 갑자기 안됨. ios: ?*/}
+          <KeyboardAvoidingView behavior={Platform.select({ios: 'padding', android: undefined})} style={{flex: 1}}>
             <ReplyArea>
               <ReplyImg
                 source={{
@@ -277,7 +274,6 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                 </ReplyButton>
               </ReplyInputArea>
             </ReplyArea>
-          </ReplyWriteArea>
           </KeyboardAvoidingView>
         </Container>
     </TouchableWithoutFeedback>

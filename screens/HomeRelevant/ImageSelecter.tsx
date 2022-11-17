@@ -7,7 +7,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView, ScrollView,
+  SafeAreaView, ScrollView, StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -19,7 +19,8 @@ import { useMutation } from "react-query";
 import { useSelector } from "react-redux";
 import { FeedApi,FeedCreationRequest } from "../../api";
 import { FeedCreateScreenProps,  } from '../../types/feed';
-
+// @ts-ignore
+import { ImageBrowser } from "expo-image-picker-multiple";
 interface ValueInfo {
   str: string;
   isHT: boolean;
@@ -112,6 +113,7 @@ const FeedCreateText = styled.Text`
   font-size: 20px;
 `
 const ImageCancleBtn = styled.TouchableOpacity``
+
 const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                                                           route:{params:{clubId,userId}},
                                                           navigation: { navigate } }) => {
@@ -153,7 +155,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [postText, setPostText] = useState("");
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const onText = (text: React.SetStateAction<string>) => setPostText(text);
-
   const [content, setContent] = useState("")
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -167,16 +168,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       setImageURI(result.uri);
     }
   };
-  /*  const pickImage = async () => {
-      const result = await MultiImagePicker.openPicker({
-        multiple: true,
-        allowsEditing: false,
-        aspect: [16, 9],
-        quality: 1,
-        cropping: true
-      });
-      console.log(result)
-    };*/
 
   const mutation = useMutation(FeedApi.createFeed, {
     onSuccess: (res) => {
@@ -252,6 +243,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   useEffect(() => {
     return () => setLoading(false);
   }, []);
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
