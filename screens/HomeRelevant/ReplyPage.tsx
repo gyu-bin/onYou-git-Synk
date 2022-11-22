@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
+  Alert, Animated, Dimensions,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StatusBar,
-  TouchableWithoutFeedback,
+  TouchableWithoutFeedback, useWindowDimensions,
   View
 } from "react-native";
 import styled from "styled-components/native";
@@ -26,6 +26,9 @@ import {
 } from "../../api";
 import { ModifiyPeedScreenProps } from "../../types/feed";
 import { useToast } from "react-native-toast-notifications";
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+const window = Dimensions.get("window");
+
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -90,8 +93,7 @@ const ReplyArea = styled.View`
   display: flex;
   flex-direction: row;
   padding: 1% 0 0 20px;
-  border: solid 0.5px #c4c4c4;
-  height: 100%;
+  height: auto;
 `;
 
 const ReplyInputArea = styled.View`
@@ -105,6 +107,7 @@ const ReplyInput = styled.TextInput`
   color: #b0b0b0;
   left: 15px;
   width: 80%;
+ 
 `;
 
 const ReplyImg = styled.Image`
@@ -132,7 +135,6 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
-
   const [content, setContent] = useState("");
 
 
@@ -211,72 +213,75 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
     <Loader>
       <ActivityIndicator/>
     </Loader>
-    ):(
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <Container>
-          <CommentList>
-            <FlatList
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              keyExtractor={(item: Reply, index: number) => String(index)}
-              data={replys?.data}
-              renderItem={({ item, index }: { item: Reply; index: number }) => (
-                <ScrollView>
-                  <CommentArea key={index}>
-                    <CommentImg source={{ uri: item.thumbnail }} />
-                    <View style={{ marginBottom: 20, top: 7 }}>
-                      <CommentMent>
-                        <CommentId>{item.userName}</CommentId>
-                        <Comment>{item.content}</Comment>
-                      </CommentMent>
-                      <CommentRemainder>
-                        <Time>{item.created}</Time>
-                      </CommentRemainder>
-                    </View>
-                  </CommentArea>
-                </ScrollView>
-              )}
+  ):(
+      <Container>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}
+                              keyboardVerticalOffset={Platform.OS === "ios" ? 110 : undefined} style={{ flex: 1 }}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <>
+        <CommentList>
+          <FlatList
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            keyExtractor={(item: Reply, index: number) => String(index)}
+            data={replys?.data}
+            renderItem={({ item, index }: { item: Reply; index: number }) => (
+              <ScrollView>
+                <CommentArea key={index}>
+                  <CommentImg source={{ uri: item.thumbnail }} />
+                  <View style={{ marginBottom: 20, top: 7 }}>
+                    <CommentMent>
+                      <CommentId>{item.userName}</CommentId>
+                      <Comment>{item.content}</Comment>
+                    </CommentMent>
+                    <CommentRemainder>
+                      <Time>{item.created}</Time>
+                    </CommentRemainder>
+                  </View>
+                </CommentArea>
+              </ScrollView>
+            )}
+          >
+          </FlatList>
+        </CommentList>
+          <ReplyArea>
+            <ReplyImg
+              source={{
+                uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+              }}
             />
-          </CommentList>
-          {/*keyboardStatus android: 갑자기 안됨. ios: ?*/}
-          <KeyboardAvoidingView behavior={Platform.select({ios: 'padding', android: undefined})} style={{flex: 1}}>
-            <ReplyArea>
-              <ReplyImg
-                source={{
-                  uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
-                }}
-              />
-              <ReplyInputArea>
-                {replys?.data.length === null ?
-                  <ReplyInput
-                    placeholder="댓글을 입력해보세요..."
-                    onChangeText={(content) => setContent(content)}
-                    autoCompleteType="off"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    multiline={true}
-                    returnKeyType="done"
-                    returnKeyLabel="done"
-                  />:
-                  <ReplyInput
-                    placeholder="댓글을 입력해보세요..."
-                    onChangeText={(content) => setContent(content)}
-                    autoCompleteType="off"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    multiline={true}
-                    returnKeyType="done"
-                    returnKeyLabel="done"
-                  />
-                }
-                <ReplyButton onPress={RelpyFeed}>
-                  <ReplyDone>게시</ReplyDone>
-                </ReplyButton>
-              </ReplyInputArea>
-            </ReplyArea>
-          </KeyboardAvoidingView>
-        </Container>
-    </TouchableWithoutFeedback>
+            <ReplyInputArea>
+              {replys?.data.length === null ?
+                <ReplyInput
+                  placeholder="댓글을 입력해보세요..."
+                  onChangeText={(content) => setContent(content)}
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  multiline={true}
+                  returnKeyType="done"
+                  returnKeyLabel="done"
+                />:
+                <ReplyInput
+                  placeholder="댓글을 입력해보세요..."
+                  onChangeText={(content) => setContent(content)}
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  multiline={true}
+                  returnKeyType="done"
+                  returnKeyLabel="done"
+                />
+              }
+              <ReplyButton onPress={RelpyFeed}>
+                <ReplyDone>게시</ReplyDone>
+              </ReplyButton>
+            </ReplyInputArea>
+          </ReplyArea>
+            </>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Container>
   );
 };
 export default ReplyPage;

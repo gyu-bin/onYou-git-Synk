@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import styled from "styled-components/native";
 import {
   ActivityIndicator,
@@ -23,7 +23,8 @@ import {
 } from "../../api";
 import { ModifiyPeedScreenProps } from "../../types/feed";
 import { RootStackParamList } from "../../types/Club";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Modalize, useModalize } from "react-native-modalize";
+import { Portal } from "react-native-portalize";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -110,6 +111,25 @@ const FixCompleteText = styled.Text`
   padding-left: 20px;
 `
 
+const ModalContainer = styled.View`
+  flex: 1;
+`;
+const ModalView = styled.View`
+  background-color: white;
+  align-items: center;
+  opacity: 1;
+  width: 100%;
+  height: auto;
+`;
+const ModalText = styled.Text`
+  font-weight: bold;
+  text-align: center;
+  font-size: 20px;
+  padding: 30px;
+  width: 100%;
+  color: black;
+  height: auto;
+`;
 interface FeedEditItem{
   id:number
   content:string;
@@ -186,12 +206,35 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
     };
     mutation.mutate(requestData);
   };
+  const modalizeRef = useRef<Modalize>(null);
+  const onOpen = () => {
+    modalizeRef.current?.open();
+  };
+
+  const myClubSelect = () =>{
+    return (
+      <Portal>
+        <Modalize
+          ref={modalizeRef}
+          modalHeight={250}
+          handlePosition="inside"
+          modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
+        >
+          <ModalContainer >
+            <ModalView>
+              <ModalText>123</ModalText>
+            </ModalView>
+          </ModalContainer>
+        </Modalize>
+      </Portal>
+    )
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Container>
         {/* keyboardStatus android: clear, ios: ?*/}
-        <KeyboardAvoidingView behavior={Platform.select({ios: 'padding', android: 'position'})} style={{flex: 1}}>
+        <KeyboardAvoidingView behavior={Platform.select({ios: 'position', android: 'position'})} style={{flex: 1}}>
           <View>
             <FeedUser >
               <UserImage source={{ uri: userInfo?.data.thumbnail }} />
@@ -204,13 +247,15 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
               </UserInfo>
             </FeedUser>
             <FeedImage>
-              <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+{/*              <SliderBox images={data.imageUrls[0]===undefined? ["https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg","https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"]
+                : [data.imageUrls[0],data.imageUrls[1]]} sliderBoxHeight={FEED_IMAGE_SIZE}/>*/}
+              <ImageSource source={data.imageUrls[0]===undefined? {uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
             </FeedImage>
           </View>
           <ContentArea>
             <Ment
               onChangeText={(content) => setContent(content)}
-              autoCompleteType="off"
+              autoComplete="off"
               autoCapitalize="none"
               autoCorrect={false}
               multiline={true}
@@ -220,13 +265,13 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
               {data.content}
             </Ment>
           </ContentArea>
-            <FixCompleteArea>
-              <FixCompleteBtn onPress={FixComplete}>
-                <FixCompleteText>수정완료</FixCompleteText>
-              </FixCompleteBtn>
-            </FixCompleteArea>
-          </KeyboardAvoidingView>
-        </Container>
+          <FixCompleteArea>
+            <FixCompleteBtn onPress={FixComplete}>
+              <FixCompleteText>수정완료</FixCompleteText>
+            </FixCompleteBtn>
+          </FixCompleteArea>
+        </KeyboardAvoidingView>
+      </Container>
     </TouchableWithoutFeedback>
   );
 };
