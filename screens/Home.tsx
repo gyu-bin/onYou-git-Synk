@@ -1,5 +1,5 @@
 import { Feather, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import {
   Alert,
   Dimensions,
@@ -210,7 +210,6 @@ const InfoArea = styled.View`
 `;
 
 const LikeClick=styled.TouchableOpacity`
-
 `
 
 const NumberText = styled.Text`
@@ -256,7 +255,6 @@ const Home:React.FC<HomeScreenProps> = ({
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
-
   //모달
   const modalizeRef = useRef<Modalize>(null);
   const onOpen = (feedData:Feed) => {
@@ -302,7 +300,6 @@ const Home:React.FC<HomeScreenProps> = ({
     },
     onSuccess: (res) => {
       setIsPageTransition(false);
-
       /!*let heartDataMap = new Map();
       let modalMap = new Map();*!/
       console.log(res+'ress')
@@ -349,7 +346,7 @@ const Home:React.FC<HomeScreenProps> = ({
     const data = {
       id: feedData.id,
     };
-    console.log(data);
+
     const likeRequestData: FeedLikeRequest=
       {
         data,
@@ -357,6 +354,8 @@ const Home:React.FC<HomeScreenProps> = ({
       }
 
     LikeMutation.mutate(likeRequestData);
+    console.log(data);
+    return <Ionicons name="md-heart" size={20} color="red" />
   };
 
 
@@ -383,7 +382,7 @@ const Home:React.FC<HomeScreenProps> = ({
     const data = {
       id: feedData.id,
     };
-    console.log(data);
+
     const likeRequestData: FeedLikeRequest=
       {
         data,
@@ -391,6 +390,8 @@ const Home:React.FC<HomeScreenProps> = ({
       }
 
     LikeMutation.mutate(likeRequestData);
+    console.log(data);
+    return <Ionicons  name="md-heart-outline" size={20} color="black"/>
   };
 
   const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
@@ -413,7 +414,7 @@ const Home:React.FC<HomeScreenProps> = ({
       screen: "ModifiyPeed",
       feedData,
     });
-    setModalVisible(!isModalVisible);
+    modalizeRef.current?.close()
   };
 
   const goToClub = () => {
@@ -428,7 +429,7 @@ const Home:React.FC<HomeScreenProps> = ({
       screen: "Accusation",
       feedData,
     });
-    setModalVisible(!isModalVisible);
+    modalizeRef.current?.close()
   };
 
   const closeModal = () => {
@@ -466,113 +467,111 @@ const Home:React.FC<HomeScreenProps> = ({
   ):(
     <>
       <Container>
-          <FeedContainer>
-            <HeaderView size={SCREEN_PADDING_SIZE}>
-              <SubView>
-                <LogoImage source={{ uri: "https://i.pinimg.com/564x/cd/c9/a5/cdc9a5ffec176461e7a1503d3b2553d4.jpg" }} />
-                <LogoText>OnYou</LogoText>
-              </SubView>
-              <SubView>
-                <MaterialIcons name="add-photo-alternate" onPress={goToClub} style={{ left: 9 }} size={19} color="black" />
-              </SubView>
-            </HeaderView>
-            <FlatList
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              keyExtractor={(item: Feed, index: number) => String(index)}
-              data={feeds?.data}
-              renderItem={({ item, index }: { item: Feed; index: number }) => (
-                <ScrollView>
-                  <FeedHeader key={index}>
-                    <FeedUser>
-                      <UserImage
-                        source={{
-                          uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
-                        }}
-                      />
-                      <UserInfo>
-                        <UserId>{item.userName}</UserId>
-                        <UserId>{myName}</UserId>
-                        <UserId>{item.id}</UserId>
-                        <ClubBox>
-                          <ClubName>{item.clubName}</ClubName>
-                        </ClubBox>
-                      </UserInfo>
-                    </FeedUser>
-                      <View>
-                        <ModalIcon
-                          onPress={()=>onOpen(item)}>
-                          <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
-                          <Text>{item.id}</Text>
-                        </ModalIcon>
-                      </View>
-                      <Portal>
-                        <Modalize
-                          ref={modalizeRef}
-                          modalHeight={250}
-                          handlePosition="inside"
-                          modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
-                        >
-                          <ModalContainer >
-                            {userInfo?.data.id===item.userId ?
-                            <ModalView>
-                              <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
-                              <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
-                                삭제2
-                              </ModalText>
-                              <Text>{item.userName},{myName},{item.id}</Text>
-                            </ModalView>
-                              :
-                              <ModalView>
-                                <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
-                                <Text>{item.userName},{myName},{item.id}</Text>
-                              </ModalView>
-                            }
-                            <ModalView>
-                            </ModalView>
-                          </ModalContainer>
-                        </Modalize>
-                      </Portal>
-                  </FeedHeader>
-                  <FeedMain>
-                    <FeedImage>
-                      <SliderBox images={item.imageUrls[0]===undefined? ["https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg","https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"]
-                        : ["item.imageUrls[0]","item.imageUrls[1]"]} sliderBoxHeight={FEED_IMAGE_SIZE}/>
-                      {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
-                    </FeedImage>
-                    <FeedInfo>
-                      <LeftInfo>
-                        <InfoArea>
-                          <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
-                            {heartMap.get(item.id)?
-                              <TouchableOpacity onPress={()=>LikeFeed(item)}><Ionicons name="md-heart" size={20} color="red" /></TouchableOpacity>
-                              :
-                              <TouchableOpacity onPress={()=>LikeReverseFeed(item)}><Ionicons  name="md-heart-outline" size={20} color="black"/></TouchableOpacity>}
-                          </TouchableOpacity>
-                          {heartMap.get(item.id) === true? <LikeClick ><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                            : <LikeClick><NumberText>{item.likesCount}</NumberText></LikeClick>}
-                        </InfoArea>
-                        <InfoArea>
-                          <TouchableOpacity onPress={() => goToReply(item)}>
-                            <Ionicons name="md-chatbox-ellipses-outline" size={20} color="black" />
-                          </TouchableOpacity>
-                          <NumberText>{item.commentCount}</NumberText>
-                        </InfoArea>
-                      </LeftInfo>
-                      <RightInfo>
-                        <Timestamp>{item.created}</Timestamp>
-                      </RightInfo>
-                    </FeedInfo>
-                    <Content>
-                      <Ment>
-                        {item.content}
-                      </Ment>
-                    </Content>
-                  </FeedMain>
-                </ScrollView>
-              )}
-            />
-          </FeedContainer>
+        <FeedContainer>
+          <HeaderView size={SCREEN_PADDING_SIZE}>
+            <SubView>
+              <LogoImage source={{ uri: "https://i.pinimg.com/564x/cd/c9/a5/cdc9a5ffec176461e7a1503d3b2553d4.jpg" }} />
+              <LogoText>OnYou</LogoText>
+            </SubView>
+            <SubView>
+              <MaterialIcons name="add-photo-alternate" onPress={goToClub} style={{ left: 9 }} size={19} color="black" />
+            </SubView>
+          </HeaderView>
+          <FlatList
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            keyExtractor={(item: Feed, index: number) => String(index)}
+            data={feeds?.data}
+            renderItem={({ item, index }: { item: Feed; index: number }) => (
+              <ScrollView>
+                <FeedHeader key={index}>
+                  <FeedUser>
+                    <UserImage
+                      source={{
+                        uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+                      }}
+                    />
+                    <UserInfo>
+                      <UserId>{item.userName}</UserId>
+                      <UserId>{myName}</UserId>
+                      <UserId>{item.id}</UserId>
+                      <ClubBox>
+                        <ClubName>{item.clubName}</ClubName>
+                      </ClubBox>
+                    </UserInfo>
+                  </FeedUser>
+                  <View>
+                    <ModalIcon
+                      onPress={()=>onOpen(item)}>
+                      <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
+                      <Text>{item.id}</Text>
+                    </ModalIcon>
+                  </View>
+                  <Portal>
+                    <Modalize
+                      ref={modalizeRef}
+                      modalHeight={250}
+                      handlePosition="inside"
+                      modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
+                    >
+                      <ModalContainer >
+                        {userInfo?.data.id===item.userId ?
+                          <ModalView>
+                            <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
+                            <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
+                              삭제
+                            </ModalText>
+                            <Text>{item.userName},{myName},{item.id}</Text>
+                          </ModalView>
+                          :
+                          <ModalView>
+                            <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
+                            <Text>{item.userName},{myName},{item.id}</Text>
+                          </ModalView>
+                        }
+                      </ModalContainer>
+                    </Modalize>
+                  </Portal>
+                </FeedHeader>
+                <FeedMain>
+                  <FeedImage>
+                    <SliderBox images={item.imageUrls[0]===undefined? ["https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg","https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"]
+                      : [item.imageUrls[0],item.imageUrls[1]]} sliderBoxHeight={FEED_IMAGE_SIZE}/>
+                    {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
+                  </FeedImage>
+                  <FeedInfo>
+                    <LeftInfo>
+                      <InfoArea>
+                        <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
+                          {heartMap.get(item.id)?
+                            <TouchableOpacity onPress={()=>LikeFeed(item)}><Ionicons  name="md-heart" size={20} color="red"/></TouchableOpacity>
+                            :
+                            <TouchableOpacity onPress={()=>LikeReverseFeed(item)}><Ionicons  name="md-heart-outline" size={20} color="black"/></TouchableOpacity>}
+                        </TouchableOpacity>
+                        {heartMap.get(item.id) === true? <LikeClick ><NumberText>{item.likesCount +1}</NumberText></LikeClick>
+                          : <LikeClick><NumberText>{item.likesCount}</NumberText></LikeClick>}
+                      </InfoArea>
+                      <InfoArea>
+                        <TouchableOpacity onPress={() => goToReply(item)}>
+                          <Ionicons name="md-chatbox-ellipses-outline" size={20} color="black" />
+                        </TouchableOpacity>
+                        <NumberText>{item.commentCount}</NumberText>
+                      </InfoArea>
+                    </LeftInfo>
+                    <RightInfo>
+                      <Timestamp>{item.created}</Timestamp>
+                    </RightInfo>
+                  </FeedInfo>
+                  <Content>
+                    <Ment>
+                      {item.content}
+                    </Ment>
+                  </Content>
+                </FeedMain>
+              </ScrollView>
+            )}
+          />
+        </FeedContainer>
       </Container>
     </>
   );
