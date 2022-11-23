@@ -34,7 +34,7 @@ import {
   ClubCreationRequest,
   FeedLikeRequest,
   FeedReverseLikeRequest,
-  Club
+  Club,
 } from "../api";
 import CustomText from "../components/CustomText";
 import {
@@ -44,7 +44,6 @@ import {
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { SliderBox } from "react-native-image-slider-box";
-import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -246,6 +245,7 @@ interface HeartType {
 
 const Home:React.FC<HomeScreenProps> = ({
                                           navigation:{navigate},
+                                          route:{params:{feedData}}
                                         })=> {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -255,35 +255,36 @@ const Home:React.FC<HomeScreenProps> = ({
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
+
   //모달
   const modalizeRef = useRef<Modalize>(null);
   const onOpen = (feedData:Feed) => {
-    modalizeRef.current?.open(feedData);
+    modalizeRef.current?.open();
   };
-
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
   //피드
-  const {
-    isLoading: feedsLoading,
-    data: feeds,
-    isRefetching: isRefetchingFeeds,
-  } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
-    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
-    onSuccess: (res) => {
-      setIsPageTransition(false);
-      let heartDataMap = new Map();
+    const {
+      isLoading: feedsLoading,
+      data: feeds,
+      isRefetching: isRefetchingFeeds,
+    } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
+      //useQuery(["getFeeds", token], FeedApi.getFeeds, {
+      onSuccess: (res) => {
+        setIsPageTransition(false);
+        let heartDataMap = new Map();
 
-      for (let i = 0; i < res?.data?.length; ++i) {
-        heartDataMap.set(res?.data[i].id, false);
-        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
-      }
-      setHeartMap(heartDataMap);
-    },
-    onError: (err) => {
-      console.log(err);
-    },
-  });
+        for (let i = 0; i < res?.data?.length; ++i) {
+          heartDataMap.set(res?.data[i].id, false);
+          //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+        }
+        setHeartMap(heartDataMap);
+      },
+      onError: (err) => {
+        console.log(err);
+      },
+    });
+
   //무한스크롤
   /*const {
     isLoading: feedsLoading,
@@ -343,6 +344,7 @@ const Home:React.FC<HomeScreenProps> = ({
   });
 
   const LikeFeed=(feedData:Feed)=>{
+    feedData.likeYn = true
     const data = {
       id: feedData.id,
     };
@@ -355,9 +357,7 @@ const Home:React.FC<HomeScreenProps> = ({
 
     LikeMutation.mutate(likeRequestData);
     console.log(data);
-    return <Ionicons name="md-heart" size={20} color="red" />
   };
-
 
   //ReverseLike
   const LikeReverseMutation = useMutation( FeedApi.likeCountReverse, {
@@ -367,7 +367,6 @@ const Home:React.FC<HomeScreenProps> = ({
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
-        // return navigate("Home", {});
       }
     },
     onError: (error) => {
@@ -379,6 +378,7 @@ const Home:React.FC<HomeScreenProps> = ({
   });
 
   const LikeReverseFeed=(feedData:Feed)=>{
+    feedData.likeYn = false
     const data = {
       id: feedData.id,
     };
@@ -388,19 +388,9 @@ const Home:React.FC<HomeScreenProps> = ({
         data,
         token,
       }
-
-    LikeMutation.mutate(likeRequestData);
+    LikeReverseMutation.mutate(likeRequestData);
     console.log(data);
-    return <Ionicons  name="md-heart-outline" size={20} color="black"/>
   };
-
-  const feedSize = Math.round(SCREEN_WIDTH / 3) - 1;
-
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
-    setRefreshing(false);
-  };
-
 
   const goToReply = (feedData: Feed) => {
     navigate("HomeStack", {
@@ -430,10 +420,6 @@ const Home:React.FC<HomeScreenProps> = ({
       feedData,
     });
     modalizeRef.current?.close()
-  };
-
-  const closeModal = () => {
-    setModalVisible(!isModalVisible);
   };
 
   const deleteCheck = (feedData:Feed) => {
@@ -482,6 +468,7 @@ const Home:React.FC<HomeScreenProps> = ({
             onRefresh={onRefresh}
             keyExtractor={(item: Feed, index: number) => String(index)}
             data={feeds?.data}
+            disableVirtualization={false}
             renderItem={({ item, index }: { item: Feed; index: number }) => (
               <ScrollView>
                 <FeedHeader key={index}>
@@ -493,8 +480,7 @@ const Home:React.FC<HomeScreenProps> = ({
                     />
                     <UserInfo>
                       <UserId>{item.userName}</UserId>
-                      <UserId>{myName}</UserId>
-                      <UserId>{item.id}</UserId>
+                      <UserId>{item.likeYn.toString()}</UserId>
                       <ClubBox>
                         <ClubName>{item.clubName}</ClubName>
                       </ClubBox>
@@ -525,7 +511,7 @@ const Home:React.FC<HomeScreenProps> = ({
                           </ModalView>
                           :
                           <ModalView>
-                            <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
+                            <ModalText onPress={()=> goToAccusation(item)}>신고1</ModalText>
                             <Text>{item.userName},{myName},{item.id}</Text>
                           </ModalView>
                         }
@@ -535,21 +521,28 @@ const Home:React.FC<HomeScreenProps> = ({
                 </FeedHeader>
                 <FeedMain>
                   <FeedImage>
-                    <SliderBox images={item.imageUrls[0]===undefined? ["https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg","https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"]
-                      : [item.imageUrls[0],item.imageUrls[1]]} sliderBoxHeight={FEED_IMAGE_SIZE}/>
-                    {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
+                    <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
                   </FeedImage>
                   <FeedInfo>
                     <LeftInfo>
                       <InfoArea>
-                        <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
-                          {heartMap.get(item.id)?
-                            <TouchableOpacity onPress={()=>LikeFeed(item)}><Ionicons  name="md-heart" size={20} color="red"/></TouchableOpacity>
-                            :
-                            <TouchableOpacity onPress={()=>LikeReverseFeed(item)}><Ionicons  name="md-heart-outline" size={20} color="black"/></TouchableOpacity>}
+                        <TouchableOpacity onPress= {() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
+                          <TouchableOpacity onPress={item.likeYn.toString() === "true" ? () => LikeReverseFeed(item) : () => LikeFeed(item)}>
+                            {item.likeYn.toString() === "false" ?
+                              <Ionicons  name="md-heart-outline" size={20} color="black"/>
+                              :
+                              <Ionicons  name="md-heart" size={20} color="red"/>}
+                          </TouchableOpacity>
+                          {/*{heartMap.get(item.id)?
+                            <Ionicons name="md-heart" size={20} color="red"><TouchableOpacity onPress={()=>LikeFeed(item)}/></Ionicons>
+                            : <Ionicons  name="md-heart-outline" size={20} color="black"><TouchableOpacity onPress={()=>LikeReverseFeed(item)}/></Ionicons>
+                        }*/}
                         </TouchableOpacity>
-                        {heartMap.get(item.id) === true? <LikeClick ><NumberText>{item.likesCount +1}</NumberText></LikeClick>
-                          : <LikeClick><NumberText>{item.likesCount}</NumberText></LikeClick>}
+                        {item.likeYn.toString() === 'true' ?
+                          <NumberText>{item.likesCount +1}</NumberText>:<NumberText>{item.likesCount}</NumberText>
+                        }
+                       {/* {heartMap.get(item.id) === true?<NumberText>{likeCount +1}</NumberText>
+                          : <NumberText>{likeCount}</NumberText>}*/}
                       </InfoArea>
                       <InfoArea>
                         <TouchableOpacity onPress={() => goToReply(item)}>
@@ -559,7 +552,7 @@ const Home:React.FC<HomeScreenProps> = ({
                       </InfoArea>
                     </LeftInfo>
                     <RightInfo>
-                      <Timestamp>{item.created}</Timestamp>
+                      <Timestamp>{item.created.substring(0,10)}</Timestamp>
                     </RightInfo>
                   </FeedInfo>
                   <Content>

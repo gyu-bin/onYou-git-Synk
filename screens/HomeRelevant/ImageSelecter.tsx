@@ -23,6 +23,7 @@ import { FeedCreateScreenProps,  } from '../../types/feed';
 import { ImageBrowser } from "expo-image-picker-multiple";
 import ImageCropPicker from 'react-native-image-crop-picker';
 import MultipleImagePicker from '@baronha/react-native-multiple-image-picker';
+import { useNavigation } from "@react-navigation/native";
 interface ValueInfo {
   str: string;
   isHT: boolean;
@@ -93,7 +94,7 @@ const SelectImageView = styled.View`
 `;
 
 const SelectImageArea = styled.TouchableOpacity`
- 
+
 `
 const SelectImage = styled.Image`
   width: 55px;
@@ -103,7 +104,6 @@ const SelectImage = styled.Image`
 `;
 
 const ImageCancleBtn = styled.TouchableOpacity`
-
 `
 const CancleIcon = styled.View`
   width: 20%;
@@ -118,9 +118,10 @@ const FeedCreateArea = styled.View`
 const FeedCreateBtn = styled.TouchableOpacity`
 `
 const FeedCreateText = styled.Text`
-  font-size: 20px;
+  font-size: 15px;
+  color: #63abff;
+  font-weight: bold;
 `
-
 
 const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                                                           route:{params:{clubId,userId}},
@@ -164,7 +165,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const onText = (text: React.SetStateAction<string>) => setPostText(text);
   const [content, setContent] = useState("")
-
+  const navigation = useNavigation();
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -211,8 +212,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       clubId: clubId,
       content: content,
     };
-
-
     const splitedURI = new String(imageURI).split("/");
 
     const requestData: FeedCreationRequest =
@@ -239,6 +238,12 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     });
   };
 
+  useEffect(()=>{
+    navigation.setOptions({
+      headerRight: () => <TouchableOpacity onPress={onSubmit}><FeedCreateText>저장</FeedCreateText></TouchableOpacity>
+    })
+  },[navigation, onSubmit]);
+
   useEffect(() => {
     let timer = setTimeout(() => {
       alertSet(false);
@@ -261,10 +266,9 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     return () => setLoading(false);
   }, []);
 
-
   return (
-      <Container>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <Container>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.select({ios: 'position', android: 'position'})} style={{ flex: 1 }}>
           <>
@@ -342,7 +346,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
             <FeedText
               placeholder="사진과 함께 남길 게시글을 작성해 보세요."
               onChangeText={(content) => setContent(content)}
-              autoComplete="off"
+              autoCompleteType="off"
               autoCapitalize="none"
               autoCorrect={false}
               multiline={true}
@@ -369,16 +373,10 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 );
               })}
             </FeedText>
-            <FeedCreateArea>
-              <FeedCreateBtn onPress={onSubmit}>
-                <FeedCreateText>저장</FeedCreateText>
-              </FeedCreateBtn>
-            </FeedCreateArea>
           </>
         </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
-      </Container>
-
+      </TouchableWithoutFeedback>
+    </Container>
   );
 };
 

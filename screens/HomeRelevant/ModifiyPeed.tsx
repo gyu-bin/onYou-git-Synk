@@ -1,7 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components/native";
 import {
-  ActivityIndicator,
+  ActivityIndicator, Animated,
   FlatList, Keyboard,
   KeyboardAvoidingView,
   Platform, SafeAreaView, ScrollView,
@@ -25,6 +25,7 @@ import { ModifiyPeedScreenProps } from "../../types/feed";
 import { RootStackParamList } from "../../types/Club";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
+import { useNavigation } from "@react-navigation/native";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -75,10 +76,6 @@ const FeedImage = styled.View`
   align-items: center;
 `;
 
-const FeedImageUrl=styled.Image`
-  width: 100%;
-  height: 70%;
-`
 const Content = styled.View`
   padding: 0 12px 0 12px;
 `;
@@ -100,15 +97,10 @@ const ImageSource = styled.Image<{ size: number }>`
   height: ${(props) => props.size}px;
 `;
 
-const FixCompleteArea = styled.View`
-  width: 100%;
-  text-align: center;
-  height: 50px;
-`
-const FixCompleteBtn = styled.TouchableOpacity``
 const FixCompleteText = styled.Text`
-  font-size: 20px;
-  padding-left: 20px;
+  color: #63abff;
+  font-size: 15px;
+  font-weight: bold;
 `
 
 const ModalContainer = styled.View`
@@ -147,6 +139,7 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   const [content, setContent] = useState("")
   const [data, setData] = useState<Feed>(feedData);
   const [items, setItems] = useState<FeedEditItem[]>();
+  const navigation = useNavigation();
   //피드호출
   const {
     isLoading: feedsLoading,
@@ -195,7 +188,7 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   const FixComplete =() =>{
     const data={
       id: feedData.id,
-      access: "PRIVATE",
+      access: "PUBLIC",
       content: content,
     };
     console.log(data);
@@ -205,35 +198,19 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
       token,
     };
     mutation.mutate(requestData);
+    return navigate("Tabs", {
+      screen: "Home",
+    });
   };
-  const modalizeRef = useRef<Modalize>(null);
-  const onOpen = () => {
-    modalizeRef.current?.open();
-  };
-
-  const myClubSelect = () =>{
-    return (
-      <Portal>
-        <Modalize
-          ref={modalizeRef}
-          modalHeight={250}
-          handlePosition="inside"
-          modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
-        >
-          <ModalContainer >
-            <ModalView>
-              <ModalText>123</ModalText>
-            </ModalView>
-          </ModalContainer>
-        </Modalize>
-      </Portal>
-    )
-  }
+  useEffect(()=>{
+    navigation.setOptions({
+      headerRight: () => <TouchableOpacity onPress={FixComplete}><FixCompleteText>저장</FixCompleteText></TouchableOpacity>
+    })
+  },[navigation, FixComplete]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Container>
-        {/* keyboardStatus android: clear, ios: ?*/}
         <KeyboardAvoidingView behavior={Platform.select({ios: 'position', android: 'position'})} style={{flex: 1}}>
           <View>
             <FeedUser >
@@ -247,15 +224,13 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
               </UserInfo>
             </FeedUser>
             <FeedImage>
-{/*              <SliderBox images={data.imageUrls[0]===undefined? ["https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg","https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"]
-                : [data.imageUrls[0],data.imageUrls[1]]} sliderBoxHeight={FEED_IMAGE_SIZE}/>*/}
-              <ImageSource source={data.imageUrls[0]===undefined? {uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+              <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
             </FeedImage>
           </View>
           <ContentArea>
             <Ment
               onChangeText={(content) => setContent(content)}
-              autoComplete="off"
+              autoCompleteType="off"
               autoCapitalize="none"
               autoCorrect={false}
               multiline={true}
@@ -265,11 +240,6 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
               {data.content}
             </Ment>
           </ContentArea>
-          <FixCompleteArea>
-            <FixCompleteBtn onPress={FixComplete}>
-              <FixCompleteText>수정완료</FixCompleteText>
-            </FixCompleteBtn>
-          </FixCompleteArea>
         </KeyboardAvoidingView>
       </Container>
     </TouchableWithoutFeedback>
