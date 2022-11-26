@@ -43,7 +43,7 @@ import {
 } from "../types/feed";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
-import { SliderBox } from "react-native-image-slider-box";
+import { ImageSlider } from "react-native-image-slider-banner";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -51,10 +51,11 @@ const Loader = styled.SafeAreaView`
   align-items: center;
   padding-top: ${Platform.OS === "android" ? StatusBar.currentHeight : 0}px;
 `;
+
 const Container = styled.SafeAreaView`
   flex: 1;
   top: ${Platform.OS === 'android' ? 5 : 0}%;
-  padding-bottom:  ${Platform.OS === 'android' ? 5 : 0}%;
+  padding-bottom:  ${Platform.OS === 'android' ? 6 : 0}%;
 `;
 
 const HeaderView = styled.View<{ size: number }>`
@@ -171,7 +172,7 @@ const FloatingButton = styled.TouchableOpacity`
 const FeedContainer = styled.View`
   flex: 1;
   width: 100%;
-  margin-bottom: 30px;
+  margin-bottom: ${Platform.OS === 'ios' ? 20 : 30}px;
   padding: 0 20px 0 20px;
 `;
 
@@ -271,6 +272,7 @@ const Home:React.FC<HomeScreenProps> = ({
     } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
       //useQuery(["getFeeds", token], FeedApi.getFeeds, {
       onSuccess: (res) => {
+        console.log('homeCall')
         setIsPageTransition(false);
         let heartDataMap = new Map();
 
@@ -331,6 +333,7 @@ const Home:React.FC<HomeScreenProps> = ({
   const LikeMutation = useMutation( FeedApi.likeCount, {
     onSuccess: (res) => {
       if (res.status === 200) {
+        console.log(res)
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -354,7 +357,6 @@ const Home:React.FC<HomeScreenProps> = ({
         data,
         token,
       }
-
     LikeMutation.mutate(likeRequestData);
     console.log(data);
   };
@@ -440,9 +442,34 @@ const Home:React.FC<HomeScreenProps> = ({
   };
   const onRefresh = async () => {
     setRefreshing(true);
-    await queryClient.refetchQueries(["feeds"]);
+    await queryClient.refetchQueries(["getFeeds"]);
     setRefreshing(false);
   };
+
+  const timeLine =(date:any) =>{
+    const start = new Date(date);
+    const end = new Date(); // 현재 날짜
+
+    let diff = (end - start); // 경과 시간
+
+    const times = [
+      {time: "분", milliSeconds: 1000 * 60},
+      {time: "시간", milliSeconds: 1000 * 60 * 60},
+      {time: "일", milliSeconds: 1000 * 60 * 60 * 24},
+      {time: "개월", milliSeconds: 1000 * 60 * 60 * 24 * 30},
+      {time: "년", milliSeconds: 1000 * 60 * 60 * 24 * 365},
+    ].reverse();
+    // 년 단위부터 알맞는 단위 찾기
+    for (const value of times) {
+      const betweenTime = Math.floor(diff / value.milliSeconds);
+      // 큰 단위는 0보다 작은 소수 단위 나옴
+      if (betweenTime > 0) {
+        return `${betweenTime}${value.time} 전`;
+      }
+    }
+    // 모든 단위가 맞지 않을 시
+    return "방금 전";
+  }
 
   const loading = feedsLoading && userInfoLoading;
 
@@ -511,7 +538,7 @@ const Home:React.FC<HomeScreenProps> = ({
                           </ModalView>
                           :
                           <ModalView>
-                            <ModalText onPress={()=> goToAccusation(item)}>신고1</ModalText>
+                            <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
                             <Text>{item.userName},{myName},{item.id}</Text>
                           </ModalView>
                         }
@@ -521,7 +548,19 @@ const Home:React.FC<HomeScreenProps> = ({
                 </FeedHeader>
                 <FeedMain>
                   <FeedImage>
-                    <ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+                    <ImageSlider
+                      data={[
+                        {img: item.imageUrls[0]},
+                        {img: 'https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg'},
+                        {img: item.imageUrls[0]},
+                      ]}
+                      closeIconColor="#fff"
+                      preview={true}
+                      caroselImageStyle={{resizeMode: 'cover'}}
+                      indicatorContainerStyle={{bottom: 0}}
+                    />
+
+                    {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
                   </FeedImage>
                   <FeedInfo>
                     <LeftInfo>
@@ -552,7 +591,7 @@ const Home:React.FC<HomeScreenProps> = ({
                       </InfoArea>
                     </LeftInfo>
                     <RightInfo>
-                      <Timestamp>{item.created.substring(0,10)}</Timestamp>
+                      <Timestamp>{timeLine(item.created)}</Timestamp>
                     </RightInfo>
                   </FeedInfo>
                   <Content>

@@ -49,9 +49,8 @@ interface ReportReason{
 }
 
 const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
-  { navigate},route:{params:{
-  feedData
-}} }) =>{
+                                                    { navigate},
+                                                    route:{params:{feedData}} }) =>{
   const token = useSelector((state) => state.AuthReducers.authToken);
 
   console.log(feedData.id)
