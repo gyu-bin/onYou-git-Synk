@@ -44,7 +44,6 @@ import {
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { ImageSlider } from "react-native-image-slider-banner";
-
 const Loader = styled.SafeAreaView`
   flex: 1;
   justify-content: center;
@@ -65,9 +64,11 @@ const HeaderView = styled.View<{ size: number }>`
   justify-content: space-between;
   padding: 5px ${(props) => props.size}px 10px ${(props) => props.size}px;
   margin-bottom: 10px;
+  transition: top 0.5s ease-in-out;
+  
 `;
 
-const SubView = styled.View`
+const SubView = styled.TouchableOpacity`
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -116,9 +117,7 @@ const ClubName = styled.Text`
 
 //ModalStyle
 //ModalStyle
-const ModalArea = styled.View`
-  flex: 1;
-`;
+const ModalArea = styled.View``;
 
 const ModalIcon = styled.TouchableOpacity``;
 const CenteredView = styled.View`
@@ -260,7 +259,7 @@ const Home:React.FC<HomeScreenProps> = ({
   //모달
   const modalizeRef = useRef<Modalize>(null);
   const onOpen = (feedData:Feed) => {
-    modalizeRef.current?.open();
+    modalizeRef.current?.open(feedData.id);
   };
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
@@ -394,6 +393,41 @@ const Home:React.FC<HomeScreenProps> = ({
     console.log(data);
   };
 
+
+  const FeedDeleteMutation = useMutation( FeedApi.feedDelete, {
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        console.log(res)
+        onRefresh();
+        modalizeRef.current?.close()
+      } else {
+        console.log(`mutation success but please check status code`);
+        console.log(res);
+      }
+    },
+    onError: (error) => {
+      console.log("--- Error ---");
+      console.log(`error: ${error}`);
+    },
+    onSettled: (res, error) => {},
+  });
+
+/**FeedDelete*/
+  const FeedDelete=(feedData:Feed)=>{
+    feedData.likeYn = true
+    const data = {
+      id: feedData.id,
+    };
+
+    const likeRequestData: FeedLikeRequest=
+      {
+        data,
+        token,
+      }
+    FeedDeleteMutation.mutate(likeRequestData);
+    console.log(data);
+  };
+
   const goToReply = (feedData: Feed) => {
     navigate("HomeStack", {
       screen: "ReplyPage",
@@ -434,7 +468,7 @@ const Home:React.FC<HomeScreenProps> = ({
           onPress: () => console.log("삭제 Api 호출"),
           style: "cancel",
         },
-        { text: "네", onPress: () => Alert.alert("삭제되었습니다.") },
+        { text: "네", onPress: () =>FeedDelete(feedData) },
       ],
       { cancelable: false }
     );
@@ -471,6 +505,17 @@ const Home:React.FC<HomeScreenProps> = ({
     return "방금 전";
   }
 
+  const topHidden=()=>{
+    console.log('down')
+  }
+
+  const onScroll = (e:any) => {
+    const {contentSize, layoutMeasurement, contentOffset} = e.nativeEvent;
+    // console.log({contentSize, layoutMeasurement, contentOffset});
+    console.log('up')
+    // console.log(contentOffset.y);
+  };
+
   const loading = feedsLoading && userInfoLoading;
 
   return loading ?(
@@ -496,8 +541,11 @@ const Home:React.FC<HomeScreenProps> = ({
             keyExtractor={(item: Feed, index: number) => String(index)}
             data={feeds?.data}
             disableVirtualization={false}
+            onEndReached={topHidden}
+            onEndReachedThreshold={1}
+            onScroll={onScroll}
             renderItem={({ item, index }: { item: Feed; index: number }) => (
-              <ScrollView>
+              <ScrollView              >
                 <FeedHeader key={index}>
                   <FeedUser>
                     <UserImage
@@ -507,28 +555,35 @@ const Home:React.FC<HomeScreenProps> = ({
                     />
                     <UserInfo>
                       <UserId>{item.userName}</UserId>
-                      <UserId>{item.likeYn.toString()}</UserId>
                       <ClubBox>
                         <ClubName>{item.clubName}</ClubName>
                       </ClubBox>
                     </UserInfo>
                   </FeedUser>
-                  <View>
+                  <ModalArea>
                     <ModalIcon
                       onPress={()=>onOpen(item)}>
                       <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
                       <Text>{item.id}</Text>
                     </ModalIcon>
-                  </View>
+                  </ModalArea>
                   <Portal>
                     <Modalize
                       ref={modalizeRef}
-                      modalHeight={250}
+                      modalHeight={300}
                       handlePosition="inside"
                       modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
                     >
-                      <ModalContainer >
-                        {userInfo?.data.id===item.userId ?
+                      <ModalContainer>
+                        <ModalView>
+                          <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
+                          <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
+                            삭제
+                          </ModalText>
+                          <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
+                          <Text>{item.userName},{myName},{item.id}</Text>
+                        </ModalView>
+                        {/*{userInfo?.data.id===item.userId ?
                           <ModalView>
                             <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
                             <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
@@ -541,7 +596,7 @@ const Home:React.FC<HomeScreenProps> = ({
                             <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
                             <Text>{item.userName},{myName},{item.id}</Text>
                           </ModalView>
-                        }
+                        }*/}
                       </ModalContainer>
                     </Modalize>
                   </Portal>

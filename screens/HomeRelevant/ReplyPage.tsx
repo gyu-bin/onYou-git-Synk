@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, {useState} from "react";
 import {
   ActivityIndicator,
   Alert, Animated, Dimensions,
@@ -17,6 +17,7 @@ import styled from "styled-components/native";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import {
+  Feed,
   FeedApi,
   FeedReplyRequest, FeedsResponse,
   getReply,
@@ -29,9 +30,7 @@ import {
 import { ModifiyPeedScreenProps } from "../../types/feed";
 import { useToast } from "react-native-toast-notifications";
 import {SwipeListView,SwipeRow} from 'react-native-swipe-list-view';
-import { AntDesign } from '@expo/vector-icons';
-const window = Dimensions.get("window");
-
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -60,7 +59,7 @@ const SwipeHiddenItem = styled.View`
   justify-content: center;
   align-items: center;
 `
-const SwipeHiddenItemText = styled.Text`
+const SwipeHiddenItemText = styled.TouchableOpacity`
   color: black;
   font-size: 14px;
   text-align: center;
@@ -131,7 +130,7 @@ const ReplyArea = styled.View`
   flex-direction: row;
   padding: 1% 0 0 20px;
   height: auto;
- 
+  bottom: ${Platform.OS === "ios" ? 5 : 0}px;
 `;
 
 const ReplyInputArea = styled.View`
@@ -145,8 +144,6 @@ const ReplyInput = styled.TextInput`
   color: #b0b0b0;
   left: 15px;
   width: 80%;
-  border: 1px solid black;
-  border-radius: 50px;
 `;
 
 const ReplyImg = styled.Image`
@@ -164,6 +161,8 @@ const ReplyDone = styled.Text`
   height: 24px;
   top: 15%;
 `;
+
+const ModalIcon = styled.TouchableOpacity``;
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
@@ -175,7 +174,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
   const [content, setContent] = useState("");
-
+  const [searchVal, setSearchVal] = useState("");
   /** 리플 데이터   */
   const { data: replys, isLoading: replysLoading } =
     useQuery<ReplyReponse>(["getReply",token,feedData.id], FeedApi.getReply,{
@@ -205,13 +204,13 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
     await queryClient.refetchQueries(["getFeeds"]);
     setRefreshing(false);
   };
-  //댓글추가
+
   const mutation = useMutation( FeedApi.ReplyFeed, {
     onSuccess: (res) => {
       if (res.status === 200) {
         console.log(res)
         onRefresh();
-        setContent('');
+        setContent('')
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -223,7 +222,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
     },
     onSettled: (res, error) => {},
   });
-
+  /**댓글추가*/
   const RelpyFeed=()=>{
     if(content === ''){
       Alert.alert('댓글을 입력하세요.')
@@ -232,8 +231,8 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
         id: feedData.id,
         content: content,
       };
+      setContent("");
       Keyboard.dismiss();
-
       const likeRequestData: FeedReplyRequest=
         {
           data,
@@ -242,6 +241,24 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
       mutation.mutate(likeRequestData);
     }
   }
+
+  /**댓글삭제*/
+  const deleteCheck = (feedData:Feed) => {
+    Alert.alert(
+      "댓글을 삭제하시겠어요?",
+      "",
+      [
+        {
+          text: "아니요",
+          onPress: () => console.log("삭제 Api 호출"),
+          style: "cancel",
+        },
+        { text: "네", onPress: () =>Alert.alert('댓글삭제')},
+      ],
+      { cancelable: false }
+    );
+    onRefresh();
+  };
 
   const timeLine =(date) =>{
     const start = new Date(date);
@@ -313,7 +330,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                           <SwipeHiddenItemText></SwipeHiddenItemText>
                         </SwipeHiddenItem>
                       <SwipeHiddenItem style={{backgroundColor: 'skyblue'}}>
-                          <SwipeHiddenItemText>
+                          <SwipeHiddenItemText onPress={()=>deleteCheck(item)}>
                             <AntDesign name="delete" size={24} color="black" />
                           </SwipeHiddenItemText>
                         </SwipeHiddenItem>
@@ -337,6 +354,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                 </TouchableWithoutFeedback>
               }
             </CommentList>
+
             <ReplyArea>
               <ReplyImg
                 source={{
@@ -354,6 +372,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                     multiline={true}
                     returnKeyType="done"
                     returnKeyLabel="done"
+                    value={content}
                   />:
                   <ReplyInput
                     placeholder="댓글을 입력해보세요..."
@@ -364,6 +383,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                     multiline={true}
                     returnKeyType="done"
                     returnKeyLabel="done"
+                    value={content}
                   />
                 }
                 <ReplyButton onPress={RelpyFeed}>
