@@ -264,6 +264,7 @@ const Home:React.FC<HomeScreenProps> = ({
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState()
+
   //모달
   const modalizeRef = useRef<Modalize>(null);
   const onOpen = (feedData:any) => {
@@ -474,6 +475,11 @@ const Home:React.FC<HomeScreenProps> = ({
 
   const loading = feedsLoading && userInfoLoading;
 
+  const onEndReached = () => {
+    console.log('bottom');
+    onRefresh();
+  }
+
   return loading ?(
     <Loader>
       <ActivityIndicator/>
@@ -496,12 +502,13 @@ const Home:React.FC<HomeScreenProps> = ({
             onRefresh={onRefresh}
             data={feeds?.data}
             disableVirtualization={false}
-/*            onEndReached={topHidden} //하단에 닿을시
+            onEndReached={onEndReached}
             onEndReachedThreshold={1}
-            onScroll={onScroll} //스크롤할시*/
             showsVerticalScrollIndicator={false}
             showsHorizontalScrollIndicator={false}
+            initialNumToRender={10}
             keyExtractor={(item: Feed, index: number) => String(index)}
+            ListFooterComponent={() => <View style={{ height: 100 }} />}
             renderItem={({ item, index }: { item: Feed; index: number }) => (
               <ScrollView              >
                 <FeedHeader key={index}>
@@ -542,7 +549,6 @@ const Home:React.FC<HomeScreenProps> = ({
                             </ModalContainer>
                           </Modalize>
                         </Portal>
-
                   </ModalArea>
                   </TouchableOpacity>
                 </FeedHeader>
