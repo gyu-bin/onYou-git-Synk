@@ -22,7 +22,8 @@ import { FeedCreateScreenProps,  } from '../../types/feed';
 // @ts-ignore
 import { ImageBrowser } from "expo-image-picker-multiple";
 import { useNavigation } from "@react-navigation/native";
-// import ImagePicker from 'react-native-image-crop-picker';
+import MultipleImagePicker, { Results } from "@baronha/react-native-multiple-image-picker";
+
 interface ValueInfo {
   str: string;
   isHT: boolean;
@@ -35,7 +36,7 @@ const Container = styled.SafeAreaView`
 `;
 const ImagePickerView = styled.View`
   width: 100%;
-  height: 55%;
+  height: ${Platform.OS === 'android' ? 55 : 65}%;
   align-items: center;
   top: ${Platform.OS === 'android' ? 3 : 0}%;
 `;
@@ -180,16 +181,20 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     }
   };
 
-/*  const pickMultiImage  = () => {
-    ImagePicker.openPicker({
-      width: 300,
-      height: 400,
-      cropping: true,
-      multiple: true
-    }).then(image => {
-      console.log(image);
-    });
+/*  const openPicker = async () => {
+    try {
+      const response = await MultipleImagePicker.openPicker({
+        selectedAssets: imageURI,
+        singleSelectedMode: false
+      });
+
+      console.log('response: ', response);
+
+    } catch (e) {
+      console.log(e.code, e.message);
+    }
   }*/
+
   const {
     isLoading: feedsLoading,
     data: feeds,
@@ -208,14 +213,13 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
         navigate("Tabs", {
           screen: "Home",
           feedData:res.data,
-          onRefresh
         });
         onRefresh();
       }
       else {
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
-        console.log(res.json);
+        console.log(res.json+'json');
         return navigate("Tabs", {
           screen: "Home",
         });
@@ -256,7 +260,8 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
         };
 
     mutation.mutate(requestData);
-    console.log(data)
+    console.log(data+'data')
+    onRefresh();
   };
 
   useEffect(()=>{
@@ -294,6 +299,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
           behavior={Platform.select({ios: 'position', android: 'padding'})} style={{ flex: 1 }}>
           <>
             <ImagePickerView>
+              {/*<ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>*/}
               <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
                 {imageURI ? (
                   // <PickedImage height={imageHeight} source={{ uri: imageURI }} />

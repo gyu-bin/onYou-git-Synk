@@ -130,14 +130,15 @@ const ReplyArea = styled.View`
   flex-direction: row;
   padding: 1% 0 0 20px;
   height: auto;
-  bottom: ${Platform.OS === "ios" ? 5 : 0}px;
+  bottom: ${Platform.OS === 'ios' ? 3 : 0}%;
 `;
 
 const ReplyInputArea = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  width: 88%;;
+  width: 88%;
+ 
 `
 
 const ReplyInput = styled.TextInput`

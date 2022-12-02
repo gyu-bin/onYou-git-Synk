@@ -10,7 +10,7 @@ import {
   useWindowDimensions,
   View,
   ActivityIndicator,
-  Platform, StatusBar, ScrollView, VirtualizedList,RefreshControl
+  Platform, StatusBar, ScrollView, VirtualizedList, RefreshControl, Button, ScaleTransform
 } from "react-native";
 import {
   useInfiniteQuery,
@@ -28,12 +28,8 @@ import {
   UserApi,
   UserInfoResponse,
   likeCount,
-  likeCountReverse,
   FeedsLikeReponse,
-  ClubApi,
-  ClubCreationRequest,
   FeedLikeRequest,
-  FeedReverseLikeRequest,
   Club,
 } from "../api";
 import CustomText from "../components/CustomText";
@@ -44,6 +40,7 @@ import {
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { ImageSlider } from "react-native-image-slider-banner";
+import LottieView from 'lottie-react-native';
 const Loader = styled.SafeAreaView`
   flex: 1;
   justify-content: center;
@@ -55,6 +52,7 @@ const Container = styled.SafeAreaView`
   flex: 1;
   top: ${Platform.OS === 'android' ? 5 : 0}%;
   padding-bottom:  ${Platform.OS === 'android' ? 6 : 0}%;
+  scroll-behavior: smooth;
 `;
 
 const HeaderView = styled.View<{ size: number }>`
@@ -192,7 +190,8 @@ const UserInfo = styled.View`
   padding-left: 10px;
 `;
 const FeedMain = styled.View``;
-const FeedImage = styled.View``;
+const FeedImage = styled.View`
+`;
 const FeedInfo = styled.View`
   flex-direction: row;
   justify-content: space-between;
@@ -207,6 +206,14 @@ const InfoArea = styled.View`
   align-items: center;
   padding-right: 10px;
 `;
+
+const LottieArea = styled.View`
+  position: relative;
+  overflow: hidden;
+  width:20px;
+  height:20px;
+  transform: scale(3);
+`
 
 const LikeClick=styled.TouchableOpacity`
 `
@@ -255,71 +262,51 @@ const Home:React.FC<HomeScreenProps> = ({
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
-
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState()
   //모달
   const modalizeRef = useRef<Modalize>(null);
-  const onOpen = (feedData:Feed) => {
-    modalizeRef.current?.open(feedData.id);
+  const onOpen = (feedData:any) => {
+    modalizeRef?.current?.open(feedData);
+
   };
+  useEffect(()=>{
+
+  },[feedData])
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
+  const [clickModal, setClickModal] = useState(new Map([]));
   //피드
     const {
       isLoading: feedsLoading,
       data: feeds,
       isRefetching: isRefetchingFeeds,
     } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
-      //useQuery(["getFeeds", token], FeedApi.getFeeds, {
       onSuccess: (res) => {
         console.log('homeCall')
         setIsPageTransition(false);
         let heartDataMap = new Map();
+        let clickModalMap = new Map();
 
         for (let i = 0; i < res?.data?.length; ++i) {
           heartDataMap.set(res?.data[i].id, false);
-          //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
+          clickModalMap.set(res?.data[i].id, res?.data[i].id);
         }
         setHeartMap(heartDataMap);
+        setClickModal(clickModalMap)
       },
       onError: (err) => {
         console.log(err);
       },
     });
 
-  //무한스크롤
-  /*const {
-    isLoading: feedsLoading,
-    data: feeds,
-    isRefetching: isRefetchingFeeds,
-    hasNextPage,
-    refetch: feedRefetch,
-  } = useInfiniteQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
-    //useQuery(["getFeeds", token], FeedApi.getFeeds, {
-    getNextPageParam: (currentPage) => {
-      if (currentPage) {
-        return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
-      }
-    },
-    onSuccess: (res) => {
-      setIsPageTransition(false);
-      /!*let heartDataMap = new Map();
-      let modalMap = new Map();*!/
-      console.log(res+'ress')
-      /!*for (let i = 0; i < res?.pages..length; ++i) {
-        heartDataMap.set(res?.responses?.content[i].id, false);
-        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
-      }
-      for (let i = 0; i < res?.responses?.content?.length; ++i) {
-        modalMap.set(res?.responses?.content[i]?.id, res?.responses?.content[i].id);
-        //나중에 api 호출했을때는 false자리에 id 불러오듯이 값 받아와야함.
-      }*!/
-      /!*setHeartMap(heartDataMap);
-      setModaltMap(modalMap);*!/
-    },
-    onError: (err) => {
-      console.log(err);
-    },
-  });*/
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.refetchQueries(["getFeeds"]);
+    setRefreshing(false);
+  };
+
   //User
   const {
     isLoading: userInfoLoading, // true or false
@@ -332,6 +319,7 @@ const Home:React.FC<HomeScreenProps> = ({
   const LikeMutation = useMutation( FeedApi.likeCount, {
     onSuccess: (res) => {
       if (res.status === 200) {
+        // onRefresh();
         console.log(res)
       } else {
         console.log(`mutation success but please check status code`);
@@ -346,7 +334,11 @@ const Home:React.FC<HomeScreenProps> = ({
   });
 
   const LikeFeed=(feedData:Feed)=>{
-    feedData.likeYn = true
+    if(feedData.likeYn.toString() === 'true'){
+      feedData.likeYn=false
+    }else{
+      feedData.likeYn = true
+    }
     const data = {
       id: feedData.id,
     };
@@ -357,39 +349,6 @@ const Home:React.FC<HomeScreenProps> = ({
         token,
       }
     LikeMutation.mutate(likeRequestData);
-    console.log(data);
-  };
-
-  //ReverseLike
-  const LikeReverseMutation = useMutation( FeedApi.likeCountReverse, {
-    onSuccess: (res) => {
-      if (res.status === 200) {
-        console.log(res)
-      } else {
-        console.log(`mutation success but please check status code`);
-        console.log(res);
-      }
-    },
-    onError: (error) => {
-      console.log("--- Error ---");
-      console.log(`error: ${error}`);
-      // return navigate("Home", {});
-    },
-    onSettled: (res, error) => {},
-  });
-
-  const LikeReverseFeed=(feedData:Feed)=>{
-    feedData.likeYn = false
-    const data = {
-      id: feedData.id,
-    };
-
-    const likeRequestData: FeedLikeRequest=
-      {
-        data,
-        token,
-      }
-    LikeReverseMutation.mutate(likeRequestData);
     console.log(data);
   };
 
@@ -474,11 +433,8 @@ const Home:React.FC<HomeScreenProps> = ({
     );
     setModalVisible(!isModalVisible);
   };
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await queryClient.refetchQueries(["getFeeds"]);
-    setRefreshing(false);
-  };
+
+
 
   const timeLine =(date:any) =>{
     const start = new Date(date);
@@ -506,13 +462,13 @@ const Home:React.FC<HomeScreenProps> = ({
   }
 
   const topHidden=()=>{
-    console.log('down')
+    // console.log('down')
   }
 
   const onScroll = (e:any) => {
     const {contentSize, layoutMeasurement, contentOffset} = e.nativeEvent;
     // console.log({contentSize, layoutMeasurement, contentOffset});
-    console.log('up')
+    // console.log('up')
     // console.log(contentOffset.y);
   };
 
@@ -538,12 +494,14 @@ const Home:React.FC<HomeScreenProps> = ({
           <FlatList
             refreshing={refreshing}
             onRefresh={onRefresh}
-            keyExtractor={(item: Feed, index: number) => String(index)}
             data={feeds?.data}
             disableVirtualization={false}
-            onEndReached={topHidden}
+/*            onEndReached={topHidden} //하단에 닿을시
             onEndReachedThreshold={1}
-            onScroll={onScroll}
+            onScroll={onScroll} //스크롤할시*/
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item: Feed, index: number) => String(index)}
             renderItem={({ item, index }: { item: Feed; index: number }) => (
               <ScrollView              >
                 <FeedHeader key={index}>
@@ -560,30 +518,36 @@ const Home:React.FC<HomeScreenProps> = ({
                       </ClubBox>
                     </UserInfo>
                   </FeedUser>
+                  <TouchableOpacity onPress={()=>setClickModal((prev)=>new Map(prev).set(item.id, prev.get(item.id)))}>
                   <ModalArea>
-                    <ModalIcon
-                      onPress={()=>onOpen(item)}>
-                      <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
-                      <Text>{item.id}</Text>
-                    </ModalIcon>
+                      <ModalIcon
+                        onPress={() => {onOpen(item.id)}}>
+                        <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
+                      </ModalIcon>
+                        <Portal>
+                          <Modalize
+                            ref={modalizeRef}
+                            modalHeight={300}
+                            handlePosition="inside"
+                          >
+                            <ModalContainer key={index}>
+                              <ModalView>
+                                <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
+                                <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
+                                  삭제
+                                </ModalText>
+                                <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
+                                <Text>{item.userName}, {myName}, {item.id}, {clickModal.get(item.id)}</Text>
+                              </ModalView>
+                            </ModalContainer>
+                          </Modalize>
+                        </Portal>
+
                   </ModalArea>
-                  <Portal>
-                    <Modalize
-                      ref={modalizeRef}
-                      modalHeight={300}
-                      handlePosition="inside"
-                      modalStyle={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}
-                    >
-                      <ModalContainer>
-                        <ModalView>
-                          <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
-                          <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
-                            삭제
-                          </ModalText>
-                          <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
-                          <Text>{item.userName},{myName},{item.id}</Text>
-                        </ModalView>
-                        {/*{userInfo?.data.id===item.userId ?
+                  </TouchableOpacity>
+                </FeedHeader>
+
+                {/*  {/*{userInfo?.data.id===item.userId ?
                           <ModalView>
                             <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
                             <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
@@ -597,10 +561,6 @@ const Home:React.FC<HomeScreenProps> = ({
                             <Text>{item.userName},{myName},{item.id}</Text>
                           </ModalView>
                         }*/}
-                      </ModalContainer>
-                    </Modalize>
-                  </Portal>
-                </FeedHeader>
                 <FeedMain>
                   <FeedImage>
                     <ImageSlider
@@ -611,21 +571,29 @@ const Home:React.FC<HomeScreenProps> = ({
                       ]}
                       closeIconColor="#fff"
                       preview={true}
-                      caroselImageStyle={{resizeMode: 'cover'}}
+                      caroselImageStyle={{resizeMode: 'stretch',height: 450}}
                       indicatorContainerStyle={{bottom: 0}}
+                      size={FEED_IMAGE_SIZE}
                     />
-
                     {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
                   </FeedImage>
                   <FeedInfo>
                     <LeftInfo>
                       <InfoArea>
                         <TouchableOpacity onPress= {() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
-                          <TouchableOpacity onPress={item.likeYn.toString() === "true" ? () => LikeReverseFeed(item) : () => LikeFeed(item)}>
+                          {/*<TouchableOpacity onPress={item.likeYn.toString() === "true" ? () => LikeReverseFeed(item) : () => LikeFeed(item)}>*/}
+                          <TouchableOpacity onPress={()=>LikeFeed(item)}>
                             {item.likeYn.toString() === "false" ?
                               <Ionicons  name="md-heart-outline" size={20} color="black"/>
                               :
-                              <Ionicons  name="md-heart" size={20} color="red"/>}
+                              <LottieArea>
+                                <LottieView
+                                  source={require('../assets/heart-lottie.json')}
+                                  // source={{uri:'https://assets3.lottiefiles.com/datafiles/nZgj7wTd56UtH6m/data.json'}}
+                                  autoPlay={true} loop={false}
+                                />
+                              </LottieArea>
+                            }
                           </TouchableOpacity>
                           {/*{heartMap.get(item.id)?
                             <Ionicons name="md-heart" size={20} color="red"><TouchableOpacity onPress={()=>LikeFeed(item)}/></Ionicons>
@@ -635,8 +603,6 @@ const Home:React.FC<HomeScreenProps> = ({
                         {item.likeYn.toString() === 'true' ?
                           <NumberText>{item.likesCount +1}</NumberText>:<NumberText>{item.likesCount}</NumberText>
                         }
-                       {/* {heartMap.get(item.id) === true?<NumberText>{likeCount +1}</NumberText>
-                          : <NumberText>{likeCount}</NumberText>}*/}
                       </InfoArea>
                       <InfoArea>
                         <TouchableOpacity onPress={() => goToReply(item)}>

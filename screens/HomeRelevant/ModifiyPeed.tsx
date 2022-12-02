@@ -13,7 +13,7 @@ import {
   View
 } from "react-native";
 import { useSelector } from "react-redux";
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import {
   Club,
   Feed,
@@ -35,6 +35,7 @@ const Loader = styled.SafeAreaView`
 `;
 const Container=styled.SafeAreaView`
   flex: 1;
+  scroll-behavior: smooth;
 `
 const FeedUser = styled.View`
   flex-direction: row;
@@ -131,7 +132,7 @@ interface FeedEditItem{
 const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
                                                       navigation:{navigate},
                                                       route:{params: {feedData}}})=> {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
@@ -139,13 +140,15 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   const [content, setContent] = useState("")
   const [data, setData] = useState<Feed>(feedData);
   const [items, setItems] = useState<FeedEditItem[]>();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const queryClient = useQueryClient();
   const navigation = useNavigation();
   //피드호출
   const {
-    isLoading: feedsLoading,
-    data: feeds,
-    isRefetching: isRefetchingFeeds,
-  } = useQuery<ModifiedReponse>(["getFeeds",token,feedData.id], FeedApi.getSelectFeeds, {
+    isLoading: feedsModifyLoading,
+    data: feedModify,
+    isRefetching: isRefetchingFeedModify,
+  } = useQuery<ModifiedReponse>(["getModify",token,feedData.id], FeedApi.getSelectFeeds, {
     onSuccess: (res) => {
       setIsPageTransition(false);
     },
@@ -153,7 +156,17 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
       console.log(err);
     },
   });
+  const {
+    isLoading: feedsLoading,
+    data: feeds,
+    isRefetching: isRefetchingFeeds,
+  } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {});
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.refetchQueries(["getFeeds"]);
+    setRefreshing(false);
+  };
   const {
     isLoading: userInfoLoading, // true or false
     data: userInfo,
@@ -161,25 +174,20 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
 
   const mutation = useMutation(FeedApi.updateFeed, {
     onSuccess: (res) => {
-      if (res.status === 200 && res.json?.resultCode === "OK") {
-        return navigate("Tabs", {
+      if (res.status === 200) {
+        navigate("Tabs", {
           screen: "Home",
+          onRefresh
         });
       } else {
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
         console.log(res.json);
-        /*  return navigate("Tabs", {
-            screen: "Home",
-          });*/
       }
     },
     onError: (error) => {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
-      /*   return navigate("Tabs", {
-           screen: "Home",
-         });*/
     },
     onSettled: (res, error) => {},
   });
@@ -192,15 +200,12 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
       content: content,
     };
     console.log(data);
-
     const requestData: FeedUpdateRequest={
       data,
       token,
     };
     mutation.mutate(requestData);
-    return navigate("Tabs", {
-      screen: "Home",
-    });
+
   };
   useEffect(()=>{
     navigation.setOptions({
@@ -211,13 +216,12 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Container>
-        <KeyboardAvoidingView behavior={Platform.select({ios: 'position', android: 'position'})} style={{flex: 1}}>
+        <KeyboardAvoidingView behavior={Platform.select({ios: 'position', android: 'position'})} style={{flex: 1,overflow: 'scroll'}}>
           <View>
             <FeedUser >
               <UserImage source={{ uri: userInfo?.data.thumbnail }} />
               <UserInfo>
                 <UserId>{data.userName}</UserId>
-                <UserId>{data.id}</UserId>
                 <ClubBox>
                   <ClubName>{data.clubName}</ClubName>
                 </ClubBox>
