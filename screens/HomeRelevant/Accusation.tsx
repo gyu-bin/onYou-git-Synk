@@ -44,12 +44,12 @@ const AccText = styled.Text`
 `;
 
 interface ReportReason{
-     title:string,
-    reason:string,
+  title:string,
+  reason:string,
 }
 
 const Accusation:React.FC<ReportPeedScreenProps>=({ navigation:
-                                                    { navigate},
+  { navigate},
                                                     route:{params:{feedData}} }) =>{
   const token = useSelector((state) => state.AuthReducers.authToken);
 

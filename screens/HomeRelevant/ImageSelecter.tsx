@@ -22,8 +22,6 @@ import { FeedCreateScreenProps,  } from '../../types/feed';
 // @ts-ignore
 import { ImageBrowser } from "expo-image-picker-multiple";
 import { useNavigation } from "@react-navigation/native";
-import MultipleImagePicker, { Results } from "@baronha/react-native-multiple-image-picker";
-
 interface ValueInfo {
   str: string;
   isHT: boolean;
@@ -94,7 +92,6 @@ const SelectImageView = styled.View`
 `;
 
 const SelectImageArea = styled.TouchableOpacity`
-
 `
 const SelectImage = styled.Image`
   width: 55px;
@@ -129,7 +126,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
-  const [imageURI, setImageURI] = useState<any>('');
+  const [imageURI, setImageURI] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   let [alert, alertSet] = useState(true);
@@ -170,32 +167,15 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
       quality: 1,
       aspect: [16,9],
-      allowsmultipleselection: true,
+      allowsMultipleSelection: true,
     });
 
-    for(let i=0; i<imageURI?.length; i++){
       if (!result.cancelled) {
-        setImageURI(result.uri[i]);
-      }
+        setImageURI(result.uri);
     }
   };
-
-/*  const openPicker = async () => {
-    try {
-      const response = await MultipleImagePicker.openPicker({
-        selectedAssets: imageURI,
-        singleSelectedMode: false
-      });
-
-      console.log('response: ', response);
-
-    } catch (e) {
-      console.log(e.code, e.message);
-    }
-  }*/
 
   const {
     isLoading: feedsLoading,
@@ -301,7 +281,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
           behavior={Platform.select({ios: 'position', android: 'padding'})} style={{ flex: 1 }}>
           <>
             <ImagePickerView>
-              {/*<ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>*/}
               <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
                 {imageURI ? (
                   // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
@@ -323,7 +302,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
             <SelectImageView>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI[0] }} />
+                <SelectImage source={{ uri: imageURI}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -333,7 +312,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI[1] }} />
+                <SelectImage source={{ uri: imageURI}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -343,7 +322,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI[2] }} />
+                <SelectImage source={{ uri: imageURI}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -353,7 +332,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI[3] }} />
+                <SelectImage source={{ uri: imageURI }} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -363,7 +342,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI[4] }} />
+                <SelectImage source={{ uri: imageURI }} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>

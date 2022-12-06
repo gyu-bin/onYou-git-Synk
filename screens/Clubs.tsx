@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import styled from "styled-components/native";
 import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
@@ -24,16 +24,16 @@ const CategoryButton = styled.TouchableOpacity`
   align-items: center;
 `;
 const CategoryName = styled(CustomText)`
-  font-size: 15px;
+  font-size: 17px;
   color: gray;
-  line-height: 21px;
+  line-height: 23px;
 `;
 
 const SelectedCategoryName = styled(CustomText)`
   font-family: "NotoSansKR-Bold";
-  font-size: 15px;
+  font-size: 17px;
   color: black;
-  line-height: 21px;
+  line-height: 23px;
 `;
 
 const Container = styled.SafeAreaView`
@@ -41,7 +41,7 @@ const Container = styled.SafeAreaView`
 `;
 
 const HeaderView = styled.View`
-  height: 80px;
+  height: 90px;
 `;
 
 const HeaderSection = styled.View`
@@ -72,12 +72,23 @@ const MainView = styled.View`
   flex: 1;
 `;
 
+const EmptyView = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`;
+
+const EmptyText = styled(CustomText)`
+  font-size: 14px;
+  color: #bdbdbd;
+`;
+
 const FloatingButton = styled.TouchableOpacity`
   position: absolute;
   right: 20px;
   bottom: 20px;
-  width: 45px;
-  height: 45px;
+  width: 50px;
+  height: 50px;
   background-color: #295af5;
   elevation: 5;
   box-shadow: 1px 1px 3px gray;
@@ -393,6 +404,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
             </Loader>
           ) : (
             <FlatList
+              contentContainerStyle={{ flexGrow: 1 }}
               refreshing={refreshing}
               onRefresh={onRefresh}
               onEndReached={loadMore}
@@ -419,6 +431,11 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
                     recruitStatus={item.recruitStatus}
                   />
                 </TouchableOpacity>
+              )}
+              ListEmptyComponent={() => (
+                <EmptyView>
+                  <EmptyText style={{ justifyContent: "center", alignItems: "center" }}>{`조건에 해당하는 모임이 없습니다.`}</EmptyText>
+                </EmptyView>
               )}
             />
           )}
