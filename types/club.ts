@@ -72,6 +72,7 @@ export type ClubDeleteProps = NativeStackScreenProps<RootStackParamList, "ClubDe
 export interface ClubHomeParamList {
   scrollY: Animated.Value;
   headerDiff: number;
+  clubRole?: ClubRole;
 }
 
 // ClubHome Header
@@ -81,6 +82,7 @@ export interface ClubHomeHaederProps extends ClubHomeParamList {
   shortDesc: string | null;
   categories: Category[];
   recruitStatus: string | null;
+  schedules: Schedule[] | undefined;
   heightExpanded: number;
   heightCollapsed: number;
 }
@@ -93,7 +95,7 @@ export type TopTabParamList = {
 export type ClubTopTabProps = MaterialTopTabScreenProps<TopTabParamList, "ClubTopTabs">;
 
 export interface ClubHomeFloatingButtonProps {
-  role: "MASTER" | "MANAGER" | "MEMBER" | undefined;
+  role: "MASTER" | "MANAGER" | "MEMBER" | "PENDING" | undefined;
   applyStatus: "APPLIED" | "APPROVED" | undefined;
   onPressEdit: Function;
   onPressJoin: Function;

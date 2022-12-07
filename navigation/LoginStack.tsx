@@ -15,6 +15,10 @@ import JoinStepSuccess from "../screens/Login/JoinStepSuccess";
 import FindLoginInfo from "../screens/Login/FindLoginInfo";
 import { TouchableOpacity, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import FindId from "../screens/Login/FindId";
+import FindPw from "../screens/Login/FindPw";
+import FindIdResult from "../screens/Login/FindIdResult";
+import FindPwResult from "../screens/Login/FindPwResult";
 
 const NativeStack = createNativeStackNavigator();
 
@@ -45,6 +49,56 @@ const LoginStack = ({
           title: "로그인 정보 찾기",
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "Login" })}>
+              <Ionicons name="chevron-back" size={20} color="black" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <NativeStack.Screen
+        name="FindId"
+        component={FindId}
+        initialParams={{ email }}
+        options={{
+          title: "아이디 찾기",
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "FindLoginInfo" })}>
+              <Ionicons name="chevron-back" size={20} color="black" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <NativeStack.Screen
+        name="FindIdResult"
+        component={FindIdResult}
+        initialParams={{ email }}
+        options={{
+          title: "아이디 찾기",
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "FindId" })}>
+              <Ionicons name="chevron-back" size={20} color="black" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <NativeStack.Screen
+        name="FindPw"
+        component={FindPw}
+        options={{
+          title: "비밀번호 찾기",
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "FindLoginInfo" })}>
+              <Ionicons name="chevron-back" size={20} color="black" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <NativeStack.Screen
+        name="FindPwResult"
+        component={FindPwResult}
+        options={{
+          title: "비밀번호 찾기",
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "FindPw" })}>
               <Ionicons name="chevron-back" size={20} color="black" />
             </TouchableOpacity>
           ),

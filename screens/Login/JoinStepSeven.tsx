@@ -1,11 +1,7 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useState, createRef, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Keyboard, ScrollView, Alert, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
-import { useMutation } from "react-query";
-import { CommonApi } from "../../api";
-import { useDispatch } from "react-redux";
-import { Login } from "../../store/Actions";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import styled from "styled-components/native";
 
 const Container = styled.View`
@@ -166,6 +162,7 @@ const JoinStepSeven: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ nav
           <SubText>연락처는 ID 찾기에 사용됩니다.</SubText>
           <Input
             placeholder="010-1234-1234"
+            placeholderTextColor={"#B0B0B0"}
             keyboardType="numeric"
             maxLength={13}
             onChangeText={(phone) => setPhoneNumber(phone)}

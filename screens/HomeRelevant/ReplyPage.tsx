@@ -138,7 +138,7 @@ const ReplyInputArea = styled.View`
   justify-content: space-between;
   align-items: center;
   width: 88%;
- 
+  
 `
 
 const ReplyInput = styled.TextInput`
@@ -298,9 +298,9 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                           keyboardVerticalOffset={Platform.OS === "ios" ? 110 : 100} style={{ flex: 1 }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <>
-            <CommentList>
-              {replys?.data.length !== 0 ?
-                <SafeAreaView style={{flex: 1}}>
+          <CommentList>
+            {replys?.data.length !== 0 ?
+              <SafeAreaView style={{flex: 1}}>
                 <SwipeListView
                   refreshing={refreshing}
                   onRefresh={onRefresh}
@@ -328,71 +328,71 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                   renderHiddenItem={(item, index) => (
                     <SwipeHiddenItemContainer>
                       <SwipeHiddenItem>
-                          <SwipeHiddenItemText></SwipeHiddenItemText>
-                        </SwipeHiddenItem>
+                        <SwipeHiddenItemText></SwipeHiddenItemText>
+                      </SwipeHiddenItem>
                       <SwipeHiddenItem style={{backgroundColor: 'skyblue'}}>
-                          <SwipeHiddenItemText onPress={()=>deleteCheck(item)}>
-                            <AntDesign name="delete" size={24} color="black" />
-                          </SwipeHiddenItemText>
-                        </SwipeHiddenItem>
+                        <SwipeHiddenItemText onPress={()=>deleteCheck(item)}>
+                          <AntDesign name="delete" size={24} color="black" />
+                        </SwipeHiddenItemText>
+                      </SwipeHiddenItem>
                     </SwipeHiddenItemContainer>
                   )}
                 />
-                </SafeAreaView>
-                  :
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                 <NoReplyScrollView
+              </SafeAreaView>
+              :
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <NoReplyScrollView
                   refreshControl={
                     <RefreshControl
                       refreshing={refreshing}
                       onRefresh={onRefresh}
                     />
-                 }>
-                   <CommentArea>
-                     <NoReplyText>아직 등록된 댓글이 없습니다. {"\n"} 첫 댓글을 남겨보세요</NoReplyText>
-                   </CommentArea>
-                 </NoReplyScrollView>
-                </TouchableWithoutFeedback>
-              }
-            </CommentList>
+                  }>
+                  <CommentArea>
+                    <NoReplyText>아직 등록된 댓글이 없습니다. {"\n"} 첫 댓글을 남겨보세요</NoReplyText>
+                  </CommentArea>
+                </NoReplyScrollView>
+              </TouchableWithoutFeedback>
+            }
+          </CommentList>
 
-            <ReplyArea>
-              <ReplyImg
-                source={{
-                  uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
-                }}
-              />
-              <ReplyInputArea>
-                {replys?.data.length === null ?
-                  <ReplyInput
-                    placeholder="댓글을 입력해보세요..."
-                    onChangeText={(content) => setContent(content)}
-                    autoCompleteType="off"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    multiline={true}
-                    returnKeyType="done"
-                    returnKeyLabel="done"
-                    value={content}
-                  />:
-                  <ReplyInput
-                    placeholder="댓글을 입력해보세요..."
-                    onChangeText={(content) => setContent(content)}
-                    autoCompleteType="off"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    multiline={true}
-                    returnKeyType="done"
-                    returnKeyLabel="done"
-                    value={content}
-                  />
-                }
-                <ReplyButton onPress={RelpyFeed}>
-                  <ReplyDone>게시</ReplyDone>
-                </ReplyButton>
-              </ReplyInputArea>
-            </ReplyArea>
-    </>
+          <ReplyArea>
+            <ReplyImg
+              source={{
+                uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+              }}
+            />
+            <ReplyInputArea>
+              {replys?.data.length === null ?
+                <ReplyInput
+                  placeholder="댓글을 입력해보세요..."
+                  onChangeText={(content:any) => setContent(content)}
+                  autoCompleteType="off"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  multiline={true}
+                  returnKeyType="done"
+                  returnKeyLabel="done"
+                  value={content}
+                />:
+                <ReplyInput
+                  placeholder="댓글을 입력해보세요..."
+                  onChangeText={(content:any) => setContent(content)}
+                  autoCompleteType="off"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  multiline={true}
+                  returnKeyType="done"
+                  returnKeyLabel="done"
+                  value={content}
+                />
+              }
+              <ReplyButton onPress={RelpyFeed}>
+                <ReplyDone>게시</ReplyDone>
+              </ReplyButton>
+            </ReplyInputArea>
+          </ReplyArea>
+        </>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );

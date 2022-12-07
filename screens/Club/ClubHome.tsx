@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, useWindowDimensions, Animated, FlatList, RefreshControl } from "react-native";
+import React, { useLayoutEffect, useState } from "react";
+import { ActivityIndicator, useWindowDimensions, Animated, FlatList } from "react-native";
 import styled from "styled-components/native";
 import { Feather, Entypo, Ionicons } from "@expo/vector-icons";
 import { ClubHomeScreenProps, ClubHomeParamList, RefinedSchedule } from "../../Types/Club";
 import { useMutation, useQuery } from "react-query";
-import { ClubApi, ClubRoleResponse, ClubSchedulesResponse, Member, Schedule } from "../../api";
+import { Club, ClubApi, ClubResponse, ClubRoleResponse, ClubSchedulesResponse, Member, Schedule } from "../../api";
 import ScheduleModal from "./ClubScheduleModal";
 import CircleIcon from "../../components/CircleIcon";
 import ScheduleAddModal from "./ClubScheduleAddModal";
@@ -25,7 +25,7 @@ const Loader = styled.View`
 
 const Break = styled.View<{ sep: number }>`
   width: 100%;
-  margin-bottom: ${(props) => props.sep}px;
+  margin-bottom: ${(props) => props.sep * 2}px;
   margin-top: ${(props) => props.sep}px;
   border-bottom-width: 1px;
   border-bottom-color: rgba(0, 0, 0, 0.2);
@@ -82,8 +82,6 @@ const ScheduleAddView = styled.TouchableOpacity`
   box-shadow: 1px 1px 2px gray;
   elevation: 5;
   padding: 20px 5px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
 `;
 
 const ScheduleBadge = styled.View`
@@ -112,12 +110,8 @@ const ScheduleDateView = styled.View<{ index: number }>`
   background-color: ${(props) => (props.index === 0 ? "#eaff87" : "#CCCCCC")};
   justify-content: center;
   align-items: center;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
   padding: 7px 15px;
   elevation: 3;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
   min-height: 40px;
 `;
 
@@ -196,6 +190,7 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
   },
   scrollY,
   headerDiff,
+  clubRole,
 }) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
   const [scheduleVisible, setScheduleVisible] = useState(false);
@@ -209,6 +204,7 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
   const [masterData, setMasterData] = useState<Member>();
   const toast = useToast();
   const memberCountPerLine = Math.floor((SCREEN_WIDTH - SCREEN_PADDING_SIZE) / (MEMBER_ICON_SIZE + MEMBER_ICON_KERNING));
+
   const {
     isLoading: scheduleLoading,
     data: schedules,
@@ -245,16 +241,10 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
 
       setScheduleData(result);
     },
-  });
-
-  const {
-    isLoading: clubRoleLoading,
-    data: clubRole,
-    isRefetching: isRefetchingClubRole,
-  } = useQuery<ClubRoleResponse>(["getClubRole", token, clubData.id], ClubApi.getClubRole, {
-    onSuccess: (res) => {},
     onError: (error) => {
-      console.log(error);
+      toast.show(`스케줄 데이터를 불러오지 못했습니다. ${error}`, {
+        type: "error",
+      });
     },
   });
 
@@ -285,7 +275,6 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
   });
 
   const getClubMembers = () => {
-    console.log(clubData.members);
     const members: Member[] = [];
     const manager: Member[] = [];
     const memberBundle: Member[][] = [];
@@ -318,12 +307,12 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
     setMemberLoading(false);
   };
 
-  useEffect(() => {
-    console.log("clubHome useEffect");
+  useLayoutEffect(() => {
+    console.log(`${clubData.id} clubHome useLayoutEffect`);
     getData();
   }, []);
 
-  const loading = memberLoading || scheduleLoading || clubRoleLoading;
+  const loading = memberLoading || scheduleLoading;
 
   return loading ? (
     <Loader>
@@ -366,12 +355,7 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
           <Ionicons name="calendar" size={16} color="#295AF5" />
           <SectionTitle>SCHEDULE</SectionTitle>
         </TitleView>
-        {clubRole?.data?.role === undefined ? (
-          // Schedule FlatList의 padding 이슈 때문에 ContentView에 paddingSize Props 추가.
-          <ContentView paddingSize={SCREEN_PADDING_SIZE}>
-            <ContentText>모임의 멤버만 확인할 수 있습니다.</ContentText>
-          </ContentView>
-        ) : (
+        {clubRole?.role && clubRole?.role !== "PENDING" ? (
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -427,13 +411,18 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
                   </ScheduleDetailView>
                 </ScheduleView>
               ) : (
-                <ScheduleAddView onPress={() => setScheduleAddVisible(true)}>
+                <ScheduleAddView onPress={() => navigate("ClubScheduleAdd", { clubData })}>
                   <Feather name="plus" size={28} color="#6E6E6E" />
                   <ScheduleText style={{ textAlign: "center", color: "#6E6E6E" }}>{`스케줄을 등록해\n멤버들과 공유해보세요.`}</ScheduleText>
                 </ScheduleAddView>
               )
             }
           />
+        ) : (
+          // Schedule FlatList의 padding 이슈 때문에 ContentView에 paddingSize Props 추가.
+          <ContentView paddingSize={SCREEN_PADDING_SIZE}>
+            <ContentText>모임의 멤버만 확인할 수 있습니다.</ContentText>
+          </ContentView>
         )}
       </SectionView>
       <SectionView style={{ paddingHorizontal: SCREEN_PADDING_SIZE }}>
@@ -506,18 +495,6 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
           </ModalCloseButton>
         </ModalHeaderRight>
       </ScheduleModal>
-
-      <ScheduleAddModal visible={scheduleAddVisible} mutation={scheduleMutation} clubId={clubData.id}>
-        <ModalHeaderRight>
-          <ModalCloseButton
-            onPress={() => {
-              setScheduleAddVisible(false);
-            }}
-          >
-            <Ionicons name="close" size={24} color="black" />
-          </ModalCloseButton>
-        </ModalHeaderRight>
-      </ScheduleAddModal>
     </Animated.ScrollView>
   );
 };
