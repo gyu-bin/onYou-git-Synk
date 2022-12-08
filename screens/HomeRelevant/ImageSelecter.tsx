@@ -22,6 +22,7 @@ import { FeedCreateScreenProps,  } from '../../types/feed';
 // @ts-ignore
 import { ImageBrowser } from "expo-image-picker-multiple";
 import { useNavigation } from "@react-navigation/native";
+import { ImageSlider } from "react-native-image-slider-banner";
 interface ValueInfo {
   str: string;
   isHT: boolean;
@@ -34,7 +35,7 @@ const Container = styled.SafeAreaView`
 `;
 const ImagePickerView = styled.View`
   width: 100%;
-  height: ${Platform.OS === 'android' ? 55 : 65}%;
+  height: ${Platform.OS === 'android' ? 62 : 65}%;
   align-items: center;
   top: ${Platform.OS === 'android' ? 3 : 0}%;
 `;
@@ -130,10 +131,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   let [alert, alertSet] = useState(true);
-
-  console.log(userId+'userId')
-  console.log(clubId+'clubId')
-  console.log(imageURI+'imageURI')
+  const [showImages, setShowImages] = useState([]);
 
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
@@ -158,24 +156,30 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
-  const [postText, setPostText] = useState("");
   const token = useSelector((state:any) => state.AuthReducers.authToken);
-  const onText = (text: React.SetStateAction<string>) => setPostText(text);
   const [content, setContent] = useState("")
   const navigation = useNavigation();
   const queryClient = useQueryClient();
+
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       quality: 1,
       aspect: [16,9],
       allowsMultipleSelection: true,
     });
 
-      if (!result.cancelled) {
-        setImageURI(result.uri);
-    }
+      console.log(result.assets?.length)
+      // @ts-ignore
+      for(let i=0; i<result.assets?.length; i++){
+        if (!result.canceled) {
+          console.log([result.assets[i].uri])
+          setImageURI(result.assets[i].uri);
+        }
+      }
   };
+
+  // console.log([imageURI+'123'])
 
   const {
     isLoading: feedsLoading,
@@ -267,6 +271,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   /** X선택시 사진 없어지는 태그 */
   const ImageCancle = () => {
+    // setShowImages(showImages.filter((_, index) => index !== id));
     console.log('imageCancle')
   };
 
@@ -284,7 +289,13 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
               <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
                 {imageURI ? (
                   // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
-                  <PickedImage height={imageHeight} source={{ uri: imageURI }} />
+                  <ImageSlider
+                    data={[{img: imageURI},{img: imageURI},{img: imageURI}]}
+                    closeIconColor="#fff"
+                    preview={true}
+                    caroselImageStyle={{ resizeMode: "stretch",height: 450 }}
+                    indicatorContainerStyle={{ bottom: 0 }}
+                  />
                 ) : (
                   <PickBackground>
                     {alert ? (
@@ -342,7 +353,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI }} />
+                <SelectImage source={{ uri: imageURI}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -355,7 +366,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
             <FeedText
               placeholder="사진과 함께 남길 게시글을 작성해 보세요."
-              onChangeText={(content) => setContent(content)}
+              onChangeText={(content:any) => setContent(content)}
               autoCapitalize="none"
               autoCorrect={false}
               multiline={true}
