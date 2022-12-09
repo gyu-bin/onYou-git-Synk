@@ -131,7 +131,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   let [alert, alertSet] = useState(true);
-  const [showImages, setShowImages] = useState([]);
 
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
@@ -167,19 +166,16 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       quality: 1,
       aspect: [16,9],
       allowsMultipleSelection: true,
+      base64: true
     });
 
-      console.log(result.assets?.length)
-      // @ts-ignore
-      for(let i=0; i<result.assets?.length; i++){
+      for(let i=0; i<result?.assets?.length; i++){
         if (!result.canceled) {
           console.log([result.assets[i].uri])
           setImageURI(result.assets[i].uri);
         }
       }
   };
-
-  // console.log([imageURI+'123'])
 
   const {
     isLoading: feedsLoading,
@@ -290,7 +286,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 {imageURI ? (
                   // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
                   <ImageSlider
-                    data={[{img: imageURI},{img: imageURI},{img: imageURI}]}
+                    data={[{img: [imageURI][0]},{img: [imageURI][1]},{img: imageURI}]}
                     closeIconColor="#fff"
                     preview={true}
                     caroselImageStyle={{ resizeMode: "stretch",height: 450 }}
@@ -313,7 +309,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
             <SelectImageView>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI}} />
+                <SelectImage source={{ uri: [imageURI][0]}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -323,7 +319,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI}} />
+                <SelectImage source={{ uri: [imageURI][1]}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -333,7 +329,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI}} />
+                <SelectImage source={{ uri: [imageURI][2]}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -343,7 +339,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI }} />
+                <SelectImage source={{ uri: [imageURI][3]}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -353,7 +349,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: imageURI}} />
+                <SelectImage source={{ uri: [imageURI][4]}} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -363,7 +359,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
             </SelectImageView>
-
             <FeedText
               placeholder="사진과 함께 남길 게시글을 작성해 보세요."
               onChangeText={(content:any) => setContent(content)}
