@@ -122,7 +122,10 @@ const ModalArea = styled.View`
   flex: 1;
 `;
 
-const ModalIcon = styled.TouchableOpacity``;
+const ModalIcon = styled.TouchableOpacity`
+  top: 50%;
+`;
+
 const CenteredView = styled.View`
   flex: 1;
   justify-content: flex-end;
@@ -269,7 +272,6 @@ const Home:React.FC<HomeScreenProps> = ({
 
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
-  const [clickModal, setClickModal] = useState(new Map([]));
 
   //getFeeds ( 무한 스크롤 )
   const {
@@ -290,14 +292,11 @@ const Home:React.FC<HomeScreenProps> = ({
       // console.log("res.pages[0].responses:", res.pages[0].responses)
       setIsPageTransition(false);
       let heartDataMap = new Map();
-      let clickModalMap = new Map();
 
       for (let i = 0; i < res?.data?.length; ++i) {
         heartDataMap.set(res?.data[i].id, false);
-        clickModalMap.set(res?.data[i].id, res?.data[i].id);
       }
       setHeartMap(heartDataMap);
-      setClickModal(clickModalMap)
     },
     onError: (err) => {
       console.log(err);
@@ -360,8 +359,8 @@ const Home:React.FC<HomeScreenProps> = ({
     onSuccess: (res) => {
       if (res.status === 200) {
         console.log(res)
-        onRefresh();
         modalizeRef.current?.close()
+        onRefresh();
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -504,7 +503,7 @@ const Home:React.FC<HomeScreenProps> = ({
             refreshing={refreshing}
             onRefresh={onRefresh}
             onEndReached={loadMore}
-            // onEndReachedThreshold={2}
+            onEndReachedThreshold={2}
             data={feeds?.pages.map((page) => page?.responses?.content).flat()}
             disableVirtualization={false}
             keyExtractor={(item: Feed, index: number) => String(index)}
@@ -525,12 +524,11 @@ const Home:React.FC<HomeScreenProps> = ({
                       </ClubBox>
                     </UserInfo>
                   </FeedUser>
-                  <TouchableOpacity onPress={()=>setClickModal((prev)=>new Map(prev).set(item.id, prev.get(item.id)))}>
+                  <TouchableOpacity>
                     <ModalArea>
                       <ModalIcon
                         onPress={() => {onOpen(item)}}>
                         <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
-                         <Text>{item.id}</Text>
                       </ModalIcon>
                       <Portal>
                         { modalFeedData.userId === myId ? (
@@ -571,7 +569,7 @@ const Home:React.FC<HomeScreenProps> = ({
                       data={[{ img: item.imageUrls[0] }, { img: "https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg" }, { img: item.imageUrls[0] }]}
                       closeIconColor="#fff"
                       preview={true}
-                      caroselImageStyle={{resizeMode: 'cover',height: 400}}
+                      caroselImageStyle={{resizeMode: 'stretch',height: 450}}
                       indicatorContainerStyle={{ bottom: 0 }}
                       size={FEED_IMAGE_SIZE}
                     />
