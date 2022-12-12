@@ -127,7 +127,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
-  const [imageURI, setImageURI] = useState<any>(null);
+  let [imageURI, setImageURI] = useState<any>(null)
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   let [alert, alertSet] = useState(true);
@@ -166,17 +166,15 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       quality: 1,
       aspect: [16,9],
       allowsMultipleSelection: true,
-      base64: true
+      selectionLimit: 5,
     });
-
       for(let i=0; i<result?.assets?.length; i++){
         if (!result.canceled) {
-          console.log([result.assets[i].uri])
           setImageURI(result.assets[i].uri);
         }
       }
   };
-
+console.log(imageURI)
   const {
     isLoading: feedsLoading,
     data: feeds,
@@ -306,10 +304,10 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 )}
               </ImagePickerButton>
             </ImagePickerView>
-
+            {/* <SelectImage source={{ uri: imageURI.assets[0].uri}} />*/}
             <SelectImageView>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: [imageURI][0]}} />
+                <SelectImage  imageURI={imageURI} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -319,7 +317,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: [imageURI][1]}} />
+                <SelectImage  imageURI={imageURI} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -329,7 +327,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: [imageURI][2]}} />
+                <SelectImage  imageURI={imageURI} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -339,7 +337,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: [imageURI][3]}} />
+                <SelectImage  imageURI={imageURI} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
@@ -349,7 +347,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 }
               </SelectImageArea>
               <SelectImageArea onPress={ImageFIx}>
-                <SelectImage source={{ uri: [imageURI][4]}} />
+                <SelectImage  imageURI={imageURI} />
                 {imageURI === null ? null :
                   <ImageCancleBtn onPress={ImageCancle}>
                     <CancleIcon>
