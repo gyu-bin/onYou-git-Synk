@@ -1,4 +1,4 @@
-import { Feather, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { createIconSetFromFontello, Feather, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import {
   Alert,
@@ -63,7 +63,6 @@ const HeaderView = styled.View<{ size: number }>`
   justify-content: space-between;
   padding: 0 ${(props) => props.size}px 0 ${(props) => props.size}px;
   margin-bottom: 20px;
-  position: sticky;
 `;
 
 const SubView = styled.View`
@@ -147,8 +146,8 @@ const ModalView = styled.View`
 const ModalText = styled.Text`
   font-weight: bold;
   text-align: center;
-  font-size: 20px;
-  padding: 30px;
+  font-size: 18px;
+  margin: 30px 0 0 0;
   width: 100%;
   color: black;
   height: auto;
@@ -247,7 +246,7 @@ interface HeartType {
 }
 
 const Home:React.FC<HomeScreenProps> = ({
-                                          navigation:{navigate},
+                                          navigation,
                                           route:{params:{feedData}}
                                         })=> {
 
@@ -258,24 +257,37 @@ const Home:React.FC<HomeScreenProps> = ({
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
   const token = useSelector((state: any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
+  const [modalFeedData, setModalFeedData] =  useState<any>('');
 
   //모달
   const modalizeRef = useRef<Modalize>(null);
-  const onOpen = (feedData:any) => {
-    modalizeRef?.current?.open(feedData);
-
+  const onOpen = (feedData:Feed) => {
+    console.log("Before Modal Passed FeedId:", feedData.id);
+    setModalFeedData(feedData);
+    modalizeRef?.current?.open(feedData.id);
   };
-    //heart선택
+
+  //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
   const [clickModal, setClickModal] = useState(new Map([]));
-  //피드
+
+  //getFeeds ( 무한 스크롤 )
   const {
     isLoading: feedsLoading,
     data: feeds,
     isRefetching: isRefetchingFeeds,
-  } = useQuery<FeedsResponse>(["getFeeds", {token}], FeedApi.getFeeds, {
+    hasNextPage,
+    refetch: feedsRefetch,
+    fetchNextPage,
+  } = useInfiniteQuery<FeedsResponse>(["feeds", {token}], FeedApi.getFeeds, {
+    getNextPageParam: (currentPage) => {
+      if (currentPage) {
+        return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
+      }
+    },
     onSuccess: (res) => {
-      console.log('homeCall')
+      console.log('getFeeds onSuccess')
+      // console.log("res.pages[0].responses:", res.pages[0].responses)
       setIsPageTransition(false);
       let heartDataMap = new Map();
       let clickModalMap = new Map();
@@ -291,6 +303,13 @@ const Home:React.FC<HomeScreenProps> = ({
       console.log(err);
     },
   });
+
+  const [fetchedFeedList, setFetchedFeedList] = useState(feeds?.pages.map((page) => page?.responses?.content).flat())
+
+  const loadMore = () => {
+    if (hasNextPage) fetchNextPage();
+    console.log('loadMore')
+  };
 
   //User
   const {
@@ -372,14 +391,15 @@ const Home:React.FC<HomeScreenProps> = ({
   };
 
   const goToReply = (feedData: Feed) => {
-    navigate("HomeStack", {
+    navigation.navigate("HomeStack", {
       screen: "ReplyPage",
       feedData,
     });
   };
 
   const goToModifiy = (feedData: Feed) => {
-    navigate("HomeStack", {
+    console.log("After Modal passed feedId:",feedData.id)
+    navigation.navigate("HomeStack", {
       screen: "ModifiyPeed",
       feedData,
     });
@@ -387,14 +407,14 @@ const Home:React.FC<HomeScreenProps> = ({
   };
 
   const goToClub = () => {
-    return navigate("HomeStack", {
+    return navigation.navigate("HomeStack", {
       screen: "MyClubSelector",
       userId: myId,
     });
   };
 
   const goToAccusation = (feedData: Feed) => {
-    navigate("HomeStack", {
+    navigation.navigate("HomeStack", {
       screen: "Accusation",
       feedData,
     });
@@ -402,6 +422,7 @@ const Home:React.FC<HomeScreenProps> = ({
   };
 
   const deleteCheck = (feedData:Feed) => {
+    console.log("After Modal passed feedId:",feedData.id)
     Alert.alert(
       "게시글을 삭제하시겠어요?",
       "",
@@ -417,10 +438,20 @@ const Home:React.FC<HomeScreenProps> = ({
     );
   };
   const onRefresh = async () => {
+    console.log("onRefresh executed");
     setRefreshing(true);
-    await queryClient.refetchQueries(["getFeeds"]);
-    setRefreshing(false);
+    await queryClient.refetchQueries(["feeds"]).then(() =>{
+        setRefreshing(false)
+      }
+    );
   };
+
+  const unsubscribe = navigation.addListener('focus', () => {
+    onRefresh();
+  });
+  useEffect(() => {
+    return () => unsubscribe();
+  });
 
   //시간측정
   const timeLine = (date: any) => {
@@ -448,12 +479,6 @@ const Home:React.FC<HomeScreenProps> = ({
     return "방금 전";
   };
 
-  /*
-  const loadMore = () => {
-    if (hasNextPage) fetchNextPage();
-  };
-*/
-
   const loading = feedsLoading && userInfoLoading;
 
   return loading ? (
@@ -478,7 +503,9 @@ const Home:React.FC<HomeScreenProps> = ({
             showsHorizontalScrollIndicator={false}
             refreshing={refreshing}
             onRefresh={onRefresh}
-            data={feeds?.data}
+            onEndReached={loadMore}
+            // onEndReachedThreshold={2}
+            data={feeds?.pages.map((page) => page?.responses?.content).flat()}
             disableVirtualization={false}
             keyExtractor={(item: Feed, index: number) => String(index)}
             renderItem={({ item, index }: { item: Feed; index: number }) => (
@@ -501,27 +528,39 @@ const Home:React.FC<HomeScreenProps> = ({
                   <TouchableOpacity onPress={()=>setClickModal((prev)=>new Map(prev).set(item.id, prev.get(item.id)))}>
                     <ModalArea>
                       <ModalIcon
-                        onPress={() => {onOpen(item.id)}}>
+                        onPress={() => {onOpen(item)}}>
                         <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
-                        <Text>{item.id}</Text>
+                         <Text>{item.id}</Text>
                       </ModalIcon>
                       <Portal>
-                        <Modalize
-                          ref={modalizeRef}
-                          modalHeight={300}
-                          handlePosition="inside"
-                        >
-                          <ModalContainer key={index}>
-                            <ModalView>
-                              <ModalText onPress={() => goToModifiy(item)}>수정</ModalText>
-                              <ModalText style={{ color: "red" }} onPress={()=>deleteCheck(item)}>
-                                삭제
-                              </ModalText>
-                              <ModalText onPress={()=> goToAccusation(item)}>신고</ModalText>
-                              <Text>{item.userName}, {myName}, {item.id}, {clickModal.get(item.id)}</Text>
-                            </ModalView>
-                          </ModalContainer>
-                        </Modalize>
+                        { modalFeedData.userId === myId ? (
+                          <Modalize
+                            ref={modalizeRef}
+                            modalHeight={150}
+                            handlePosition="inside"
+                          >
+                            <ModalContainer key={index}>
+                              <ModalView>
+                                <ModalText onPress={() => goToModifiy(modalFeedData)}>수정</ModalText>
+                                <ModalText style={{ color: "red" }} onPress={() => deleteCheck(modalFeedData)}>
+                                  삭제
+                                </ModalText>
+                              </ModalView>
+                            </ModalContainer>
+                          </Modalize>
+                        ):(
+                          <Modalize
+                            ref={modalizeRef}
+                            modalHeight={75}
+                            handlePosition="inside"
+                          >
+                            <ModalContainer key={index}>
+                              <ModalView>
+                                <ModalText onPress={()=> goToAccusation(modalFeedData)}>신고</ModalText>
+                              </ModalView>
+                            </ModalContainer>
+                          </Modalize>
+                        )}
                       </Portal>
                     </ModalArea>
                   </TouchableOpacity>
@@ -536,6 +575,7 @@ const Home:React.FC<HomeScreenProps> = ({
                       indicatorContainerStyle={{ bottom: 0 }}
                       size={FEED_IMAGE_SIZE}
                     />
+
                     {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
                   </FeedImage>
                   <FeedInfo>
@@ -543,7 +583,7 @@ const Home:React.FC<HomeScreenProps> = ({
                       <InfoArea>
                         <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
                           <TouchableOpacity onPress={()=>LikeFeed(item)}>
-                          {item.likeYn.toString() === "false" ? <Ionicons name="md-heart-outline" size={20} color="black" /> : <Ionicons name="md-heart" size={20} color="red" />}
+                            {item.likeYn.toString() === "false" ? <Ionicons name="md-heart-outline" size={20} color="black" /> : <Ionicons name="md-heart" size={20} color="red" />}
                           </TouchableOpacity>
                         </TouchableOpacity>
                         {item.likeYn.toString() === "true" ? <NumberText>{item.likesCount + 1}</NumberText> : <NumberText>{item.likesCount}</NumberText>}

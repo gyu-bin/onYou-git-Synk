@@ -244,7 +244,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
   }
 
   /**댓글삭제*/
-  const deleteCheck = (feedData:Feed) => {
+  const deleteCheck = (feedData:Reply) => {
     Alert.alert(
       "댓글을 삭제하시겠어요?",
       "",
@@ -258,12 +258,11 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
       ],
       { cancelable: false }
     );
-    onRefresh();
   };
 
-  const timeLine =(date) =>{
-    const start = new Date(date);
-    const end = new Date(); // 현재 날짜
+  const timeLine =(date:any) =>{
+    const start:any = new Date(date);
+    const end:any = new Date(); // 현재 날짜
 
     let diff = (end - start); // 경과 시간
 
@@ -331,7 +330,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                         <SwipeHiddenItemText></SwipeHiddenItemText>
                       </SwipeHiddenItem>
                       <SwipeHiddenItem style={{backgroundColor: 'skyblue'}}>
-                        <SwipeHiddenItemText onPress={()=>deleteCheck(item)}>
+                        <SwipeHiddenItemText onPress={()=>deleteCheck(item.item)}>
                           <AntDesign name="delete" size={24} color="black" />
                         </SwipeHiddenItemText>
                       </SwipeHiddenItem>

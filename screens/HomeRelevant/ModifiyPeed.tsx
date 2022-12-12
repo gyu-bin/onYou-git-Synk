@@ -1,12 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components/native";
 import {
-  ActivityIndicator, Animated,
-  FlatList, Keyboard,
+  Keyboard,
   KeyboardAvoidingView,
-  Platform, SafeAreaView, ScrollView,
+  Platform,
   StatusBar,
-  Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
   useWindowDimensions,
@@ -15,16 +13,12 @@ import {
 import { useSelector } from "react-redux";
 import { useMutation, useQuery } from "react-query";
 import {
-  Club,
   Feed,
   FeedApi,
-  FeedsResponse, FeedUpdateRequest, ModifiedReponse,
-  updateFeed, UserApi, UserInfoResponse
+  FeedUpdateRequest, ModifiedReponse, UserApi, UserInfoResponse
 } from "../../api";
-import { ModifiyPeedScreenProps } from "../../types/feed";
+import { ModifiyFeedScreenProps } from "../../types/feed";
 import { RootStackParamList } from "../../types/Club";
-import { Modalize, useModalize } from "react-native-modalize";
-import { Portal } from "react-native-portalize";
 import { useNavigation } from "@react-navigation/native";
 
 const Loader = styled.SafeAreaView`
@@ -35,19 +29,25 @@ const Loader = styled.SafeAreaView`
 `;
 const Container=styled.SafeAreaView`
   flex: 1;
+  margin-bottom: ${Platform.OS === "ios" ? 20 : 30}px;
+  padding: 0 20px 0 20px;
 `
 const FeedUser = styled.View`
   flex-direction: row;
-  padding: 20px 0 0 20px;
+  padding: 20px 0 0 0;
 `;
 
 const UserInfo = styled.View`
   padding-left: 10px;
 `;
+
 const UserImage = styled.Image`
-  width: 42.5px;
-  height: 42.5px;
+  width: 40px;
+  height: 40px;
   border-radius: 100px;
+  border-style: solid;
+  border-color: #dddddd;
+  border-width: 1.5px;
   background-color: #c4c4c4;
 `;
 
@@ -70,6 +70,14 @@ const ClubName = styled.Text`
   font-weight: 500;
   color: white;
 `;
+
+const FeedHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 20px 40px 10px 0;
+`;
+
 const FeedImage = styled.View`
   padding: 10px 10px;
   justify-content: center;
@@ -81,20 +89,21 @@ const Content = styled.View`
 `;
 
 const ContentArea = styled.View`
-  height: 20%;
+`
+const ImageArea = styled.View`
+  // padding-bottom: 1px;  
 `
 
 const Ment = styled.TextInput`
   width: 100%;
-  height: 30%;
+  height: 150px;
   color: black;
-  font-size: 20px;
-  padding-left: 20px;
+  font-size: 14px;
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
-  width: ${(props) => props.size}px;
-  height: ${(props) => props.size}px;
+  width: ${(props:any) => props.size}px;
+  height: ${(props:any) => props.size}px;
 `;
 
 const FixCompleteText = styled.Text`
@@ -102,36 +111,16 @@ const FixCompleteText = styled.Text`
   font-size: 15px;
   font-weight: bold;
 `
-
-const ModalContainer = styled.View`
-  flex: 1;
-`;
-const ModalView = styled.View`
-  background-color: white;
-  align-items: center;
-  opacity: 1;
-  width: 100%;
-  height: auto;
-`;
-const ModalText = styled.Text`
-  font-weight: bold;
-  text-align: center;
-  font-size: 20px;
-  padding: 30px;
-  width: 100%;
-  color: black;
-  height: auto;
-`;
 interface FeedEditItem{
   id:number
   content:string;
   screen: keyof RootStackParamList;
 }
 
-const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
+const ModifiyFeed:React.FC<ModifiyFeedScreenProps>=({
                                                       navigation:{navigate},
                                                       route:{params: {feedData}}})=> {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
@@ -161,7 +150,7 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
 
   const mutation = useMutation(FeedApi.updateFeed, {
     onSuccess: (res) => {
-      if (res.status === 200 && res.json?.resultCode === "OK") {
+      if (res.status === 200) {
         return navigate("Tabs", {
           screen: "Home",
         });
@@ -185,22 +174,21 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   });
 
   //피드업데이트
-  const FixComplete =() =>{
+  const FixComplete = async () =>{
     const data={
       id: feedData.id,
       access: "PUBLIC",
       content: content,
     };
-    console.log(data);
+    console.log("fixed Data:", data);
 
     const requestData: FeedUpdateRequest={
       data,
       token,
     };
-    mutation.mutate(requestData);
-    return navigate("Tabs", {
-      screen: "Home",
-    });
+
+    mutation.mutate(requestData)
+
   };
   useEffect(()=>{
     navigation.setOptions({
@@ -212,24 +200,23 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Container>
         <KeyboardAvoidingView behavior={Platform.select({ios: 'position', android: 'position'})} style={{flex: 1}}>
-          <View>
-            <FeedUser >
-              <UserImage source={{ uri: userInfo?.data.thumbnail }} />
-              <UserInfo>
-                <UserId>{data.userName}</UserId>
-                <UserId>{data.id}</UserId>
-                <ClubBox>
-                  <ClubName>{data.clubName}</ClubName>
-                </ClubBox>
-              </UserInfo>
-            </FeedUser>
-            <FeedImage>
-              <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
-            </FeedImage>
-          </View>
+          {/* <ImageArea> */}
+          <FeedUser>
+            <UserImage source={{ uri: userInfo?.data.thumbnail }} />
+            <UserInfo>
+              <UserId>{data.userName}</UserId>
+              <ClubBox>
+                <ClubName>{data.clubName}</ClubName>
+              </ClubBox>
+            </UserInfo>
+          </FeedUser>
+          <FeedImage>
+            <ImageSource source={data.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:data.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>
+          </FeedImage>
+          {/* </ImageArea> */}
           <ContentArea>
             <Ment
-              onChangeText={(content) => setContent(content)}
+              onChangeText={(content:any) => setContent(content)}
               autoCompleteType="off"
               autoCapitalize="none"
               autoCorrect={false}
@@ -245,4 +232,4 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
     </TouchableWithoutFeedback>
   );
 };
-export default ModifiyPeed;
+export default ModifiyFeed;
