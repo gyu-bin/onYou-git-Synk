@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons,AntDesign } from "@expo/vector-icons";
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
+import * as Permissions from 'expo-permissions';
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -127,10 +128,10 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
-  let [imageURI, setImageURI] = useState<any>(null)
+  const [imageURI, setImageURI] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
-  let [alert, alertSet] = useState(true);
+  const [alert, alertSet] = useState(true);
 
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
@@ -159,22 +160,33 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [content, setContent] = useState("")
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-
+  const [imageLength, setImageLength] = useState(0)
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    if(!status?.granted){
+      const permission=await requestPermission();
+      if(!permission.granted){
+        return null;
+      }
+    }
+
+    let result:any = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       quality: 1,
       aspect: [16,9],
       allowsMultipleSelection: true,
       selectionLimit: 5,
     });
+    let array = [];
       for(let i=0; i<result?.assets?.length; i++){
         if (!result.canceled) {
-          setImageURI(result.assets[i].uri);
+          array.push(result.assets[i].uri);
+          // setImageURI(result.assets[i].uri);
         }
       }
+    setImageURI(array);
   };
 console.log(imageURI)
+  console.log(imageURI.length)
   const {
     isLoading: feedsLoading,
     data: feeds,
@@ -200,17 +212,14 @@ console.log(imageURI)
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
         console.log(res.json+'json');
-        return navigate("Tabs", {
+/*        return navigate("Tabs", {
           screen: "Home",
-        });
+        });*/
       }
     },
     onError: (error) => {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
-      return navigate("Tabs", {
-        screen: "Home",
-      });
     },
     onSettled: (res, error) => {},
   });
@@ -222,8 +231,9 @@ console.log(imageURI)
     };
     const splitedURI = String(imageURI).split("/");
 
+
     const requestData: FeedCreationRequest =
-      imageURI === null
+      imageURI.length === 0
         ? {
           image: null,
           data,
@@ -281,15 +291,15 @@ console.log(imageURI)
           <>
             <ImagePickerView>
               <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
-                {imageURI ? (
+                {Object.keys(imageURI).length !== 0 ? (
                   // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
                   <ImageSlider
-                    data={[{img: [imageURI][0]},{img: [imageURI][1]},{img: imageURI}]}
-                    closeIconColor="#fff"
-                    preview={true}
-                    caroselImageStyle={{ resizeMode: "stretch",height: 450 }}
-                    indicatorContainerStyle={{ bottom: 0 }}
-                  />
+                                      data={[{img: imageURI[0]},{img: imageURI[1]},{img: imageURI[2]}]}
+                                      preview={false}
+                                      caroselImageStyle={{ resizeMode: "stretch",height: 450 }}
+                                      indicatorContainerStyle={{ bottom: 0 }}
+                                    />
+                  // <View><Text>{imageURI}</Text></View>
                 ) : (
                   <PickBackground>
                     {alert ? (
@@ -305,7 +315,7 @@ console.log(imageURI)
               </ImagePickerButton>
             </ImagePickerView>
             {/* <SelectImage source={{ uri: imageURI.assets[0].uri}} />*/}
-            <SelectImageView>
+            {/*<SelectImageView>
               <SelectImageArea onPress={ImageFIx}>
                 <SelectImage  imageURI={imageURI} />
                 {imageURI === null ? null :
@@ -356,7 +366,7 @@ console.log(imageURI)
                   </ImageCancleBtn>
                 }
               </SelectImageArea>
-            </SelectImageView>
+            </SelectImageView>*/}
             <FeedText
               placeholder="사진과 함께 남길 게시글을 작성해 보세요."
               onChangeText={(content:any) => setContent(content)}
