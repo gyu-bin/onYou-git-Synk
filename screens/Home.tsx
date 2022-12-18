@@ -42,7 +42,6 @@ import { FeedData, HomeScreenProps } from "../types/feed";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { ImageSlider } from "react-native-image-slider-banner";
-
 const Loader = styled.SafeAreaView`
   flex: 1;
   justify-content: center;
@@ -61,7 +60,7 @@ const HeaderView = styled.View<{ size: number }>`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 0 ${(props) => props.size}px 0 ${(props) => props.size}px;
+  padding: 0 ${(props:any) => props.size}px 0 ${(props:any) => props.size}px;
   margin-bottom: 20px;
 `;
 
@@ -95,7 +94,7 @@ const UserImage = styled.Image`
   background-color: #c4c4c4;
 `;
 
-const UserId = styled.Text`
+const UserId = styled(CustomText)`
   color: black;
   font-weight: bold;
   font-size: 14px;
@@ -110,7 +109,7 @@ const ClubBox = styled.TouchableOpacity`
   border-radius: 5px;
 `;
 
-const ClubName = styled.Text`
+const ClubName = styled(CustomText)`
   font-size: 10px;
   font-weight: 500;
   color: white;
@@ -146,7 +145,7 @@ const ModalView = styled.View`
   height: auto;
 `;
 
-const ModalText = styled.Text`
+const ModalText = styled(CustomText)`
   font-weight: bold;
   text-align: center;
   font-size: 18px;
@@ -217,13 +216,13 @@ const InfoArea = styled.View`
 
 const LikeClick = styled.TouchableOpacity``;
 
-const NumberText = styled.Text`
+const NumberText = styled(CustomText)`
   font-size: 12px;
   font-weight: 300;
   padding-left: 5px;
 `;
 const RightInfo = styled.View``;
-const Timestamp = styled.Text`
+const Timestamp = styled(CustomText)`
   color: #9a9a9a;
   font-size: 12px;
 `;
@@ -239,8 +238,8 @@ const Ment = styled(CustomText)`
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
-  width: ${(props) => props.size}px;
-  height: ${(props) => props.size}px;
+  width: ${(props:any) => props.size}px;
+  height: ${(props:any) => props.size}px;
 `;
 
 interface HeartType {
@@ -248,11 +247,12 @@ interface HeartType {
   heart: boolean;
 }
 
-const Home:React.FC<HomeScreenProps> = ({
-                                          navigation,
-                                          route:{params:{feedData}}
-                                        })=> {
-
+const Home: React.FC<HomeScreenProps> = ({
+                                           navigation,
+                                           route: {
+                                             params: { feedData },
+                                           },
+                                         }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
@@ -261,10 +261,10 @@ const Home:React.FC<HomeScreenProps> = ({
   const token = useSelector((state: any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
   const [modalFeedData, setModalFeedData] =  useState<any>('');
-
+  const [feedImageLength, setFeedImageLength]=useState(0)
   //모달
   const modalizeRef = useRef<Modalize>(null);
-  const onOpen = (feedData:Feed) => {
+  const onOpen = (feedData: Feed) => {
     console.log("Before Modal Passed FeedId:", feedData.id);
     setModalFeedData(feedData);
     modalizeRef?.current?.open(feedData.id);
@@ -281,7 +281,7 @@ const Home:React.FC<HomeScreenProps> = ({
     hasNextPage,
     refetch: feedsRefetch,
     fetchNextPage,
-  } = useInfiniteQuery<FeedsResponse>(["feeds", {token}], FeedApi.getFeeds, {
+  } = useInfiniteQuery<FeedsResponse>(["feeds", { token }], FeedApi.getFeeds, {
     getNextPageParam: (currentPage) => {
       if (currentPage) {
         return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
@@ -319,11 +319,11 @@ const Home:React.FC<HomeScreenProps> = ({
   let myId = userInfo?.data?.id;
 
   //Like
-  const LikeMutation = useMutation( FeedApi.likeCount, {
+  const LikeMutation = useMutation(FeedApi.likeCount, {
     onSuccess: (res) => {
       if (res.status === 200) {
         // onRefresh();
-        console.log(res)
+        console.log(res);
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -336,31 +336,30 @@ const Home:React.FC<HomeScreenProps> = ({
     onSettled: (res, error) => {},
   });
 
-  const LikeFeed=(feedData:Feed)=>{
-    if(feedData.likeYn.toString() === 'true'){
-      feedData.likeYn=false
-    }else{
-      feedData.likeYn = true
+  const LikeFeed = (feedData: Feed) => {
+    if (feedData.likeYn.toString() === "true") {
+      feedData.likeYn = false;
+    } else {
+      feedData.likeYn = true;
     }
     const data = {
       id: feedData.id,
     };
 
-    const likeRequestData: FeedLikeRequest=
-      {
-        data,
-        token,
-      }
+    const likeRequestData: FeedLikeRequest = {
+      data,
+      token,
+    };
     LikeMutation.mutate(likeRequestData);
     console.log(data);
   };
 
-  const FeedDeleteMutation = useMutation( FeedApi.feedDelete, {
+  const FeedDeleteMutation = useMutation(FeedApi.feedDelete, {
     onSuccess: (res) => {
       if (res.status === 200) {
-        console.log(res)
-        modalizeRef.current?.close()
+        console.log(res);
         onRefresh();
+        modalizeRef.current?.close();
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
@@ -374,17 +373,15 @@ const Home:React.FC<HomeScreenProps> = ({
   });
 
   /**FeedDelete*/
-  const FeedDelete=(feedData:Feed)=>{
-    feedData.likeYn = true
+  const FeedDelete = (feedData: Feed) => {
     const data = {
       id: feedData.id,
     };
 
-    const likeRequestData: FeedLikeRequest=
-      {
-        data,
-        token,
-      }
+    const likeRequestData: FeedLikeRequest = {
+      data,
+      token,
+    };
     FeedDeleteMutation.mutate(likeRequestData);
     console.log(data);
   };
@@ -399,7 +396,7 @@ const Home:React.FC<HomeScreenProps> = ({
   const goToModifiy = (feedData: Feed) => {
     console.log("After Modal passed feedId:",feedData.id)
     navigation.navigate("HomeStack", {
-      screen: "ModifiyPeed",
+      screen: "ModifiyFeed",
       feedData,
     });
     modalizeRef.current?.close();
@@ -420,8 +417,8 @@ const Home:React.FC<HomeScreenProps> = ({
     modalizeRef.current?.close();
   };
 
-  const deleteCheck = (feedData:Feed) => {
-    console.log("After Modal passed feedId:",feedData.id)
+  const deleteCheck = (feedData: Feed) => {
+    console.log("After Modal passed feedId:", feedData.id);
     Alert.alert(
       "게시글을 삭제하시겠어요?",
       "",
@@ -431,7 +428,7 @@ const Home:React.FC<HomeScreenProps> = ({
           onPress: () => console.log("삭제 Api 호출"),
           style: "cancel",
         },
-        { text: "네", onPress: () =>FeedDelete(feedData) },
+        { text: "네", onPress: () => FeedDelete(feedData) },
       ],
       { cancelable: false }
     );
@@ -439,13 +436,12 @@ const Home:React.FC<HomeScreenProps> = ({
   const onRefresh = async () => {
     console.log("onRefresh executed");
     setRefreshing(true);
-    await queryClient.refetchQueries(["feeds"]).then(() =>{
-        setRefreshing(false)
-      }
-    );
+    await queryClient.refetchQueries(["feeds"]).then(() => {
+      setRefreshing(false);
+    });
   };
 
-  const unsubscribe = navigation.addListener('focus', () => {
+  const unsubscribe = navigation.addListener("focus", () => {
     onRefresh();
   });
   useEffect(() => {
@@ -454,8 +450,8 @@ const Home:React.FC<HomeScreenProps> = ({
 
   //시간측정
   const timeLine = (date: any) => {
-    const start = new Date(date);
-    const end = new Date(); // 현재 날짜
+    const start:any = new Date(date);
+    const end:any = new Date(); // 현재 날짜
 
     let diff = end - start; // 경과 시간
 
@@ -479,7 +475,6 @@ const Home:React.FC<HomeScreenProps> = ({
   };
 
   const loading = feedsLoading && userInfoLoading;
-
   return loading ? (
     <Loader>
       <ActivityIndicator />
@@ -505,7 +500,6 @@ const Home:React.FC<HomeScreenProps> = ({
             onEndReached={loadMore}
             onEndReachedThreshold={2}
             data={feeds?.pages.map((page) => page?.responses?.content).flat()}
-            disableVirtualization={false}
             keyExtractor={(item: Feed, index: number) => String(index)}
             renderItem={({ item, index }: { item: Feed; index: number }) => (
               <>
@@ -566,14 +560,14 @@ const Home:React.FC<HomeScreenProps> = ({
                 <FeedMain>
                   <FeedImage>
                     <ImageSlider
-                      data={[{ img: item.imageUrls[0] }, { img: "https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg" }, { img: item.imageUrls[0] }]}
+                      data={[{ img: item.imageUrls[0] }, { img: item.imageUrls[1]},{ img: item.imageUrls[2] }]}
+                      // data={[{ img: item.imageUrls[item.imageUrls?.length-1]}]}
                       closeIconColor="#fff"
-                      preview={true}
-                      caroselImageStyle={{resizeMode: 'stretch',height: 450}}
+                      caroselImageStyle={{resizeMode: 'stretch',height: 400}}
                       indicatorContainerStyle={{ bottom: 0 }}
                       size={FEED_IMAGE_SIZE}
+                      preview={false}
                     />
-
                     {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
                   </FeedImage>
                   <FeedInfo>

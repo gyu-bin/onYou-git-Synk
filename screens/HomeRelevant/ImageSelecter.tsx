@@ -117,9 +117,10 @@ const FeedCreateArea = styled.View`
 const FeedCreateBtn = styled.TouchableOpacity`
 `
 const FeedCreateText = styled.Text`
-  font-size: 15px;
+  font-size: 20px;
   color: #63abff;
   font-weight: bold;
+  padding: 10px;
 `
 
 const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
@@ -128,7 +129,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
-  const [imageURI, setImageURI] = useState<any>([]);
+  const [imageURI, setImageURI] = useState<any>("");
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [alert, alertSet] = useState(true);
@@ -161,13 +162,15 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const [imageLength, setImageLength] = useState(0)
+  const [feedImageLength, setFeedImageLength] = useState<any>(0);
   const pickImage = async () => {
-    if(!status?.granted){
+    //사진허용
+/*    if(!status?.granted){
       const permission=await requestPermission();
       if(!permission.granted){
         return null;
       }
-    }
+    }*/
 
     let result:any = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -176,17 +179,20 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       allowsMultipleSelection: true,
       selectionLimit: 5,
     });
+
     let array = [];
-      for(let i=0; i<result?.assets?.length; i++){
-        if (!result.canceled) {
-          array.push(result.assets[i].uri);
-          // setImageURI(result.assets[i].uri);
-        }
+    for(let i=0; i<result?.assets?.length; i++){
+      if (!result.canceled) {
+        array.push(result.assets[i].uri);
+        // setImageURI(result.assets[i].uri);
       }
+    }
     setImageURI(array);
+    setFeedImageLength(array.length)
   };
-console.log(imageURI)
+  console.log(imageURI.toString())
   console.log(imageURI.length)
+
   const {
     isLoading: feedsLoading,
     data: feeds,
@@ -212,9 +218,9 @@ console.log(imageURI)
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
         console.log(res.json+'json');
-/*        return navigate("Tabs", {
-          screen: "Home",
-        });*/
+        /*        return navigate("Tabs", {
+                  screen: "Home",
+                });*/
       }
     },
     onError: (error) => {
@@ -230,28 +236,29 @@ console.log(imageURI)
       content: content,
     };
     const splitedURI = String(imageURI).split("/");
+    for(let i =0; i<imageURI.length; i++){
+      console.log(i)
+      const requestData: FeedCreationRequest =
+        imageURI.length === 0
+          ? {
+            image: null,
+            data,
+            token,
+          }
+          : {
+            image: {
+              uri: imageURI[i].toString().replace("file://", ""),
+              type: "image/jpeg",
+              name: splitedURI[splitedURI.length - 1],
+            },
+            data,
+            token,
+          };
 
-
-    const requestData: FeedCreationRequest =
-      imageURI.length === 0
-        ? {
-          image: null,
-          data,
-          token,
-        }
-        : {
-          image: {
-            uri: imageURI.replace("file://", ""),
-            type: "image/jpeg",
-            name: splitedURI[splitedURI.length - 1],
-          },
-          data,
-          token,
-        };
-
-    mutation.mutate(requestData);
-    console.log(data+'data')
-    onRefresh();
+      mutation.mutate(requestData);
+      console.log(data+'data')
+      onRefresh();
+    }
   };
 
   useEffect(()=>{
@@ -269,19 +276,57 @@ console.log(imageURI)
   /**
    * 이미지 리스트 선택하면 사진 크게보는쪽 사진뜨게
    */
-  const ImageFIx = () => {
+  const ImageFIx = (i:any) => {
     console.log('imageFix')
+    return (
+      <View key={i}>
+        <ImageSlider
+          data={[{img: imageURI[i]}]}
+          preview={false}
+          caroselImageStyle={{ resizeMode: "stretch",height: 420 }}
+          indicatorContainerStyle={{ bottom: 0 }}
+        />
+      </View>
+    )
   };
 
   /** X선택시 사진 없어지는 태그 */
   const ImageCancle = () => {
-    // setShowImages(showImages.filter((_, index) => index !== id));
-    console.log('imageCancle')
+   if(imageURI.length>0){
+     setImageURI('')
+     console.log('imageCancle')
+   }
   };
 
-  useEffect(() => {
-    return () => setLoading(false);
-  }, []);
+  /*이미지 큰 영역**/
+  const imagePreview = [];
+  for (let i = 0; i < imageURI.length; i += 1) {
+    imagePreview.push(
+      <SelectImageArea key={i} onPress={ImageFIx}>
+        <SelectImage source={{ uri: imageURI[i]}} onPress={()=>ImageFIx(i)}/>
+        {imageURI === null ? null :
+          <ImageCancleBtn>
+            <CancleIcon onPress={ImageCancle}>
+              <AntDesign name="close" size={15} color="white" />
+            </CancleIcon>
+          </ImageCancleBtn>
+        }
+      </SelectImageArea>
+    );
+  }
+
+  /*이미지 선택영역**/
+  const imageChoice = [];
+  for (let i = 0; i < imageURI.length; i += 1) {
+    imageChoice.push(
+        <ImageSlider
+          data={[{img: imageURI[0]},{img: imageURI[1]},{img: imageURI[2]},{img: imageURI[3]},{img: imageURI[4]}]}
+          preview={false}
+          caroselImageStyle={{ resizeMode: "stretch",height: 420 }}
+          indicatorContainerStyle={{ bottom: 0 }}
+        />
+    );
+  }
 
   return (
     <Container>
@@ -290,17 +335,12 @@ console.log(imageURI)
           behavior={Platform.select({ios: 'position', android: 'padding'})} style={{ flex: 1 }}>
           <>
             <ImagePickerView>
-              <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
                 {Object.keys(imageURI).length !== 0 ? (
-                  // <PickedImage height={imageHeight} source={{ uri: imageURI }} />
-                  <ImageSlider
-                                      data={[{img: imageURI[0]},{img: imageURI[1]},{img: imageURI[2]}]}
-                                      preview={false}
-                                      caroselImageStyle={{ resizeMode: "stretch",height: 450 }}
-                                      indicatorContainerStyle={{ bottom: 0 }}
-                                    />
-                  // <View><Text>{imageURI}</Text></View>
+                  <View>
+                    {imageChoice}
+                  </View>
                 ) : (
+                  <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
                   <PickBackground>
                     {alert ? (
                       <ImageCrop>
@@ -311,62 +351,15 @@ console.log(imageURI)
                       </ImageCrop>
                     ) : null}
                   </PickBackground>
+                  </ImagePickerButton>
                 )}
-              </ImagePickerButton>
             </ImagePickerView>
             {/* <SelectImage source={{ uri: imageURI.assets[0].uri}} />*/}
-            {/*<SelectImageView>
-              <SelectImageArea onPress={ImageFIx}>
-                <SelectImage  imageURI={imageURI} />
-                {imageURI === null ? null :
-                  <ImageCancleBtn onPress={ImageCancle}>
-                    <CancleIcon>
-                      <AntDesign name="close" size={15} color="white" />
-                    </CancleIcon>
-                  </ImageCancleBtn>
-                }
-              </SelectImageArea>
-              <SelectImageArea onPress={ImageFIx}>
-                <SelectImage  imageURI={imageURI} />
-                {imageURI === null ? null :
-                  <ImageCancleBtn onPress={ImageCancle}>
-                    <CancleIcon>
-                      <AntDesign name="close" size={15} color="white" />
-                    </CancleIcon>
-                  </ImageCancleBtn>
-                }
-              </SelectImageArea>
-              <SelectImageArea onPress={ImageFIx}>
-                <SelectImage  imageURI={imageURI} />
-                {imageURI === null ? null :
-                  <ImageCancleBtn onPress={ImageCancle}>
-                    <CancleIcon>
-                      <AntDesign name="close" size={15} color="white" />
-                    </CancleIcon>
-                  </ImageCancleBtn>
-                }
-              </SelectImageArea>
-              <SelectImageArea onPress={ImageFIx}>
-                <SelectImage  imageURI={imageURI} />
-                {imageURI === null ? null :
-                  <ImageCancleBtn onPress={ImageCancle}>
-                    <CancleIcon>
-                      <AntDesign name="close" size={15} color="white" />
-                    </CancleIcon>
-                  </ImageCancleBtn>
-                }
-              </SelectImageArea>
-              <SelectImageArea onPress={ImageFIx}>
-                <SelectImage  imageURI={imageURI} />
-                {imageURI === null ? null :
-                  <ImageCancleBtn onPress={ImageCancle}>
-                    <CancleIcon>
-                      <AntDesign name="close" size={15} color="white" />
-                    </CancleIcon>
-                  </ImageCancleBtn>
-                }
-              </SelectImageArea>
-            </SelectImageView>*/}
+            <SelectImageView>
+              <View style={{display:'flex', flexDirection:'row'}}>
+                {imagePreview}
+              </View>
+            </SelectImageView>
             <FeedText
               placeholder="사진과 함께 남길 게시글을 작성해 보세요."
               onChangeText={(content:any) => setContent(content)}
