@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Permissions from 'expo-permissions';
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
+  Alert, Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -190,8 +190,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     setImageURI(array);
     setFeedImageLength(array.length)
   };
-  console.log(imageURI.toString())
-  console.log(imageURI.length)
+  // console.log(imageURI.toString())
 
   const {
     isLoading: feedsLoading,
@@ -235,9 +234,8 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       clubId: clubId,
       content: content,
     };
+
     const splitedURI = String(imageURI).split("/");
-    for(let i =0; i<imageURI.length; i++){
-      console.log(i)
       const requestData: FeedCreationRequest =
         imageURI.length === 0
           ? {
@@ -247,18 +245,15 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
           }
           : {
             image: {
-              uri: imageURI[i].toString().replace("file://", ""),
+              uri: imageURI[imageURI.length-1].replace("file://", ""),
               type: "image/jpeg",
               name: splitedURI[splitedURI.length - 1],
             },
             data,
             token,
           };
-
       mutation.mutate(requestData);
-      console.log(data+'data')
       onRefresh();
-    }
   };
 
   useEffect(()=>{
@@ -298,7 +293,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
    }
   };
 
-  /*이미지 큰 영역**/
+  /*이미지 선택영역**/
   const imagePreview = [];
   for (let i = 0; i < imageURI.length; i += 1) {
     imagePreview.push(
@@ -315,18 +310,21 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     );
   }
 
-  /*이미지 선택영역**/
+
+  /*이미지 큰영역**/
   const imageChoice = [];
-  for (let i = 0; i < imageURI.length; i += 1) {
-    imageChoice.push(
-        <ImageSlider
-          data={[{img: imageURI[0]},{img: imageURI[1]},{img: imageURI[2]},{img: imageURI[3]},{img: imageURI[4]}]}
-          preview={false}
-          caroselImageStyle={{ resizeMode: "stretch",height: 420 }}
-          indicatorContainerStyle={{ bottom: 0 }}
-        />
-    );
+  const imageList=[];
+    for (let i = 0; i < imageURI.length; i++) {
+    imageList.push({img:imageURI[i]});
   }
+  imageChoice.push(
+    <ImageSlider
+      data={imageList}
+      preview={false}
+      caroselImageStyle={{ resizeMode: "stretch",height: 420 }}
+      indicatorContainerStyle={{ bottom: 0 }}
+    />
+  );
 
   return (
     <Container>
