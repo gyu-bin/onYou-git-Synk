@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Tabs from "./Tabs";
 import Profile from "../screens/Profile";
-import CreateHomePeed from "../screens/HomeRelevant/CreateHomePeed";
+import CreateHomeFeed from "../screens/HomeRelevant/CreateHomeFeed";
 import Accusation from "../screens/HomeRelevant/Accusation";
 import ModifiyPeed from "../screens/HomeRelevant/ModifiyPeed";
 import ImageSelecter from "../screens/HomeRelevant/ImageSelecter";
@@ -12,8 +12,6 @@ import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
 import { Text, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
-import { useQuery, useMutation } from "react-query";
-import { Feed, FeedCreationRequest, FeedsResponse } from "../api";
 import styled from "styled-components/native";
 
 const ImageSelectSave = styled.Text`
@@ -24,8 +22,11 @@ const ImageSelectSave = styled.Text`
 const NativeStack = createNativeStackNavigator();
 
 const HomeStack = ({
-                     navigation: { navigate },
-                     route:{params:{feedData,userId,clubId}} }) => {
+  navigation: { navigate },
+  route: {
+    params: { feedData, userId, clubId },
+  },
+}) => {
   const token = useSelector((state) => state.AuthReducers.authToken);
 
   const cancleCreate = () => {
@@ -50,6 +51,8 @@ const HomeStack = ({
       screenOptions={{
         presentation: "card",
         contentStyle: { backgroundColor: "white" },
+        headerTitleAlign: "center",
+        headerTitleStyle: { fontFamily: "NotoSansKR-Medium", fontSize: 16 },
       }}
     >
       <NativeStack.Screen
@@ -68,7 +71,7 @@ const HomeStack = ({
       <NativeStack.Screen
         name="ImageSelecter"
         component={ImageSelecter}
-        initialParams={{userId,clubId}}
+        initialParams={{ userId, clubId }}
         options={{
           title: "",
           headerLeft: () => (
@@ -87,7 +90,7 @@ const HomeStack = ({
       <NativeStack.Screen
         name="MyClubSelector"
         component={MyClubSelector}
-        initialParams={{userId}}
+        initialParams={{ userId }}
         options={{
           title: "나의 모임",
           headerLeft: () => (
@@ -99,9 +102,9 @@ const HomeStack = ({
         }}
       />
       <NativeStack.Screen
-        name="CreateHomePeed"
-        component={CreateHomePeed}
-        initialParams={{feedData}}
+        name="CreateHomeFeed"
+        component={CreateHomeFeed}
+        initialParams={{ feedData }}
         options={{
           title: "새 게시물",
           headerLeft: () => (
@@ -115,7 +118,7 @@ const HomeStack = ({
       <NativeStack.Screen
         name="ReplyPage"
         component={ReplyPage}
-        initialParams={{feedData}}
+        initialParams={{ feedData }}
         options={{
           title: "댓글",
           headerLeft: () => (
@@ -129,7 +132,7 @@ const HomeStack = ({
       <NativeStack.Screen
         name="ModifiyPeed"
         component={ModifiyPeed}
-        initialParams={{feedData}}
+        initialParams={{ feedData }}
         options={{
           title: "수정",
           headerLeft: () => (
@@ -148,7 +151,7 @@ const HomeStack = ({
       <NativeStack.Screen
         name="Accusation"
         component={Accusation}
-        initialParams={{feedData}}
+        initialParams={{ feedData }}
         options={{
           title: "신고",
           headerLeft: () => (

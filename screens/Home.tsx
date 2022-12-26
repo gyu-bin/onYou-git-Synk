@@ -35,13 +35,14 @@ import {
   FeedLikeRequest,
   FeedReverseLikeRequest,
   Club,
-  ClubsParams,
+  ClubsParams, ClubResponse
 } from "../api";
 import CustomText from "../components/CustomText";
-import { FeedData, HomeScreenProps } from "../types/feed";
+import { HomeScreenProps } from "../types/feed";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { ImageSlider } from "react-native-image-slider-banner";
+
 const Loader = styled.SafeAreaView`
   flex: 1;
   justify-content: center;
@@ -51,8 +52,8 @@ const Loader = styled.SafeAreaView`
 
 const Container = styled.SafeAreaView`
   flex: 1;
-  top: ${Platform.OS === "android" ? 5 : 0}%;
-  padding-bottom: ${Platform.OS === "android" ? 6 : 0}%;
+  top: ${Platform.OS === "android" ? 3 : 0}%;
+  // padding-bottom: ${Platform.OS === "android" ? 6 : 0}%;
 `;
 
 const HeaderView = styled.View<{ size: number }>`
@@ -61,7 +62,6 @@ const HeaderView = styled.View<{ size: number }>`
   align-items: center;
   justify-content: space-between;
   padding: 0 ${(props:any) => props.size}px 0 ${(props:any) => props.size}px;
-  margin-bottom: 20px;
 `;
 
 const SubView = styled.View`
@@ -115,7 +115,6 @@ const ClubName = styled(CustomText)`
   color: white;
 `;
 
-//ModalStyle
 //ModalStyle
 const ModalArea = styled.View`
   flex: 1;
@@ -247,7 +246,7 @@ interface HeartType {
   heart: boolean;
 }
 
-const Home: React.FC<HomeScreenProps> = ({
+const Home: React.FC<HomeScreenProps & HomeList> = ({
                                            navigation,
                                            route: {
                                              params: { feedData },
@@ -261,15 +260,15 @@ const Home: React.FC<HomeScreenProps> = ({
   const token = useSelector((state: any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
   const [modalFeedData, setModalFeedData] =  useState<any>('');
-  const [feedImageLength, setFeedImageLength]=useState(0)
+  const [scrollY] = useState(new Animated.Value(0));
   //모달
   const modalizeRef = useRef<Modalize>(null);
+
   const onOpen = (feedData: Feed) => {
     console.log("Before Modal Passed FeedId:", feedData.id);
     setModalFeedData(feedData);
     modalizeRef?.current?.open(feedData.id);
   };
-
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
 
@@ -396,10 +395,24 @@ const Home: React.FC<HomeScreenProps> = ({
   const goToModifiy = (feedData: Feed) => {
     console.log("After Modal passed feedId:",feedData.id)
     navigation.navigate("HomeStack", {
-      screen: "ModifiyFeed",
+      screen: "ModifiyPeed",
       feedData,
     });
     modalizeRef.current?.close();
+  };
+
+
+  const goToClubStack = (clubData: Club) => {
+
+    let clubNagivateData: Club = {
+      id: clubData.clubId
+    }
+
+    console.log("clubNagivateData", clubNagivateData);
+    return navigation.navigate("ClubStack", {
+      screen: "ClubTopTabs",
+      clubData: clubNagivateData,
+    });
   };
 
   const goToClub = () => {
@@ -425,7 +438,7 @@ const Home: React.FC<HomeScreenProps> = ({
       [
         {
           text: "아니요",
-          onPress: () => console.log("삭제 Api 호출"),
+          onPress: () => console.log(""),
           style: "cancel",
         },
         { text: "네", onPress: () => FeedDelete(feedData) },
@@ -473,8 +486,12 @@ const Home: React.FC<HomeScreenProps> = ({
     // 모든 단위가 맞지 않을 시
     return "방금 전";
   };
-
+  const {
+    isLoading: myClubInfoLoading, // true or false
+    data: myClub,
+  } = useQuery<ClubResponse>(["selectMyClubs", token], UserApi.selectMyClubs);
   const loading = feedsLoading && userInfoLoading;
+
   return loading ? (
     <Loader>
       <ActivityIndicator />
@@ -500,6 +517,7 @@ const Home: React.FC<HomeScreenProps> = ({
             onEndReached={loadMore}
             onEndReachedThreshold={2}
             data={feeds?.pages.map((page) => page?.responses?.content).flat()}
+            disableVirtualization={false}
             keyExtractor={(item: Feed, index: number) => String(index)}
             renderItem={({ item, index }: { item: Feed; index: number }) => (
               <>
@@ -512,16 +530,15 @@ const Home: React.FC<HomeScreenProps> = ({
                     />
                     <UserInfo>
                       <UserId>{item.userName}</UserId>
-                      {/* <UserId>{item.likeYn.toString()}</UserId> */}
                       <ClubBox>
-                        <ClubName>{item.clubName}</ClubName>
+                        <ClubName onPress={() => goToClubStack(item)} >{item.clubName}</ClubName>
                       </ClubBox>
                     </UserInfo>
                   </FeedUser>
                   <TouchableOpacity>
                     <ModalArea>
                       <ModalIcon
-                        onPress={() => {onOpen(item)}}>
+                        onPress={() => onOpen(item)}>
                         <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
                       </ModalIcon>
                       <Portal>
@@ -561,12 +578,11 @@ const Home: React.FC<HomeScreenProps> = ({
                   <FeedImage>
                     <ImageSlider
                       data={[{ img: item.imageUrls[0] }, { img: item.imageUrls[1]},{ img: item.imageUrls[2] }]}
-                      // data={[{ img: item.imageUrls[item.imageUrls?.length-1]}]}
                       closeIconColor="#fff"
+                      preview={false}
                       caroselImageStyle={{resizeMode: 'stretch',height: 400}}
                       indicatorContainerStyle={{ bottom: 0 }}
                       size={FEED_IMAGE_SIZE}
-                      preview={false}
                     />
                     {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
                   </FeedImage>
