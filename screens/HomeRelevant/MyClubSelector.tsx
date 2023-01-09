@@ -10,7 +10,8 @@ import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 import { Club, ClubApi, ClubResponse, ClubsParams, ClubsResponse, Feed, UserApi } from "../../api";
 import { MyClubSelectorScreenProps } from "../../types/feed";
-import Swipeable from "react-native-gesture-handler/Swipeable";
+import CustomTextInput from "../../components/CustomTextInput";
+import CustomText from "../../components/CustomText";
 const Container = styled.SafeAreaView`
   flex: 1;
   height: 100%;
@@ -18,7 +19,7 @@ const Container = styled.SafeAreaView`
   width: 100%;
 `;
 
-const IntroText = styled.Text`
+const IntroText = styled(CustomText)`
   text-align: right;
   padding: 5px 14px 0 0;
   font-size: 10px;
@@ -51,14 +52,14 @@ const ClubMy = styled.View`
   justify-content: center;
   padding-top: 3%;
 `;
-const ClubId = styled.Text`
+const ClubId = styled(CustomText)`
   padding-left: 2%;
   color: black;
   font-size: 12px;
   font-weight: bold;
 `;
 
-const Comment = styled.Text`
+const Comment = styled(CustomText)`
   color: black;
   margin-left: 10px;
   width: 200px;
@@ -89,7 +90,7 @@ const CtgrText = styled.View`
   margin: 3px 5px 3px 5px;
 `;
 
-const OrganizationName = styled.Text`
+const OrganizationName = styled(CustomText)`
   width: auto;
   height: auto;
   font-size: 12px;
@@ -97,7 +98,7 @@ const OrganizationName = styled.Text`
   text-align: center;
   color: #fff;
 `;
-const CreatorName = styled.Text`
+const CreatorName = styled(CustomText)`
   width: auto;
   height: auto;
   font-size: 12px;
@@ -111,7 +112,7 @@ const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min
 
 const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { navigate},
                                                                route:{params:{userId}} }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state:any) => state.AuthReducers.authToken);
   const queryClient = useQueryClient();
   const [params, setParams] = useState<ClubsParams>({
     token,
@@ -129,13 +130,10 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
   const [loading, setLoading] = useState(false);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
-  const [clubData, setClubData] = useState<Club[]>();
-
   const {
     isLoading: myClubInfoLoading, // true or false
     data: myClub,
   } = useQuery<ClubResponse>(["selectMyClubs", token], UserApi.selectMyClubs);
-
 
   const goToImageSelect = (clubData:Club) =>{
     return navigate("HomeStack", {
@@ -158,27 +156,38 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
         {loading ? (
           <ActivityIndicator />
         ) : (
-          <FlatList refreshing={refreshing} onRefresh={onRefresh}
-                    keyExtractor={(item: Club, index: number) => String(index)}
-                    data={myClub?.data}
-                    renderItem={({ item, index }: { item: Club; index: number }) => (
-            <ClubArea onPress={() => goToImageSelect(item)}>
-              <ClubImg source={{ uri: item.thumbnail }} />
-              <ClubMy>
-                <CommentMent>
-                  <ClubId>{item.clubShortDesc}</ClubId>
-                </CommentMent>
-                <CommentRemainder>
-                  <CtrgArea>
-                    <CtgrText>
-                      <OrganizationName>{item.organizationName}</OrganizationName>
-                      <CreatorName>{item.creatorName}</CreatorName>
-                    </CtgrText>
-                  </CtrgArea>
-                </CommentRemainder>
-              </ClubMy>
-            </ClubArea>
-          )}/>
+          <FlatList
+            refreshing={refreshing} onRefresh={onRefresh}
+            keyExtractor={(item: Club, index: number) => String(index)}
+            data={myClub?.data}
+            renderItem={({ item, index }: { item: Club; index: number }) => (
+              <ClubArea onPress={() => goToImageSelect(item)}>
+                <ClubImg source={{ uri: item.thumbnail }} />
+                <ClubMy>
+                  <CommentMent>
+                    <ClubId>{item.clubShortDesc}</ClubId>
+                  </CommentMent>
+                  <CommentRemainder>
+                    <CtrgArea>
+                      <CtgrText>
+                        {item.categories?.length>1?
+                          (
+                            <View style={{display:'flex',flexDirection:'row'}}>
+                              <OrganizationName>{item.categories?.map((name)=>{return name.name})}</OrganizationName>
+                              {/*<OrganizationName>{item.categories[0].name}</OrganizationName>
+                                      <OrganizationName>,</OrganizationName>
+                                      <OrganizationName>{item.categories[1].name}</OrganizationName>*/}
+                            </View>
+                          ):(
+                            <OrganizationName>{item.categories[0].name}</OrganizationName>
+                          )
+                        }
+                      </CtgrText>
+                    </CtrgArea>
+                  </CommentRemainder>
+                </ClubMy>
+              </ClubArea>
+            )}/>
         )}
       </ReplyContainer>
     </Container>

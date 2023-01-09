@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons, AntDesign } from "@expo/vector-icons";
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -17,6 +17,7 @@ import {
   TouchableWithoutFeedback,
   useWindowDimensions,
   View,
+  ActivityIndicator
 } from "react-native";
 import styled from "styled-components/native";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -25,7 +26,9 @@ import { FeedApi, FeedCreationRequest, FeedsResponse } from "../../api";
 import { FeedCreateScreenProps } from "../../types/feed";
 import { useNavigation } from "@react-navigation/native";
 import { ImageSlider } from "react-native-image-slider-banner";
-import reactImagePicker from 'react-native-image-picker';
+import CustomText from "../../components/CustomText";
+import Spinner from 'react-native-loading-spinner-overlay';
+
 interface ValueInfo {
   str: string;
   isHT: boolean;
@@ -115,24 +118,24 @@ const FeedCreateArea = styled.View`
 `;
 
 const FeedCreateBtn = styled.TouchableOpacity``;
-const FeedCreateText = styled.Text`
-  font-size: 15px;
+const FeedCreateText = styled(CustomText)`
+  font-size: 18px;
   color: #63abff;
   font-weight: bold;
   padding: 10px;
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
-  width: ${(props) => props.size}px;
-  height: ${(props) => props.size}px;
+  width: ${(props:any) => props.size}px;
+  height: ${(props:any) => props.size}px;
 `;
 
 const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
-  route: {
-    params: { clubId, userId },
-  },
-  navigation: { navigate },
-}) => {
+                                                          route: {
+                                                            params: { clubId, userId },
+                                                          },
+                                                          navigation: { navigate },
+                                                        }) => {
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
   //사진권한 허용
@@ -141,7 +144,11 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [loading, setLoading] = useState(false);
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [alert, alertSet] = useState(true);
-
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [isSummitShow, setSummitShow] = useState(true)
+   const [isLoadingShow, setLoadingShow] = useState(false)
+  const LoadingRef = useRef(false);
+  const SummitRef = useRef(true);
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
       return [];
@@ -171,6 +178,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const queryClient = useQueryClient();
   const [imageLength, setImageLength] = useState(0);
   const [feedImageLength, setFeedImageLength] = useState<any>(0);
+
   const pickImage = async () => {
     //사진허용
     /*    if(!status?.granted){
@@ -181,7 +189,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
         }*/
 
     let result: any = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
       aspect: [16, 9],
       allowsMultipleSelection: true,
@@ -208,6 +216,13 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     setRefreshing(false);
   };
 
+  const startLoading = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+  };
+
   const mutation = useMutation(FeedApi.createFeed, {
     onSuccess: (res) => {
       if (res.status === 200 && res.resultCode === "OK") {
@@ -227,12 +242,20 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     onSettled: (res, error) => {},
   });
 
+
   const onSubmit = () => {
+  if (imageURI.length == 0){
+      Alert.alert('이미지를 선택하세요')
+    }
+    else if(content.length == 0){
+      Alert.alert('게시글을 작성하세요')
+    }
+    else {
+      setSummitShow(false);
     const data = {
       clubId: clubId,
       content: content,
     };
-
     let requestData: FeedCreationRequest = {
       image: [],
       data,
@@ -249,18 +272,26 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       }
     }
     mutation.mutate(requestData);
+     }
   };
+
 
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={onSubmit}>
-          <FeedCreateText>저장</FeedCreateText>
+        <TouchableOpacity  onPress={() => {
+        onSubmit();
+        }}>
+          {
+            isSummitShow ?
+            <FeedCreateText>저장</FeedCreateText> :
+            <ActivityIndicator/>
+          }
         </TouchableOpacity>
       ),
     });
-  }, [imageURI, content]);
-
+  }, [imageURI, content, isSummitShow]);
+  console.log(isSummitShow)
   useEffect(() => {
     let timer = setTimeout(() => {
       alertSet(false);
@@ -271,7 +302,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
    * 이미지 리스트 선택하면 사진 크게보는쪽 사진뜨게
    */
   const ImageFIx = (i: any) => {
-    console.log(imageURI[i]);
     setChoiceImage(imageURI[i])
     /*return (
       <View key={i}>
@@ -281,11 +311,8 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   };
 
   /** X선택시 사진 없어지는 태그 */
-  const ImageCancle = () => {
-    if (imageURI.length > 0) {
-      setImageURI("");
-      console.log("imageCancle");
-    }
+  const ImageCancle = (q:any) => {
+    console.log('imageCancle')
   };
 
   /*이미지 선택영역**/
@@ -295,8 +322,8 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       <SelectImageArea key={i} onPress={() => ImageFIx(i)}>
         <SelectImage source={{ uri: imageURI[i] }}  />
         {imageURI === null ? null : (
-          <ImageCancleBtn>
-            <CancleIcon onPress={ImageCancle}>
+          <ImageCancleBtn onPress={()=>ImageCancle(i)}>
+            <CancleIcon >
               <AntDesign name="close" size={15} color="white" />
             </CancleIcon>
           </ImageCancleBtn>
@@ -312,72 +339,70 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     imageList.push({ img: imageURI[i] });
   }
   imageChoice.push(
-    <ImageSource source={{uri: choiceImage}}  size={400}/>
+    <ImageSource source={{uri: choiceImage}} size={400}/>
+    /* <ImageSlider data={imageList} preview={false} caroselImageStyle={{ resizeMode: "stretch", height: 420 }}
+              indicatorContainerStyle={{ bottom: 0 }}
+ />*/
   );
-  /*  <ImageSlider data={imageList} preview={false} caroselImageStyle={{ resizeMode: "stretch", height: 420 }}
-                 indicatorContainerStyle={{ bottom: 0 }}
-    />)*/
-
-//여기 슬라이드 없애고 하나씩 노출되는 이미지리스트로 바꿔보기
 
   return (
     <Container>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView behavior={Platform.select({ ios: "position", android: "padding" })} style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios"? "position": "padding" } style={{ flex: 1 }}>
           <>
-            <ImagePickerView>
-              {Object.keys(imageURI).length !== 0 ? (
-                <View>{imageChoice}</View>
-              ) : (
-                <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
-                  <PickBackground>
-                    {alert ? (
-                      <ImageCrop>
-                        <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
-                        <ImagePickerText>
-                          손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
-                        </ImagePickerText>
-                      </ImageCrop>
-                    ) : null}
-                  </PickBackground>
-                </ImagePickerButton>
-              )}
-            </ImagePickerView>
-            {/* <SelectImage source={{ uri: imageURI.assets[0].uri}} />*/}
-            <SelectImageView>
-              <View style={{ display: "flex", flexDirection: "row" }}>
-                {imagePreview}
-              </View>
-            </SelectImageView>
-            <FeedText
-              placeholder="사진과 함께 남길 게시글을 작성해 보세요."
-              onChangeText={(content: any) => setContent(content)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              multiline={true}
-              returnKeyType="done"
-              returnKeyLabel="done"
-            >
-              {valueInfos.map(({ str, isHT, idxArr }, idx) => {
-                const [firstIdx, lastIdx] = idxArr;
-                let value = title.slice(firstIdx, lastIdx + 1);
-                const isLast = idx === valueInfos.length - 1;
-                if (isHT) {
+              <ImagePickerView>
+                {Object.keys(imageURI).length !== 0 ? (
+                  <View>{imageChoice}</View>
+                ) : (
+                  <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
+                    <PickBackground>
+                      {alert ? (
+                        <ImageCrop>
+                          <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
+                          <ImagePickerText>
+                            손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
+                          </ImagePickerText>
+                        </ImageCrop>
+                      ) : null}
+                    </PickBackground>
+                  </ImagePickerButton>
+                )}
+              </ImagePickerView>
+              {/* <SelectImage source={{ uri: imageURI.assets[0].uri}} />*/}
+              <SelectImageView>
+                <View style={{ display: "flex", flexDirection: "row" }}>
+                  {imagePreview}
+                </View>
+              </SelectImageView>
+              <FeedText
+                placeholder="사진과 함께 남길 게시글을 작성해 보세요."
+                onChangeText={(content: any) => setContent(content)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                multiline={true}
+                returnKeyType="done"
+                returnKeyLabel="done"
+              >
+                {valueInfos.map(({ str, isHT, idxArr }, idx) => {
+                  const [firstIdx, lastIdx] = idxArr;
+                  let value = title.slice(firstIdx, lastIdx + 1);
+                  const isLast = idx === valueInfos.length - 1;
+                  if (isHT) {
+                    return (
+                      <Text style={{ color: "skyblue", backgroundColor: "black" }}>
+                        {value}
+                        {!isLast && <Text style={{ backgroundColor: "pink" }}> </Text>}
+                      </Text>
+                    );
+                  }
                   return (
-                    <Text style={{ color: "skyblue", backgroundColor: "black" }}>
+                    <Text style={{ color: "black" }}>
                       {value}
-                      {!isLast && <Text style={{ backgroundColor: "pink" }}> </Text>}
+                      {!isLast && <Text> </Text>}
                     </Text>
                   );
-                }
-                return (
-                  <Text style={{ color: "black" }}>
-                    {value}
-                    {!isLast && <Text> </Text>}
-                  </Text>
-                );
-              })}
-            </FeedText>
+                })}
+              </FeedText>
           </>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>

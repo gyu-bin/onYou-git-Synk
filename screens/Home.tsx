@@ -38,7 +38,7 @@ import {
   ClubsParams, ClubResponse
 } from "../api";
 import CustomText from "../components/CustomText";
-import { HomeScreenProps } from "../types/feed";
+import { FeedData, HomeScreenProps } from "../types/feed";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { ImageSlider } from "react-native-image-slider-banner";
@@ -52,8 +52,8 @@ const Loader = styled.SafeAreaView`
 
 const Container = styled.SafeAreaView`
   flex: 1;
-  top: ${Platform.OS === "android" ? 3 : 0}%;
-  // padding-bottom: ${Platform.OS === "android" ? 6 : 0}%;
+  top: ${Platform.OS === "android" ? 5 : 0}%;
+    // padding-bottom: ${Platform.OS === "android" ? 6 : 0}%;
 `;
 
 const HeaderView = styled.View<{ size: number }>`
@@ -61,7 +61,8 @@ const HeaderView = styled.View<{ size: number }>`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 0 ${(props:any) => props.size}px 0 ${(props:any) => props.size}px;
+  padding: 0 ${(props:any) => props.size}px 0 10px;
+  margin-bottom: 20px;
 `;
 
 const SubView = styled.View`
@@ -116,6 +117,7 @@ const ClubName = styled(CustomText)`
 `;
 
 //ModalStyle
+//ModalStyle
 const ModalArea = styled.View`
   flex: 1;
 `;
@@ -148,7 +150,7 @@ const ModalText = styled(CustomText)`
   font-weight: bold;
   text-align: center;
   font-size: 18px;
-  margin: 30px 0 0 0;
+  padding: 30px 0 0 0;
   width: 100%;
   color: black;
   height: auto;
@@ -197,7 +199,8 @@ const UserInfo = styled.View`
   padding-bottom: 2px;
 `;
 const FeedMain = styled.View``;
-const FeedImage = styled.View``;
+const FeedImage = styled.View`
+`;
 const FeedInfo = styled.View`
   flex-direction: row;
   justify-content: space-between;
@@ -241,12 +244,90 @@ const ImageSource = styled.Image<{ size: number }>`
   height: ${(props:any) => props.size}px;
 `;
 
+//모달
+const ClubArea = styled.TouchableOpacity`
+  flex-direction: row;
+  width: 100%;
+  height: auto;
+  padding: 5px 15px 0 15px;
+  border-style: solid;
+  border-bottom-color: #e9e9e9;
+  border-bottom-width: 1px;
+  align-self: flex-start;
+`;
+
+const ClubImg = styled.Image`
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  margin: 5px;
+`;
+
+const ClubMy = styled.View`
+  justify-content: center;
+  padding-top: 3%;
+`;
+const ClubId = styled(CustomText)`
+  padding-left: 2%;
+  color: black;
+  font-size: 12px;
+  font-weight: bold;
+`;
+
+const Comment = styled(CustomText)`
+  color: black;
+  margin-left: 10px;
+  width: 200px;
+  font-size: 12px;
+  font-weight: 300;
+`;
+
+const CommentMent = styled.View`
+  flex-direction: row;
+  padding-bottom: 4px;
+`;
+
+const CommentRemainder = styled.View`
+  flex-direction: row;
+`;
+
+const CtrgArea = styled.View`
+  width: auto;
+  height: auto;
+  margin: 0.1px 6px 13.9px 8px;
+  border-radius: 3px;
+  background-color: #c4c4c4;
+`;
+
+const CtgrText = styled.View`
+  display: flex;
+  flex-direction: row;
+  margin: 3px 5px 3px 5px;
+`;
+
+const OrganizationName = styled(CustomText)`
+  width: auto;
+  height: auto;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  color: #fff;
+`;
+const CreatorName = styled(CustomText)`
+  width: auto;
+  height: auto;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  color: #fff;
+  padding-left: 6px;
+`;
 interface HeartType {
   feedId: number;
   heart: boolean;
 }
 
-const Home: React.FC<HomeScreenProps & HomeList> = ({
+const Home: React.FC<HomeScreenProps> = ({
                                            navigation,
                                            route: {
                                              params: { feedData },
@@ -260,19 +341,17 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
   const token = useSelector((state: any) => state.AuthReducers.authToken);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
   const [modalFeedData, setModalFeedData] =  useState<any>('');
-  const [scrollY] = useState(new Animated.Value(0));
   //모달
   const modalizeRef = useRef<Modalize>(null);
-
   const onOpen = (feedData: Feed) => {
     console.log("Before Modal Passed FeedId:", feedData.id);
     setModalFeedData(feedData);
     modalizeRef?.current?.open(feedData.id);
   };
+
   //heart선택
   const [heartMap, setHeartMap] = useState(new Map());
 
-  //getFeeds ( 무한 스크롤 )
   const {
     isLoading: feedsLoading,
     data: feeds,
@@ -292,10 +371,10 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
       setIsPageTransition(false);
       let heartDataMap = new Map();
 
-      for (let i = 0; i < res?.data?.length; ++i) {
+    /*  for (let i = 0; i < res?.data?.length; ++i) {
         heartDataMap.set(res?.data[i].id, false);
       }
-      setHeartMap(heartDataMap);
+      setHeartMap(heartDataMap);*/
     },
     onError: (err) => {
       console.log(err);
@@ -395,12 +474,11 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
   const goToModifiy = (feedData: Feed) => {
     console.log("After Modal passed feedId:",feedData.id)
     navigation.navigate("HomeStack", {
-      screen: "ModifiyPeed",
+      screen: "ModifiyFeed",
       feedData,
     });
     modalizeRef.current?.close();
   };
-
 
   const goToClubStack = (clubData: Club) => {
 
@@ -434,11 +512,11 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
     console.log("After Modal passed feedId:", feedData.id);
     Alert.alert(
       "게시글을 삭제하시겠어요?",
-      "",
+      "정말로 해당 게시물을 삭제하시겠습니까?",
       [
         {
           text: "아니요",
-          onPress: () => console.log(""),
+          onPress: () => console.log("삭제 Api 호출"),
           style: "cancel",
         },
         { text: "네", onPress: () => FeedDelete(feedData) },
@@ -486,10 +564,17 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
     // 모든 단위가 맞지 않을 시
     return "방금 전";
   };
+
   const {
     isLoading: myClubInfoLoading, // true or false
     data: myClub,
   } = useQuery<ClubResponse>(["selectMyClubs", token], UserApi.selectMyClubs);
+
+  const MyClubChange = () =>{
+
+  }
+
+
   const loading = feedsLoading && userInfoLoading;
 
   return loading ? (
@@ -525,7 +610,7 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
                   <FeedUser>
                     <UserImage
                       source={{
-                        uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+                        uri: userInfo?.data.thumbnail
                       }}
                     />
                     <UserInfo>
@@ -535,13 +620,40 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
                       </ClubBox>
                     </UserInfo>
                   </FeedUser>
-                  <TouchableOpacity>
+                  <View>
                     <ModalArea>
                       <ModalIcon
-                        onPress={() => onOpen(item)}>
+                        onPress={() => {onOpen(item)}}>
                         <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
                       </ModalIcon>
                       <Portal>
+                       {/* <Modalize
+                          ref={modalizeRef}
+                          modalHeight={300}
+                          handlePosition="inside"
+                          withReactModal={true}
+                        >
+                          <FlatList
+                            keyExtractor={(item: Club, index: number) => String(index)}
+                            data={myClub?.data}
+                            renderItem={({ item, index }: { item: Club; index: number }) => (
+                              <ClubArea>
+                                <ClubImg source={{ uri: item.thumbnail }} />
+                                <ClubMy>
+                                  <CommentMent>
+                                    <ClubId>{item.clubShortDesc}</ClubId>
+                                  </CommentMent>
+                                  <CommentRemainder>
+                                    <CtrgArea>
+                                      <CtgrText>
+                                        <OrganizationName>{item.categories?.map((name)=>{return name.name})}</OrganizationName>
+                                      </CtgrText>
+                                    </CtrgArea>
+                                  </CommentRemainder>
+                                </ClubMy>
+                              </ClubArea>
+                            )}/>
+                        </Modalize>*/}
                         { modalFeedData.userId === myId ? (
                           <Modalize
                             ref={modalizeRef}
@@ -572,19 +684,23 @@ const Home: React.FC<HomeScreenProps & HomeList> = ({
                         )}
                       </Portal>
                     </ModalArea>
-                  </TouchableOpacity>
+                  </View>
                 </FeedHeader>
                 <FeedMain>
                   <FeedImage>
-                    <ImageSlider
-                      data={[{ img: item.imageUrls[0] }, { img: item.imageUrls[1]},{ img: item.imageUrls[2] }]}
-                      closeIconColor="#fff"
-                      preview={false}
-                      caroselImageStyle={{resizeMode: 'stretch',height: 400}}
-                      indicatorContainerStyle={{ bottom: 0 }}
-                      size={FEED_IMAGE_SIZE}
-                    />
-                    {/*<ImageSource source={item.imageUrls[0]===undefined?{uri:"https://i.pinimg.com/564x/eb/24/52/eb24524c5c645ce204414237b999ba11.jpg"}:{uri:item.imageUrls[0]}} size={FEED_IMAGE_SIZE}/>*/}
+                    {item.imageUrls?.length > 1 ?
+                      (
+                        <ImageSlider
+                          data={item.imageUrls?.map((url)=>{return {img: url}})}
+                          preview={false}
+                          caroselImageContainerStyle={{justifyContent: 'center', alignItems: 'center'}}
+                          caroselImageStyle={{resizeMode: 'cover',height: 380, left: -20}}
+                          activeIndicatorStyle={{backgroundColor: 'orange'}}
+                          indicatorContainerStyle={{ bottom: 0 }}
+                        />
+                      ):(
+                        <ImageSource source={{uri: item.imageUrls[0]}} size={380}/>
+                      )}
                   </FeedImage>
                   <FeedInfo>
                     <LeftInfo>
