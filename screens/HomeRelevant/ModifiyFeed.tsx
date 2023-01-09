@@ -1,33 +1,40 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import styled from "styled-components/native";
 import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  StatusBar, Text,
+  StatusBar,
+  Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
   useWindowDimensions,
   View
 } from "react-native";
 import { useSelector } from "react-redux";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import {
   Club,
   ClubResponse,
   Feed,
   FeedApi,
-  FeedUpdateRequest, ModifiedReponse, UserApi, UserInfoResponse
+  FeedUpdateRequest,
+  ModifiedReponse,
+  UserApi,
+  UserInfoResponse
 } from "../../api";
-import { ModifiyPeedScreenProps } from "../../types/feed";
+import { ModifiyFeedScreenProps } from "../../types/feed";
 import { RootStackParamList } from "../../types/Club";
 import { useNavigation } from "@react-navigation/native";
-import { Modalize } from "react-native-modalize";
-import { Portal } from "react-native-portalize";
-import { Ionicons } from "@expo/vector-icons";
+import CustomTextInput from "../../components/CustomTextInput";
 import CustomText from "../../components/CustomText";
-import { ImageSlider } from "react-native-image-slider-banner";
+import {
+  ImageSlider
+} from "react-native-image-slider-banner";
+import { Modalize, useModalize } from "react-native-modalize";
+import { Portal } from "react-native-portalize";
+import { MaterialIcons,Ionicons } from "@expo/vector-icons";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -35,14 +42,14 @@ const Loader = styled.SafeAreaView`
   align-items: center;
   padding-top: ${Platform.OS === "android" ? StatusBar.currentHeight : 0}px;
 `;
-const Container=styled.SafeAreaView`
+const Container = styled.SafeAreaView`
   flex: 1;
   margin-bottom: ${Platform.OS === "ios" ? 20 : 30}px;
   padding: 0 20px 0 20px;
-`
+`;
 const FeedUser = styled.View`
   flex-direction: row;
-  padding: 20px 0 0 0;
+  padding: 20px 0 0 20px;
 `;
 
 const UserInfo = styled.View`
@@ -59,23 +66,28 @@ const UserImage = styled.Image`
   background-color: #c4c4c4;
 `;
 
-const UserId = styled.Text`
+const UserId = styled(CustomText)`
   color: black;
+  font-size: 16px;
   font-weight: bold;
-  font-size: 14px;
-  padding-bottom: 5px;
 `;
+const ClubModIcon=styled.View`
+  display: flex;
+  flex-direction: row;
+`
 const ClubBox = styled.TouchableOpacity`
   padding: 3px 6px 3px 6px;
   background-color: #c4c4c4;
   justify-content: center;
   align-items: center;
   border-radius: 5px;
-  flex: 1
+  display: flex;
+  flex-direction: row;
 `;
 
-const ClubName = styled.Text`
+const ClubName = styled(CustomText)`
   font-size: 10px;
+  line-height: 15px;
   font-weight: 500;
   color: white;
 `;
@@ -88,9 +100,11 @@ const FeedHeader = styled.View`
 `;
 
 const FeedImage = styled.View`
-  padding: 10px 10px;
+  padding: 10px 0;
   justify-content: center;
   align-items: center;
+  height: 70%;
+  width: 100%;
 `;
 
 const Content = styled.View`
@@ -98,17 +112,18 @@ const Content = styled.View`
 `;
 
 const ContentArea = styled.View`
-`
+  padding: 0 20px ;
+  flex:1;
+`;
 const ImageArea = styled.View`
-  // padding-bottom: 1px;  
-`
+  // padding-bottom: 1px;
+`;
 
-const Ment = styled.TextInput`
+const Ment = styled(CustomTextInput)`
   width: 100%;
   height: 150px;
   color: black;
   font-size: 14px;
-  background-color: bisque;
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
@@ -116,35 +131,8 @@ const ImageSource = styled.Image<{ size: number }>`
   height: ${(props:any) => props.size}px;
 `;
 
-const FixCompleteText = styled.Text`
-  color: #63abff;
-  font-size: 15px;
-  font-weight: bold;
-`
 
-const ModalContainer = styled.View`
-  flex: 1;
-`;
-
-const ModalView = styled.View`
-  background-color: white;
-  align-items: center;
-  opacity: 1;
-  width: 100%;
-  height: auto;
-`;
-
-const ModalText = styled(CustomText)`
-  font-weight: bold;
-  text-align: center;
-  font-size: 18px;
-  margin: 30px 0 0 0;
-  width: 100%;
-  color: black;
-  height: auto;
-`;
-
-//모달내 클럽리스트
+//모달
 const ClubArea = styled.TouchableOpacity`
   flex-direction: row;
   width: 100%;
@@ -222,41 +210,42 @@ const CreatorName = styled(CustomText)`
   color: #fff;
   padding-left: 6px;
 `;
-interface FeedEditItem{
-  id:number
-  content:string;
+
+interface FeedEditItem {
+  id: number;
+  content: string;
   screen: keyof RootStackParamList;
 }
 
-const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
-                                                      navigation:{navigate},
-                                                      route:{params: {feedData}}})=> {
+const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
+                                                         navigation: { navigate },
+                                                         route: {
+                                                           params: { feedData },
+                                                         },
+                                                       }) => {
   const token = useSelector((state:any) => state.AuthReducers.authToken);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
-  const [isPageTransition, setIsPageTransition] = useState<boolean>(false)
-  const [content, setContent] = useState("")
+  const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
+  const [content, setContent] = useState("");
   const [data, setData] = useState<Feed>(feedData);
   const [items, setItems] = useState<FeedEditItem[]>();
   const navigation = useNavigation();
-  const [refreshing, setRefreshing] = useState(false);
-  const queryClient = useQueryClient();
-
+  const { ref: ClubModalRef, open: openFilteringSheet, close: closeFilteringSheet } = useModalize();
   const modalizeRef = useRef<Modalize>(null);
+  const [myClubId, setMyClubId]=useState(feedData.clubId)
   const onOpen = () => {
     console.log("Before Modal Passed FeedId");
     modalizeRef?.current?.open();
   };
-
   //피드호출
   const {
     isLoading: feedsLoading,
     data: feeds,
     isRefetching: isRefetchingFeeds,
-  } = useQuery<ModifiedReponse>(["getFeeds",token,feedData.id], FeedApi.getSelectFeeds, {
+  } = useQuery<ModifiedReponse>(["getFeeds", token, feedData.id], FeedApi.getSelectFeeds, {
     onSuccess: (res) => {
-      console.log('modifyCall')
       setIsPageTransition(false);
     },
     onError: (err) => {
@@ -295,67 +284,70 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
   });
 
   //피드업데이트
-  const FixComplete = async () =>{
-    const data={
+  const FixComplete = async () => {
+    const data = {
       id: feedData.id,
       access: "PUBLIC",
       content: content,
     };
     console.log("fixed Data:", data);
 
-    const requestData: FeedUpdateRequest={
+    const requestData: FeedUpdateRequest = {
       data,
       token,
     };
 
-    mutation.mutate(requestData)
-
+    mutation.mutate(requestData);
   };
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={FixComplete}>
+          <CustomText style={{ color: "#2995FA", fontSize: 18, lineHeight: 20 }}>저장</CustomText>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, FixComplete]);
+
+  const imageList = [];
+  for (let i = 0; i < feedData?.imageUrls?.length; i++) {
+    imageList.push({ img: feedData?.imageUrls[i] });
+  }
+
   const {
     isLoading: myClubInfoLoading, // true or false
     data: myClub,
   } = useQuery<ClubResponse>(["selectMyClubs", token], UserApi.selectMyClubs);
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await queryClient.refetchQueries(["selectMyClubs"]);
-    setRefreshing(false);
-  };
 
-  useEffect(()=>{
-    navigation.setOptions({
-      headerRight: () => <TouchableOpacity onPress={FixComplete}><FixCompleteText>저장</FixCompleteText></TouchableOpacity>
-    })
-  },[navigation, FixComplete]);
-
-  console.log('수정페이지')
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Container>
-        <KeyboardAvoidingView behavior={Platform.select({ios: 'position', android: 'position'})} style={{flex: 1}}>
-          {/* <ImageArea> */}
+        <KeyboardAvoidingView behavior={Platform.select({ ios: "position", android: "position" })} style={{ flex: 1 }}>
           <FeedUser>
             <UserImage source={{ uri: userInfo?.data.thumbnail }} />
             <UserInfo>
               <UserId>{data.userName}</UserId>
-                <ClubBox onPress={onOpen}>
+              <ClubModIcon>
+                <ClubBox>
                   <ClubName>{data.clubName}</ClubName>
                 </ClubBox>
-              <Portal>
-                <Modalize
-                  ref={modalizeRef}
-                  modalHeight={200}
-                  handlePosition="inside"
-                >
-                  <ModalContainer>
-                    <ModalView>
+                <View>
+                  <TouchableOpacity onPress={onOpen}>
+                    <Ionicons name="pencil" size={18} style={{left: 3, top: 2}} color="gray" />
+                  </TouchableOpacity>
+                  {/*<Portal >
+                    <Modalize
+                      ref={modalizeRef}
+                      modalHeight={300}
+                      handlePosition="inside"
+                      withReactModal={true}
+                    >
                       <FlatList
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
                         keyExtractor={(item: Club, index: number) => String(index)}
                         data={myClub?.data}
                         renderItem={({ item, index }: { item: Club; index: number }) => (
-                          <ClubArea key={index}>
+                          <ClubArea>
                             <ClubImg source={{ uri: item.thumbnail }} />
                             <ClubMy>
                               <CommentMent>
@@ -364,38 +356,36 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
                               <CommentRemainder>
                                 <CtrgArea>
                                   <CtgrText>
-                                    <OrganizationName>{item.organizationName}</OrganizationName>
-                                    <CreatorName>{item.creatorName}</CreatorName>
+                                    <OrganizationName>{item.categories?.map((name)=>{return name.name})}</OrganizationName>
                                   </CtgrText>
                                 </CtrgArea>
                               </CommentRemainder>
                             </ClubMy>
                           </ClubArea>
                         )}/>
-                      <ModalText>123</ModalText>
-                    </ModalView>
-                  </ModalContainer>
-                </Modalize>
-              </Portal>
+                    </Modalize>
+                  </Portal>*/}
+                </View>
+              </ClubModIcon>
             </UserInfo>
-
           </FeedUser>
           <FeedImage>
             <ImageSlider
-              data={[{ img: data.imageUrls[0] }, { img: data.imageUrls[1]},{ img: data.imageUrls[2] }]}
-              closeIconColor="#fff"
-              preview={false}
-              caroselImageStyle={{resizeMode: 'stretch',height: 400}}
+              data={imageList} preview={false}
+              caroselImageContainerStyle={{justifyContent: 'center', alignItems: 'center'}}
+              caroselImageStyle={{resizeMode: 'cover',height: 380, left: -20}}
+              activeIndicatorStyle={{backgroundColor: 'orange'}}
               indicatorContainerStyle={{ bottom: 0 }}
-              size={FEED_IMAGE_SIZE}
-            /></FeedImage>
+            />
+          </FeedImage>
           <ContentArea>
             <Ment
               onChangeText={(content:any) => setContent(content)}
-              autoCompleteType="off"
-              autoCapitalize="none"
-              autoCorrect={false}
+              placeholderTextColor="#B0B0B0"
+              placeholder="게시글 입력 ..."
+              textAlign="left"
               multiline={true}
+              maxLength={1000}
               returnKeyType="done"
               returnKeyLabel="done"
             >
@@ -407,4 +397,4 @@ const ModifiyPeed:React.FC<ModifiyPeedScreenProps>=({
     </TouchableWithoutFeedback>
   );
 };
-export default ModifiyPeed;
+export default ModifiyFeed;
