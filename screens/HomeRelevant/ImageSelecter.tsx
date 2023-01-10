@@ -141,7 +141,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [imageURI, setImageURI] = useState<any>("");
   const [choiceImage, setChoiceImage] = useState();
   const [loading, setLoading] = useState(false);
-  // const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [alert, alertSet] = useState(true);
   const [isSummitShow, setSummitShow] = useState(true)
   const getValueInfos = (value: string): ValueInfo[] => {
@@ -185,12 +185,12 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
 
   const pickImage = async () => {
     //사진허용
-    /*    if(!status?.granted){
+        if(!status?.granted){
           const permission=await requestPermission();
           if(!permission.granted){
             return null;
           }
-        }*/
+        }
 
     let result: any = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -208,7 +208,6 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       }
     }
     setImageURI(array);
-    setFeedImageLength(array.length);
   };
   // console.log(imageURI.toString())
 
@@ -219,13 +218,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
     await queryClient.refetchQueries(["getFeeds"]);
     setRefreshing(false);
   };
-
-  const startLoading = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 3000);
-  };
+  
 
   const mutation = useMutation(FeedApi.createFeed, {
     onSuccess: (res) => {
