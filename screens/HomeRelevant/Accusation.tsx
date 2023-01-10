@@ -46,7 +46,6 @@ const AccText = styled(CustomText)`
   border: 0.5px solid lightgray;
   padding: 15px;
   color: black;
-  line-height: normal;
 `;
 
 interface ReportReason{
@@ -54,12 +53,10 @@ interface ReportReason{
   reason:string,
 }
 
-const Accusation:React.FC<ReportFeedScreenProps>=({ navigation:
-                                                    { navigate},
-                                                    route:{params:{feedData}} }) =>{
+const Accusation:React.FC<ReportFeedScreenProps>=({ navigation:{ navigate},
+                                                   route:{params:{feedData}} }) =>{
   const token = useSelector((state:any) => state.AuthReducers.authToken);
 
-  // const[reportReason,setReportReason]=useState<ReportReason[]>();
 
   const mutation = useMutation( FeedApi.reportFeed, {
     onSuccess: (res) => {
@@ -68,13 +65,11 @@ const Accusation:React.FC<ReportFeedScreenProps>=({ navigation:
       } else {
         console.log(`mutation success but please check status code`);
         console.log(res);
-        // return navigate("Home", {});
       }
     },
     onError: (error) => {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
-      // return navigate("Home", {});
     },
     onSettled: (res, error) => {},
   });

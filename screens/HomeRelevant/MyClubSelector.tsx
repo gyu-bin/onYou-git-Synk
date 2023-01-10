@@ -127,7 +127,6 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
   const [clubId,setClubId] = useState("")
   const [clubName, setClubName] = useState<string>("");
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
 
   const {
@@ -148,15 +147,11 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
     await queryClient.refetchQueries(["clubs"]);
     setRefreshing(false);
   };
-
   return (
     <Container>
       <IntroText>가입한 모임 List</IntroText>
       <ReplyContainer>
-        {loading ? (
-          <ActivityIndicator />
-        ) : (
-          <FlatList
+            <FlatList
             refreshing={refreshing} onRefresh={onRefresh}
             keyExtractor={(item: Club, index: number) => String(index)}
             data={myClub?.data}
@@ -165,7 +160,7 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
                 <ClubImg source={{ uri: item.thumbnail }} />
                 <ClubMy>
                   <CommentMent>
-                    <ClubId>{item.clubShortDesc}</ClubId>
+                    <ClubId>{item.name}</ClubId>
                   </CommentMent>
                   <CommentRemainder>
                     <CtrgArea>
@@ -188,7 +183,6 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
                 </ClubMy>
               </ClubArea>
             )}/>
-        )}
       </ReplyContainer>
     </Container>
   );

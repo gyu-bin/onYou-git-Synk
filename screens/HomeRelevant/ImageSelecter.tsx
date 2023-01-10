@@ -27,8 +27,7 @@ import { FeedCreateScreenProps } from "../../types/feed";
 import { useNavigation } from "@react-navigation/native";
 import { ImageSlider } from "react-native-image-slider-banner";
 import CustomText from "../../components/CustomText";
-import Spinner from 'react-native-loading-spinner-overlay';
-
+// import ImagePicker from 'react-native-image-crop-picker';
 interface ValueInfo {
   str: string;
   isHT: boolean;
@@ -142,13 +141,9 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [imageURI, setImageURI] = useState<any>("");
   const [choiceImage, setChoiceImage] = useState();
   const [loading, setLoading] = useState(false);
-  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  // const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [alert, alertSet] = useState(true);
-  const [isDisabled, setIsDisabled] = useState(false);
   const [isSummitShow, setSummitShow] = useState(true)
-   const [isLoadingShow, setLoadingShow] = useState(false)
-  const LoadingRef = useRef(false);
-  const SummitRef = useRef(true);
   const getValueInfos = (value: string): ValueInfo[] => {
     if (value.length === 0) {
       return [];
@@ -176,8 +171,17 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
   const [content, setContent] = useState("");
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const [imageLength, setImageLength] = useState(0);
-  const [feedImageLength, setFeedImageLength] = useState<any>(0);
+
+  //cropPicker
+/*  const CropPicker=async ()=>{
+    let result = await ImagePicker.openPicker({
+      cropping:true,
+      multiple:true,
+    }).then(imageURI=>{
+      console.log(imageURI)
+      console.log(result)
+    })
+  }*/
 
   const pickImage = async () => {
     //사진허용
@@ -291,7 +295,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
       ),
     });
   }, [imageURI, content, isSummitShow]);
-  console.log(isSummitShow)
+
   useEffect(() => {
     let timer = setTimeout(() => {
       alertSet(false);
@@ -375,7 +379,7 @@ const ImageSelecter: React.FC<FeedCreateScreenProps> = ({
                 </View>
               </SelectImageView>
               <FeedText
-                placeholder="사진과 함께 남길 게시글을 작성해 보세요."
+                placeholder="사진과 함께 남길 게시글을 작성해 보세요"
                 onChangeText={(content: any) => setContent(content)}
                 autoCapitalize="none"
                 autoCorrect={false}

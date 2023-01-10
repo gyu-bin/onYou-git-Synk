@@ -149,7 +149,7 @@ const ModalText = styled(CustomText)`
   font-weight: bold;
   text-align: center;
   font-size: 18px;
-  padding: 30px 0 0 0;
+  padding: 30px 0 20px 0;
   width: 100%;
   color: black;
   height: auto;
@@ -635,7 +635,7 @@ const Home: React.FC<HomeScreenProps> = ({
                                     <ModalContainer key={index}>
                                       <ModalView>
                                         <ModalText onPress={() => goToModifiy(modalFeedData)}>수정</ModalText>
-                                        <ModalText style={{ color: "red" }} onPress={() => deleteCheck(modalFeedData)}>
+                                        <ModalText style={{ color: "red",backgroundColor:'pink' }} onPress={() => deleteCheck(modalFeedData)}>
                                           삭제
                                         </ModalText>
                                       </ModalView>
@@ -666,7 +666,7 @@ const Home: React.FC<HomeScreenProps> = ({
                                       data={item.imageUrls?.map((url)=>{return {img: url}})}
                                       preview={false}
                                       caroselImageContainerStyle={{justifyContent: 'center', alignItems: 'center'}}
-                                      caroselImageStyle={{resizeMode: 'center',height: 380, left: -20}}
+                                      caroselImageStyle={{resizeMode: 'cover',height: 380, left: -20}}
                                       activeIndicatorStyle={{backgroundColor: 'orange'}}
                                       indicatorContainerStyle={{ bottom: 0 }}
                                   />
