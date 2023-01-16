@@ -18,19 +18,23 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import {
   Feed,
-  FeedApi,
+  FeedApi, FeedLikeRequest,
   FeedReplyRequest, FeedsResponse,
   getReply,
   getUserInfo,
-  Reply,
+  Reply, ReplyDeleteRequest,
   ReplyReponse,
   UserApi,
   UserInfoResponse
 } from "../../api";
-import { ModifiyPeedScreenProps } from "../../types/feed";
+import {
+  ModifiyFeedScreenProps
+} from "../../types/feed";
 import { useToast } from "react-native-toast-notifications";
 import {SwipeListView,SwipeRow} from 'react-native-swipe-list-view';
 import { AntDesign, Ionicons } from "@expo/vector-icons";
+import CustomTextInput from "../../components/CustomTextInput";
+import CustomText from "../../components/CustomText";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -44,7 +48,7 @@ const Container = styled.SafeAreaView`
 `;
 
 const CommentList = styled.View`
-  height: 95%;
+  height: 92%;
 `
 const SwipeHiddenItemContainer = styled.View`
   flex: 1;
@@ -71,7 +75,7 @@ const CommentArea = styled.View`
   width: 100%;
   padding: 10px 20px 0 20px;
   position: relative;
-  background-color: #ffffff;;
+  background-color: #ffffff;
 `;
 
 const CommentImg = styled.Image`
@@ -81,14 +85,14 @@ const CommentImg = styled.Image`
   flex-grow: 0;
   background-color: #c4c4c4;
 `;
-const CommentId = styled.Text`
+const CommentId = styled(CustomText)`
   color: black;
   font-size: 12px;
   left: 8px;
   font-weight: bold;
 `;
 
-const Comment = styled.Text`
+const Comment = styled(CustomText)`
   color: black;
   margin-left: 10px;
   width: 200px;
@@ -105,8 +109,8 @@ const CommentRemainder = styled.View`
   flex-direction: row;
 `;
 
-const NoReplyText = styled.Text`
-  font-size: 20px;
+const NoReplyText = styled(CustomText)`
+  font-size: 15px;
   text-align: center;
   left: 0;
   right: 0;
@@ -118,7 +122,7 @@ const NoReplyScrollView = styled.ScrollView`
   padding-Top: 50%;
 `
 
-const Time = styled.Text`
+const Time = styled(CustomText)`
   font-size: 10px;
   font-weight: 300;
   color: #8e8e8e;
@@ -128,45 +132,46 @@ const Time = styled.Text`
 const ReplyArea = styled.View`
   display: flex;
   flex-direction: row;
-  padding: 1% 0 0 20px;
-  height: auto;
-  bottom: ${Platform.OS === 'ios' ? 3 : 0}%;
+  padding: 10px 0 0 20px;
+  border-style: solid;
+  border-top-color: #e9e9e9;
+  border-top-width: 2px;
 `;
 
 const ReplyInputArea = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  width: 88%;
-  
+  width: 85%;
 `
 
-const ReplyInput = styled.TextInput`
+const ReplyInput = styled(CustomTextInput)`
+  font-size: 14px;
   color: #b0b0b0;
   left: 15px;
+  margin-top: 5px;
   width: 80%;
 `;
 
 const ReplyImg = styled.Image`
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border-radius: 100px;
 `;
 
 const ReplyButton = styled.TouchableOpacity``;
-const ReplyDone = styled.Text`
+const ReplyDone = styled(CustomText)`
   color: #63abff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
   width: 30px;
   height: 24px;
-  top: 15%;
 `;
 
 const ModalIcon = styled.TouchableOpacity``;
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
+const ReplyPage:React.FC<ModifiyFeedScreenProps> = ({
                                                       navigation:{navigate},
                                                       route: { params: { feedData }},
                                                     }) => {
@@ -197,6 +202,8 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
     isLoading: userInfoLoading, // true or false
     data: userInfo,
   } = useQuery<UserInfoResponse>(["userInfo", token], UserApi.getUserInfo);
+
+  let myId = userInfo?.data.id;
 
   // console.log(userInfo?.data.id);
   const onRefresh = async () => {
@@ -242,9 +249,40 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
       mutation.mutate(likeRequestData);
     }
   }
+  const ReplyDeleteMutation = useMutation( FeedApi.ReplyDelete, {
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        console.log(res)
+        onRefresh();
+      } else {
+        console.log(`mutation success but please check status code`);
+        console.log(res);
+      }
+    },
+    onError: (error) => {
+      console.log("--- Error ---");
+      console.log(`error: ${error}`);
+    },
+    onSettled: (res, error) => {},
+  });
 
+  /**RelpyDelete*/
+  const ReplyDelete=(feedData:Reply)=>{
+    const data = {
+      id: feedData.commentId,
+    };
+    console.log(data);
+    const replyRequestData: ReplyDeleteRequest=
+      {
+        data,
+        token,
+      }
+    ReplyDeleteMutation.mutate(replyRequestData);
+    console.log(data)
+  };
   /**댓글삭제*/
-  const deleteCheck = (feedData:Reply) => {
+  const deleteCheck = (replyData:Reply) => {
+    console.log(replyData.commentId)
     Alert.alert(
       "댓글을 삭제하시겠어요?",
       "",
@@ -254,7 +292,7 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
           onPress: () => console.log("삭제 Api 호출"),
           style: "cancel",
         },
-        { text: "네", onPress: () =>Alert.alert('댓글삭제')},
+        { text: "네", onPress: () =>ReplyDelete(replyData)},
       ],
       { cancelable: false }
     );
@@ -311,7 +349,9 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                   renderItem={({ item, index }: { item: Reply; index: number }) => (
                     <ScrollView>
                       <CommentArea key={index}>
-                        <CommentImg source={{ uri: item.thumbnail }} />
+                        <CommentImg source={{
+                          uri: userInfo?.data.thumbnail === null ? "https://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_110x110.jpg" : userInfo?.data.thumbnail,
+                        }} />
                         <View style={{ marginBottom: 20, top: 7 }}>
                           <CommentMent>
                             <CommentId>{item.userName}</CommentId>
@@ -325,16 +365,20 @@ const ReplyPage:React.FC<ModifiyPeedScreenProps> = ({
                     </ScrollView>
                   )}
                   renderHiddenItem={(item, index) => (
-                    <SwipeHiddenItemContainer>
-                      <SwipeHiddenItem>
-                        <SwipeHiddenItemText></SwipeHiddenItemText>
-                      </SwipeHiddenItem>
-                      <SwipeHiddenItem style={{backgroundColor: 'skyblue'}}>
-                        <SwipeHiddenItemText onPress={()=>deleteCheck(item.item)}>
-                          <AntDesign name="delete" size={24} color="black" />
-                        </SwipeHiddenItemText>
-                      </SwipeHiddenItem>
-                    </SwipeHiddenItemContainer>
+                    item.item.userId === myId ? (
+                        <SwipeHiddenItemContainer>
+                          <SwipeHiddenItem>
+                            <SwipeHiddenItemText></SwipeHiddenItemText>
+                          </SwipeHiddenItem>
+                          <SwipeHiddenItem style={{backgroundColor: 'skyblue'}}>
+                            <SwipeHiddenItemText onPress={()=>deleteCheck(item.item)}>
+                              <AntDesign name="delete" size={24} color="black" />
+                            </SwipeHiddenItemText>
+                          </SwipeHiddenItem>
+                        </SwipeHiddenItemContainer>
+                      )
+                      :
+                      (<></>)
                   )}
                 />
               </SafeAreaView>

@@ -15,7 +15,7 @@ import {
   ScrollView,
   VirtualizedList,
   RefreshControl,
-  Animated, TouchableWithoutFeedback
+  Animated, TouchableWithoutFeedback, Image
 } from "react-native";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
@@ -60,7 +60,7 @@ const HeaderView = styled.View<{ size: number }>`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 0 ${(props:any) => props.size}px 0 10px;
+  padding: 0 25px 0 25px;
   margin-bottom: 20px;
 `;
 
@@ -177,14 +177,13 @@ const FeedContainer = styled.View`
   flex: 1;
   width: 100%;
   margin-bottom: ${Platform.OS === "ios" ? 0 : 30}px;
-  padding: 0 15px 0 15px;
 `;
 
 const FeedHeader = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-end;
-  margin: 20px 0 10px 0;
+  margin: 20px 15px 10px 15px;
 `;
 
 const FeedUser = styled.View`
@@ -198,13 +197,13 @@ const UserInfo = styled.View`
   padding-bottom: 2px;
 `;
 const FeedMain = styled.View``;
-const FeedImage = styled.View`
-`;
+const FeedImage = styled.View``;
+const ImageSliderView = styled.View``
 const FeedInfo = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 7px 5px 5px 5px;
+  padding: 7px 15px 5px 15px;
 `;
 const LeftInfo = styled.View`
   flex-direction: row;
@@ -229,7 +228,7 @@ const Timestamp = styled(CustomText)`
 `;
 
 const Content = styled.View`
-  padding: 0 12px 0 10px;
+  padding: 0 20px 0 20px;
 `;
 
 const Ment = styled(CustomText)`
@@ -239,9 +238,8 @@ const Ment = styled(CustomText)`
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
-  width: 400px;
+  width: 100%;
   height: 400px;
-  background-size: cover;
 `;
 //모달
 const ClubArea = styled.TouchableOpacity`
@@ -398,7 +396,7 @@ const Home: React.FC<HomeScreenProps> = ({
   const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
   const [modalFeedData, setModalFeedData] =  useState<any>('');
   const [lastClick, setLastClick] = useState(null); //더블클릭
-
+  const [heart, setHeart] = useState(false);
   //모달
   const modalizeRef = useRef<Modalize>(null);
   const AccModalRef = useRef<Modalize>(null);
@@ -435,7 +433,7 @@ const Home: React.FC<HomeScreenProps> = ({
       }
     },
     onSuccess: (res) => {
-      console.log('getFeeds onSuccess')
+      // console.log('getFeeds onSuccess')
       // console.log("res.pages[0].responses:", res.pages[0].responses)
       setIsPageTransition(false);
       let heartDataMap = new Map();
@@ -601,7 +599,7 @@ const Home: React.FC<HomeScreenProps> = ({
     );
   };
   const onRefresh = async () => {
-    console.log("onRefresh executed");
+    // console.log("onRefresh executed");
     setRefreshing(true);
     await queryClient.refetchQueries(["feeds"]).then(() => {
       setRefreshing(false);
@@ -691,10 +689,16 @@ const Home: React.FC<HomeScreenProps> = ({
     AccFinModalRef?.current?.close();
   }
 
+  useEffect(() => {
+    let timer = setTimeout(() => {
+      setHeart(false);
+    }, 1000);
+  });
   const handleClick = (feedData:Feed) => {
     const now:any = Date.now();
     if (lastClick && now - lastClick < 1000) {
       // double click
+
       LikeFeed(feedData);
       console.log('Double click!');
     }
@@ -709,6 +713,7 @@ const Home: React.FC<HomeScreenProps> = ({
   ) : (
       <>
         <Container>
+          <StatusBar barStyle="default"/>
           <FeedContainer>
             <HeaderView size={SCREEN_PADDING_SIZE}>
               <SubView>
@@ -845,16 +850,17 @@ const Home: React.FC<HomeScreenProps> = ({
                           <FeedImage>
                             {item.imageUrls?.length > 1 ?
                               (
-                                <ImageSlider
-                                  data={item.imageUrls?.map((url)=>{return {img: url}})}
-                                  preview={false}
-                                  caroselImageContainerStyle={{justifyContent: 'center', alignItems: 'center', height: 400, width: 400}}
-                                  caroselImageStyle={{resizeMode: 'cover', left: 10, right: 10}}
-                                  activeIndicatorStyle={{backgroundColor: 'orange'}}
-                                  indicatorContainerStyle={{ bottom: 0 }}
-                                />
+                                <ImageSliderView>
+                                  <ImageSlider
+                                    data={item.imageUrls?.map((url)=>{return {img: url}})}
+                                    preview={false}
+                                    caroselImageStyle={{resizeMode: 'cover', height: 400}}
+                                    activeIndicatorStyle={{backgroundColor: 'orange'}}
+                                    indicatorContainerStyle={{ bottom: 0 }}
+                                  />
+                                </ImageSliderView>
                               ):(
-                                <ImageSource source={{uri: item.imageUrls[0]}}  size={400}/>
+                                <ImageSource source={{uri: item.imageUrls[0]}}  size={'auto'}/>
                               )}
                           </FeedImage>
                         </TouchableWithoutFeedback>
@@ -867,7 +873,6 @@ const Home: React.FC<HomeScreenProps> = ({
                                 </TouchableOpacity>
                               </TouchableOpacity>
                               <NumberText>{item.likesCount}</NumberText>
-                              {/*{item.likeYn.toString() === "true" ? <NumberText>{item.likesCount + 1}</NumberText> : <NumberText>{item.likesCount}</NumberText>}*/}
                             </InfoArea>
                             <InfoArea>
                               <TouchableOpacity onPress={() => goToReply(item)}>

@@ -90,7 +90,7 @@ const CtgrText = styled.View`
   margin: 3px 5px 3px 5px;
 `;
 
-const OrganizationName = styled(CustomText)`
+const ClubCtrgList = styled(CustomText)`
   width: auto;
   height: auto;
   font-size: 12px;
@@ -127,7 +127,7 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
   const [clubId,setClubId] = useState("")
   const [clubName, setClubName] = useState<string>("");
   const [refreshing, setRefreshing] = useState(false);
-  const [isPageTransition, setIsPageTransition] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     isLoading: myClubInfoLoading, // true or false
@@ -147,16 +147,20 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
     await queryClient.refetchQueries(["clubs"]);
     setRefreshing(false);
   };
+
   return (
     <Container>
       <IntroText>가입한 모임 List</IntroText>
       <ReplyContainer>
-            <FlatList
+        {loading ? (
+          <ActivityIndicator />
+        ) : (
+          <FlatList
             refreshing={refreshing} onRefresh={onRefresh}
             keyExtractor={(item: Club, index: number) => String(index)}
             data={myClub?.data}
             renderItem={({ item, index }: { item: Club; index: number }) => (
-              <ClubArea onPress={() => goToImageSelect(item)}>
+              <ClubArea key={index} onPress={() => goToImageSelect(item)}>
                 <ClubImg source={{ uri: item.thumbnail }} />
                 <ClubMy>
                   <CommentMent>
@@ -165,24 +169,17 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
                   <CommentRemainder>
                     <CtrgArea>
                       <CtgrText>
-                        {item.categories?.length>1?
-                          (
-                            <View style={{display:'flex',flexDirection:'row'}}>
-                              <OrganizationName>{item.categories?.map((name)=>{return name.name})}</OrganizationName>
-                              {/*<OrganizationName>{item.categories[0].name}</OrganizationName>
-                                      <OrganizationName>,</OrganizationName>
-                                      <OrganizationName>{item.categories[1].name}</OrganizationName>*/}
-                            </View>
-                          ):(
-                            <OrganizationName>{item.categories[0].name}</OrganizationName>
-                          )
+                        {item.categories?.map((name)=>{
+                          return <ClubCtrgList>{name.name}</ClubCtrgList>
+                         })
                         }
-                      </CtgrText>
+                 </CtgrText>
                     </CtrgArea>
                   </CommentRemainder>
                 </ClubMy>
               </ClubArea>
             )}/>
+        )}
       </ReplyContainer>
     </Container>
   );
