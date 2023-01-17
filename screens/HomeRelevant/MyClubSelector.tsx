@@ -10,7 +10,6 @@ import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 import { Club, ClubApi, ClubResponse, ClubsParams, ClubsResponse, Feed, UserApi } from "../../api";
 import { MyClubSelectorScreenProps } from "../../types/feed";
-import CustomTextInput from "../../components/CustomTextInput";
 import CustomText from "../../components/CustomText";
 const Container = styled.SafeAreaView`
   flex: 1;

@@ -28,16 +28,9 @@ import {
   ImageSlider
 } from "react-native-image-slider-banner";
 import { Modalize,useModalize } from "react-native-modalize";
-// import { Portal } from "react-native-portalize";
 import { Portal } from 'react-native-paper';
 import { MaterialIcons,Ionicons } from "@expo/vector-icons";
 
-const Loader = styled.SafeAreaView`
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-  padding-top: ${Platform.OS === "android" ? StatusBar.currentHeight : 0}px;
-`;
 const Container = styled.SafeAreaView`
   flex: 1;
   margin-bottom: ${Platform.OS === "ios" ? 20 : 30}px;
@@ -92,11 +85,11 @@ const FeedImage = styled.View`
   justify-content: center;
   align-items: center;
   width: 100%;
+  height: 70%;
 `;
 
-
 const ContentArea = styled.View`
-  padding: 0 20px;
+  padding: 10px 20px;
   flex:1;
 `;
 
@@ -105,7 +98,6 @@ const Ment = styled(CustomTextInput)`
   height: 100px;
   color: black;
   font-size: 14px;
-  background-color: bisque;
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
@@ -181,6 +173,7 @@ const OrganizationName = styled(CustomText)`
 //
 const ModalContainer = styled.View`
   flex: 1;
+  top: 2%;
 `;
 
 const ModalView = styled.View`
@@ -188,6 +181,7 @@ const ModalView = styled.View`
   opacity: 1;
   width: 100%;
   padding: 10px 20px 0 20px;
+  height: auto;
 `;
 
 interface FeedEditItem {
@@ -219,9 +213,6 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
     console.log("Before Modal Passed FeedId");
     modalizeRef.current?.open();
   };
-  const onClose=()=>{
-    modalizeRef.current?.close();
-  }
   //피드호출
   const {
     isLoading: feedsLoading,
@@ -342,15 +333,12 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
           {/* <TouchableOpacity>
               <Ionicons name="pencil" size={18} style={{left: 3, top: 2}} color="gray" />
             </TouchableOpacity>*/}
-          <Modalize ref={modalizeRef} modalHeight={250}
-                    handlePosition="inside" modalStyle={{top: 180}}
+          <Modalize ref={modalizeRef} modalHeight={300}
+                    handlePosition="inside" modalStyle={{top: 280}}
                     disableScrollIfPossible={false}
           >
             <ModalContainer>
-              <ModalView >
-                {loading ? (
-                  <ActivityIndicator />
-                ) : (
+              <ModalView>
                   <FlatList
                     refreshing={refreshing} onRefresh={onRefresh}
                     keyExtractor={(item: Club, index: number) => String(index)}
@@ -375,7 +363,6 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
                       </>
                     )}
                   />
-                )}
               </ModalView>
             </ModalContainer>
           </Modalize>
@@ -385,7 +372,7 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
                 <ImageSlider
                   data={imageList}
                   preview={false}
-                  caroselImageStyle={{resizeMode: 'cover',height: 400}}
+                  caroselImageStyle={{resizeMode: 'cover',height: 350}}
                   activeIndicatorStyle={{backgroundColor: 'orange'}}
                   indicatorContainerStyle={{ bottom: 0 }}
                 />

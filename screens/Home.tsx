@@ -38,7 +38,7 @@ import {
   ClubsParams, ClubResponse, getFeedLike, FeedLikeResponse, FeedReportRequest
 } from "../api";
 import CustomText from "../components/CustomText";
-import { FeedData, HomeScreenProps } from "../types/feed";
+import { FeedData, HomeScreenProps, HomeScrollView } from "../types/feed";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { ImageSlider } from "react-native-image-slider-banner";
@@ -52,7 +52,7 @@ const Loader = styled.SafeAreaView`
 
 const Container = styled.SafeAreaView`
   flex: 1;
-  top: ${Platform.OS === "android" ? 5 : 0}%;
+  top: ${Platform.OS === "android" ? 3 : 0}%;
 `;
 
 const HeaderView = styled.View<{ size: number }>`
@@ -61,7 +61,7 @@ const HeaderView = styled.View<{ size: number }>`
   align-items: center;
   justify-content: space-between;
   padding: 0 25px 0 25px;
-  margin-bottom: 20px;
+  margin-bottom: 1%;
 `;
 
 const SubView = styled.View`
@@ -125,14 +125,6 @@ const ModalIcon = styled.TouchableOpacity`
   top: 50%;
 `;
 
-const CenteredView = styled.View`
-  flex: 1;
-  justify-content: flex-end;
-  align-items: center;
-  background-color: gray;
-  opacity: 0.8;
-`;
-
 const ModalContainer = styled.View`
   flex: 1;
 `;
@@ -149,29 +141,13 @@ const ModalText = styled(CustomText)`
   font-weight: bold;
   text-align: center;
   font-size: 18px;
-  padding: 30px 0 20px 0;
+  padding: 30px 0 10px 0;
   width: 100%;
   color: black;
   height: auto;
 `;
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-
 //Img Slider
-
-const FloatingButton = styled.TouchableOpacity`
-  position: absolute;
-  right: 25px;
-  top: 1.7%;
-  width: 30px;
-  height: 30px;
-  background-color: red;
-  color: black;
-  border-radius: 10px;
-  justify-content: center;
-  align-items: center;
-  font-size: 10px;
-`;
 
 const FeedContainer = styled.View`
   flex: 1;
@@ -214,8 +190,6 @@ const InfoArea = styled.View`
   padding-right: 10px;
 `;
 
-const LikeClick = styled.TouchableOpacity``;
-
 const NumberText = styled(CustomText)`
   font-size: 12px;
   font-weight: 300;
@@ -241,86 +215,15 @@ const ImageSource = styled.Image<{ size: number }>`
   width: 100%;
   height: 400px;
 `;
-//모달
-const ClubArea = styled.TouchableOpacity`
-  flex-direction: row;
-  width: 100%;
-  height: auto;
-  padding: 5px 15px 0 15px;
-  border-style: solid;
-  border-bottom-color: #e9e9e9;
-  border-bottom-width: 1px;
-  align-self: flex-start;
-`;
-
-const ClubImg = styled.Image`
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
-  margin: 5px;
-`;
-
-const ClubMy = styled.View`
-  justify-content: center;
-  padding-top: 3%;
-`;
-const ClubId = styled(CustomText)`
-  padding-left: 2%;
-  color: black;
-  font-size: 12px;
-  font-weight: bold;
-`;
-
-const Comment = styled(CustomText)`
-  color: black;
-  margin-left: 10px;
-  width: 200px;
-  font-size: 12px;
-  font-weight: 300;
-`;
-
-const CommentMent = styled.View`
-  flex-direction: row;
-  padding-bottom: 4px;
-`;
-
-const CommentRemainder = styled.View`
-  flex-direction: row;
-`;
-
-const CtrgArea = styled.View`
-  width: auto;
-  height: auto;
-  margin: 0.1px 6px 13.9px 8px;
-  border-radius: 3px;
-  background-color: #c4c4c4;
-`;
-
-const CtgrText = styled.View`
-  display: flex;
-  flex-direction: row;
-  margin: 3px 5px 3px 5px;
-`;
-
-const OrganizationName = styled(CustomText)`
-  width: auto;
-  height: auto;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-  color: #fff;
-`;
-const CreatorName = styled(CustomText)`
-  width: auto;
-  height: auto;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-  color: #fff;
-  padding-left: 6px;
-`;
-
 //신고
+const ModalAccArea = styled.View`
+  padding: 10px 0;
+  width: 100%;
+  background-color: white;
+  opacity: 1;
+  height: auto;
+`
+
 const AccTop = styled.View`
   top: 20px;
   position: relative;
@@ -329,7 +232,7 @@ const AccTop = styled.View`
 
 const AccInfo = styled.View`
   top: 20px;
-  margin-top: 10px;
+  margin-top: 5%;
 `;
 
 const AccHeader = styled.Text`
@@ -343,17 +246,9 @@ const AccSubHeader = styled(CustomText)`
   color: darkgray;
 `
 
-const AccTitle = styled(CustomText)`
-  text-align: center;
-  font-size: 30px;
-  top: 20px;
-  font-weight: bold;
-  color: red;
-`;
-
-const AccText = styled.Text`
+const AccText = styled(CustomText)`
   font-size: 17px;
-  border: 0.5px solid lightgray;
+  //border: 0.5px solid lightgray;
   padding: 15px;
   color: black;
 `;
@@ -376,16 +271,14 @@ const AccLogoImg = styled.Image`
 const ReportFin = styled.Text`
   font-size: 25px;
 `;
-interface HeartType {
-  feedId: number;
-  heart: boolean;
-}
 
-const Home: React.FC<HomeScreenProps> = ({
+const Home: React.FC<HomeScreenProps & HomeScrollView> = ({
                                            navigation,
                                            route: {
                                              params: { feedData },
                                            },
+                                              scrollY,
+                                              headerDiff,
                                          }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
@@ -397,6 +290,7 @@ const Home: React.FC<HomeScreenProps> = ({
   const [modalFeedData, setModalFeedData] =  useState<any>('');
   const [lastClick, setLastClick] = useState(null); //더블클릭
   const [heart, setHeart] = useState(false);
+  const [headerShown, setHeaderShown] = useState(false);
   //모달
   const modalizeRef = useRef<Modalize>(null);
   const AccModalRef = useRef<Modalize>(null);
@@ -469,11 +363,11 @@ const Home: React.FC<HomeScreenProps> = ({
   let myName = userInfo?.data?.name;
   let myId = userInfo?.data?.id;
 
-/*  const {
-    isLoading: feedLikeLoading, // true or false
-    data: feedLike,
-  } = useQuery<FeedLikeResponse>(["getFeedLike", token], FeedApi.getFeedLike);
-  console.log(feedLike)*/
+  /*  const {
+      isLoading: feedLikeLoading, // true or false
+      data: feedLike,
+    } = useQuery<FeedLikeResponse>(["getFeedLike", token], FeedApi.getFeedLike);
+    console.log(feedLike)*/
 
   //Like
   const LikeMutation = useMutation(FeedApi.likeCount, {
@@ -568,7 +462,7 @@ const Home: React.FC<HomeScreenProps> = ({
     }
 
     console.log("clubNagivateData", clubNagivateData);
-    return navigation.navigate("ClubStack", {
+    navigation.navigate("ClubStack", {
       screen: "ClubTopTabs",
       clubData: clubNagivateData,
     });
@@ -585,17 +479,17 @@ const Home: React.FC<HomeScreenProps> = ({
   const deleteCheck = (feedData: Feed) => {
     console.log("After Modal passed feedId:", feedData.id);
     Alert.alert(
-        "게시글을 삭제하시겠어요?",
-        "정말로 해당 게시물을 삭제하시겠습니까?",
-        [
-          {
-            text: "아니요",
-            onPress: () => console.log("삭제 Api 호출"),
-            style: "cancel",
-          },
-          { text: "네", onPress: () => FeedDelete(feedData) },
-        ],
-        { cancelable: false }
+      "게시글을 삭제하시겠어요?",
+      "정말로 해당 게시물을 삭제하시겠습니까?",
+      [
+        {
+          text: "아니요",
+          onPress: () => console.log("삭제 Api 호출"),
+          style: "cancel",
+        },
+        { text: "네", onPress: () => FeedDelete(feedData) },
+      ],
+      { cancelable: false }
     );
   };
   const onRefresh = async () => {
@@ -707,13 +601,13 @@ const Home: React.FC<HomeScreenProps> = ({
 
   const loading = feedsLoading && userInfoLoading;
   return loading ? (
-      <Loader>
-        <ActivityIndicator />
-      </Loader>
+    <Loader>
+      <ActivityIndicator />
+    </Loader>
   ) : (
-      <>
-        <Container>
-          <StatusBar barStyle="default"/>
+    <>
+      <Container>
+        <StatusBar barStyle="default"/>
           <FeedContainer>
             <HeaderView size={SCREEN_PADDING_SIZE}>
               <SubView>
@@ -725,190 +619,176 @@ const Home: React.FC<HomeScreenProps> = ({
               </SubView>
             </HeaderView>
             <FlatList
-                showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                onEndReached={loadMore}
-                onEndReachedThreshold={2}
-                data={feeds?.pages.map((page) => page?.responses?.content).flat()}
-                disableVirtualization={false}
-                keyExtractor={(item: Feed, index: number) => String(index)}
-                renderItem={({ item, index }: { item: Feed; index: number }) => (
-                    <>
-                      <FeedHeader>
-                        <FeedUser>
-                          <UserImage
-                              source={{
-                                uri: userInfo?.data.thumbnail
-                              }}
-                          />
-                          <UserInfo>
-                            <UserId>{item.userName}</UserId>
-                            <ClubBox>
-                              <ClubName onPress={() => goToClubStack(item)}>{item.clubName}</ClubName>
-                            </ClubBox>
-                          </UserInfo>
-                        </FeedUser>
-                        <TouchableOpacity>
-                          <ModalArea>
-                            <ModalIcon
-                                onPress={() => {onOpen(item)}}>
-                              <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
-                            </ModalIcon>
-                            <Portal>
-                              { modalFeedData.userId === myId ? (
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              onEndReached={loadMore}
+              onEndReachedThreshold={2}
+              data={feeds?.pages.map((page) => page?.responses?.content).flat()}
+              disableVirtualization={false}
+              keyExtractor={(item: Feed, index: number) => String(index)}
+              renderItem={({ item, index }: { item: Feed; index: number }) => (
+                <>
+                  <FeedHeader>
+                    <FeedUser>
+                      <UserImage
+                        source={{
+                          uri: userInfo?.data.thumbnail
+                        }}
+                      />
+                      <UserInfo>
+                        <UserId>{item.userName}</UserId>
+                        <ClubBox>
+                          <ClubName onPress={() => goToClubStack(item)}>{item.clubName}</ClubName>
+                        </ClubBox>
+                      </UserInfo>
+                    </FeedUser>
+                    <TouchableOpacity>
+                      <ModalArea>
+                        <ModalIcon
+                          onPress={() => {onOpen(item)}}>
+                          <Ionicons name="ellipsis-vertical" size={20} color={"black"} />
+                        </ModalIcon>
+                        <Portal>
+                          { modalFeedData.userId === myId ? (
+                            <Modalize
+                              ref={modalizeRef}
+                              modalHeight={150}
+                              handlePosition="inside"
+                            >
+                              <ModalContainer key={index}>
+                                <ModalView>
+                                  <ModalText onPress={() => goToModifiy(modalFeedData)}>수정</ModalText>
+                                  <ModalText style={{ color: "red"}} onPress={() => deleteCheck(modalFeedData)}>
+                                    삭제
+                                  </ModalText>
+                                </ModalView>
+                              </ModalContainer>
+                            </Modalize>
+                          ):(
+                            <Modalize
+                              ref={modalizeRef}
+                              modalHeight={75}
+                              handlePosition="inside"
+                            >
+                              <ModalContainer key={index}>
+                                <ModalView>
+                                  <ModalText onPress={()=> onAccOpen()}>신고</ModalText>
+                                  {/*<ModalText onPress={()=> onAccOpen()}>신고</ModalText>*/}
+                                </ModalView>
+                                <Portal>
                                   <Modalize
-                                      ref={modalizeRef}
-                                      modalHeight={150}
-                                      handlePosition="inside"
+                                    ref={AccModalRef}
+                                    modalHeight={350}
+                                    handlePosition="inside"
                                   >
-                                    <ModalContainer key={index}>
-                                      <ModalView>
-                                        <ModalText onPress={() => goToModifiy(modalFeedData)}>수정</ModalText>
-                                        <ModalText style={{ color: "red"}} onPress={() => deleteCheck(modalFeedData)}>
-                                          삭제
-                                        </ModalText>
-                                      </ModalView>
+                                    <ModalContainer>
+                                      <ModalAccArea>
+                                        <AccTop>
+                                          <AccHeader>신고가 필요한 게시물인가요?</AccHeader>
+                                          <AccSubHeader>신고유형을 선택해 주세요. 관리자에게 신고 접수가 진행됩니다.</AccSubHeader>
+                                        </AccTop>
+                                        <AccInfo>
+                                          <TouchableOpacity>
+                                            <AccText onPress={()=>{
+                                              ReportComplete('SPAM');
+                                              onAccFinOpen();
+                                            }}>스팸</AccText>
+                                          </TouchableOpacity>
+                                          <TouchableOpacity>
+                                            <AccText onPress={()=>{
+                                              ReportComplete('FRAUD');
+                                              onAccFinOpen();
+                                            }}>사기 또는 거짓</AccText>
+                                          </TouchableOpacity>
+                                          <TouchableOpacity>
+                                            <AccText onPress={()=>{
+                                              ReportComplete('HATE')
+                                              onAccFinOpen();
+                                            }}>혐오 발언 또는 상징</AccText>
+                                          </TouchableOpacity>
+                                          <TouchableOpacity>
+                                            <AccText onPress={()=>{
+                                              ReportComplete('PORNO');
+                                              onAccFinOpen();
+                                            }}>성인물</AccText>
+                                          </TouchableOpacity>
+                                        </AccInfo>
+                                      </ModalAccArea>
                                     </ModalContainer>
                                   </Modalize>
-                              ):(
-                                  <Modalize
-                                      ref={modalizeRef}
-                                      modalHeight={75}
-                                      handlePosition="inside"
-                                  >
-                                    <ModalContainer key={index}>
-                                      <ModalView>
-                                        <ModalText onPress={()=> onAccOpen()}>신고</ModalText>
-                                        {/*<ModalText onPress={()=> onAccOpen()}>신고</ModalText>*/}
-                                      </ModalView>
-                                      <Portal>
-                                        <Modalize
-                                          ref={AccModalRef}
-                                          modalHeight={350}
-                                          handlePosition="inside"
-                                        >
-                                          <ModalContainer>
-                                            <View>
-                                              <AccTop>
-                                                <AccHeader>신고가 필요한 게시물인가요?</AccHeader>
-                                                <AccSubHeader>신고유형을 선택해 주세요. 관리자에게 신고 접수가 진행됩니다.</AccSubHeader>
-                                              </AccTop>
-                                              <AccInfo>
-                                                <TouchableOpacity>
-                                                  <AccText onPress={()=>{
-                                                    ReportComplete('SPAM');
-                                                    onAccFinOpen();
-                                                  }}>스팸</AccText>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity>
-                                                  <AccText onPress={()=>{
-                                                    ReportComplete('FRAUD');
-                                                    onAccFinOpen();
-                                                  }}>사기 또는 거짓</AccText>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity>
-                                                  <AccText onPress={()=>{
-                                                    ReportComplete('HATE')
-                                                    onAccFinOpen();
-                                                  }}>혐오 발언 또는 상징</AccText>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity>
-                                                  <AccText onPress={()=>{
-                                                    ReportComplete('PORNO');
-                                                    onAccFinOpen();
-                                                  }}>성인물</AccText>
-                                                </TouchableOpacity>
-                                              </AccInfo>
-                                            </View>
-                                          </ModalContainer>
-                                        </Modalize>
-                                      </Portal>
-                                    </ModalContainer>
-                                  </Modalize>
-                              )}
-                            </Portal>
-                            <Portal>
-                              <Modalize
-                                ref={AccFinModalRef}
-                                modalHeight={300}
-                                handlePosition="inside"
-                              >
-                                <ReportView>
-                                  <AccLogoImg source={{ uri: "https://cdn1.iconfinder.com/data/icons/3d-front-color/256/tick-front-color.png" }} />
-                                  <ReportFin>신고가 완료되었습니다. 감사합니다.</ReportFin>
-                                  <TouchableOpacity onPress={modalClose}><Text>확인</Text></TouchableOpacity>
-                                </ReportView>
-                              </Modalize>
-                            </Portal>
-                          </ModalArea>
-                        </TouchableOpacity>
-                      </FeedHeader>
-                      <FeedMain>
-                        <TouchableWithoutFeedback onPress={()=>handleClick(item)}>
-                          <FeedImage>
-                            {item.imageUrls?.length > 1 ?
-                              (
-                                <ImageSliderView>
-                                  <ImageSlider
-                                    data={item.imageUrls?.map((url)=>{return {img: url}})}
-                                    preview={false}
-                                    caroselImageStyle={{resizeMode: 'cover', height: 400}}
-                                    activeIndicatorStyle={{backgroundColor: 'orange'}}
-                                    indicatorContainerStyle={{ bottom: 0 }}
-                                  />
-                                </ImageSliderView>
-                              ):(
-                                <ImageSource source={{uri: item.imageUrls[0]}}  size={'auto'}/>
-                              )}
-                          </FeedImage>
-                        </TouchableWithoutFeedback>
-                        <FeedInfo>
-                          <LeftInfo>
-                            <InfoArea>
-                              <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
-                                <TouchableOpacity onPress={()=>LikeFeed(item)}>
-                                  {item.likeYn.toString() === "false" ? <Ionicons name="md-heart-outline" size={20} color="black" /> : <Ionicons name="md-heart" size={20} color="red" />}
-                                </TouchableOpacity>
-                              </TouchableOpacity>
-                              <NumberText>{item.likesCount}</NumberText>
-                            </InfoArea>
-                            <InfoArea>
-                              <TouchableOpacity onPress={() => goToReply(item)}>
-                                <Ionicons name="md-chatbox-ellipses-outline" size={20} color="black" />
-                              </TouchableOpacity>
-                              <NumberText>{item.commentCount}</NumberText>
-                            </InfoArea>
-                          </LeftInfo>
-                          <RightInfo>
-                            <Timestamp>{timeLine(item.created)}</Timestamp>
-                          </RightInfo>
-                        </FeedInfo>
-                        <Content>
-                          <Ment>{item.content}</Ment>
-                        </Content>
-                      </FeedMain>
-                    </>
-                )}
+                                </Portal>
+                              </ModalContainer>
+                            </Modalize>
+                          )}
+                        </Portal>
+                        <Portal>
+                          <Modalize
+                            ref={AccFinModalRef}
+                            modalHeight={300}
+                            handlePosition="inside"
+                          >
+                            <ReportView>
+                              <AccLogoImg source={{ uri: "https://cdn1.iconfinder.com/data/icons/3d-front-color/256/tick-front-color.png" }} />
+                              <ReportFin>신고가 완료되었습니다. 감사합니다.</ReportFin>
+                              <TouchableOpacity onPress={modalClose}><Text>확인</Text></TouchableOpacity>
+                            </ReportView>
+                          </Modalize>
+                        </Portal>
+                      </ModalArea>
+                    </TouchableOpacity>
+                  </FeedHeader>
+                  <FeedMain>
+                    <TouchableWithoutFeedback onPress={()=>handleClick(item)}>
+                      <FeedImage>
+                        {item.imageUrls?.length > 1 ?
+                          (
+                            <ImageSliderView>
+                              <ImageSlider
+                                data={item.imageUrls?.map((url)=>{return {img: url}})}
+                                preview={false}
+                                caroselImageStyle={{resizeMode: 'cover', height: 400}}
+                                activeIndicatorStyle={{backgroundColor: 'orange'}}
+                                indicatorContainerStyle={{ bottom: 0 }}
+                              />
+                            </ImageSliderView>
+                          ):(
+                            <ImageSource source={{uri: item.imageUrls[0]}}  size={'auto'}/>
+                          )}
+                      </FeedImage>
+                    </TouchableWithoutFeedback>
+                    <FeedInfo>
+                      <LeftInfo>
+                        <InfoArea>
+                          <TouchableOpacity onPress={() => setHeartMap((prev) => new Map(prev).set(item.id, !prev.get(item.id)))}>
+                            <TouchableOpacity onPress={()=>LikeFeed(item)}>
+                              {item.likeYn.toString() === "false" ? <Ionicons name="md-heart-outline" size={20} color="black" /> : <Ionicons name="md-heart" size={20} color="red" />}
+                            </TouchableOpacity>
+                          </TouchableOpacity>
+                          <NumberText>{item.likesCount}</NumberText>
+                        </InfoArea>
+                        <InfoArea>
+                          <TouchableOpacity onPress={() => goToReply(item)}>
+                            <Ionicons name="md-chatbox-ellipses-outline" size={20} color="black" />
+                          </TouchableOpacity>
+                          <NumberText>{item.commentCount}</NumberText>
+                        </InfoArea>
+                      </LeftInfo>
+                      <RightInfo>
+                        <Timestamp>{timeLine(item.created)}</Timestamp>
+                      </RightInfo>
+                    </FeedInfo>
+                    <Content>
+                      <Ment>{item.content}</Ment>
+                    </Content>
+                  </FeedMain>
+                </>
+              )}
             />
           </FeedContainer>
-        </Container>
-      </>
+      </Container>
+    </>
   );
 };
 export default Home;
-
-//해야할것들
-// 	1. 사진 크롭 (줌)
-// 	2. 이미지 리스트 핀치로 순서변경되게 --어렵네
-// 	3. 피드 생성시 다중 선택(android) - 파일선택에서는 됨.
-// 	4. 피드 수정시 이미지 비율 수정 --4,5동일
-// 	5. 홈 화면 피드 사진 좌우 여백만큼 잘림 --뭐지
-// 	6. 피드 생성 시 나오는 모임 카테고리에 콤마 넣기 --??
-// 	7. 피드 수정에서 모임 변경 후 저장후 반영 -> 백앤드 반영
-// 	8. 피드 수정시 content 안바꾸면 값 없어지는 버그 -수정완료
-// 	9. 신고화면 디자인
-// 	10. 신고 화면 모달로 변경
-// 	11. 피드 더블클릭 시 좋아요
-// 이미지 게시글 로딩시간 확인 -??
