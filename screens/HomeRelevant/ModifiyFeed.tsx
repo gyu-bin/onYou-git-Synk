@@ -18,7 +18,17 @@ import {
   useQuery,
   useQueryClient
 } from "react-query";
-import { Feed, FeedApi, FeedUpdateRequest, ModifiedReponse, UserApi, UserInfoResponse,Club,ClubResponse } from "../../api";
+import {
+  Feed,
+  FeedApi,
+  FeedUpdateRequest,
+  ModifiedReponse,
+  UserApi,
+  UserInfoResponse,
+  Club,
+  ClubResponse,
+  ClubApi
+} from "../../api";
 import { ModifiyFeedScreenProps } from "../../types/feed";
 import { RootStackParamList } from "../../types/Club";
 import { useNavigation } from "@react-navigation/native";
@@ -150,8 +160,10 @@ const CommentRemainder = styled.View`
 const CtrgArea = styled.View`
   width: auto;
   height: auto;
-  margin: 0.1px 6px 13.9px 8px;
+  margin: 0 3px 5px 5px;
   border-radius: 3px;
+  display: flex;
+  flex-direction: row;
   background-color: #c4c4c4;
 `;
 
@@ -161,7 +173,7 @@ const CtgrText = styled.View`
   margin: 3px 5px 3px 5px;
 `;
 
-const OrganizationName = styled(CustomText)`
+const ClubCtrgList = styled(CustomText)`
   width: auto;
   height: auto;
   font-size: 12px;
@@ -299,7 +311,8 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
   const {
     isLoading: myClubInfoLoading, // true or false
     data: myClub,
-  } = useQuery<ClubResponse>(["selectMyClubs", token], UserApi.selectMyClubs);
+  } = useQuery<ClubResponse>(["selectMyClubs", token], ClubApi.selectMyClubs);
+  console.log(myClub?.data?.isApprovedRequired)
 
   const ChangeClub = (id:any, name:any) =>{
     data.clubName = name;
@@ -352,11 +365,16 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
                               <ClubId>{item.name}</ClubId>
                             </CommentMent>
                             <CommentRemainder>
-                              <CtrgArea>
-                                <CtgrText>
-                                  <OrganizationName>{item.categories?.map((name)=>{return name.name})}</OrganizationName>
-                                </CtgrText>
-                              </CtrgArea>
+                              {item.categories?.map((name)=>{
+                                return (
+                                  <CtrgArea>
+                                    <CtgrText>
+                                      <ClubCtrgList>{name.name}</ClubCtrgList>
+                                    </CtgrText>
+                                  </CtrgArea>
+                                )
+                              })
+                              }
                             </CommentRemainder>
                           </ClubMy>
                         </ClubArea>

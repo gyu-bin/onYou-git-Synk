@@ -78,14 +78,14 @@ const CommentRemainder = styled.View`
 const CtrgArea = styled.View`
   width: auto;
   height: auto;
-  margin: 0.1px 6px 13.9px 8px;
+  margin: 0 3px 5px 5px;
   border-radius: 3px;
+  display: flex;
+  flex-direction: row;
   background-color: #c4c4c4;
 `;
 
 const CtgrText = styled.View`
-  display: flex;
-  flex-direction: row;
   margin: 3px 5px 3px 5px;
 `;
 
@@ -104,7 +104,6 @@ const CreatorName = styled(CustomText)`
   font-weight: 500;
   text-align: center;
   color: #fff;
-  padding-left: 6px;
 `;
 
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -166,14 +165,16 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({ navigation: { nav
                     <ClubId>{item.name}</ClubId>
                   </CommentMent>
                   <CommentRemainder>
-                    <CtrgArea>
-                      <CtgrText>
                         {item.categories?.map((name)=>{
-                          return <ClubCtrgList>{name.name}</ClubCtrgList>
+                          return (
+                            <CtrgArea>
+                            <CtgrText>
+                              <ClubCtrgList>{name.name}</ClubCtrgList>
+                            </CtgrText>
+                            </CtrgArea>
+                          )
                          })
                         }
-                 </CtgrText>
-                    </CtrgArea>
                   </CommentRemainder>
                 </ClubMy>
               </ClubArea>
