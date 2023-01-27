@@ -137,7 +137,7 @@ const ReplyArea = styled.View`
   border-style: solid;
   border-top-color: #e9e9e9;
   border-top-width: 1px;
-  top: ${Platform.OS === "ios" ? 15 : 4}%;
+  top: ${Platform.OS === "ios" ? 0 : 4}%;
   width: 100%;
 `;
 
@@ -168,9 +168,6 @@ const ReplyDone = styled.Text`
   font-weight: bold;
   width: 30px;
 `;
-
-const ModalIcon = styled.TouchableOpacity``;
-const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const ReplyPage:React.FC<ModifiyFeedScreenProps> = ({
                                                       navigation:{navigate},
@@ -333,7 +330,7 @@ const ReplyPage:React.FC<ModifiyFeedScreenProps> = ({
     </Loader>
   ):( //안드로이드 높이 확인, ios 확인필요
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}
-                          keyboardVerticalOffset={Platform.OS === "ios" ? 150 : 180} style={{ flex: 1 }}>
+                          keyboardVerticalOffset={Platform.OS === "ios" ? 105 : 180} style={{ flex: 1, top: Platform.OS==='ios'? 20: 0}}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <Container>
           <CommentList>

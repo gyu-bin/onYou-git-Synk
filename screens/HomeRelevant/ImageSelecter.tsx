@@ -110,9 +110,10 @@ const FeedCreateText = styled(CustomText)`
   padding: 10px;
 `;
 
-const ImageSource = styled.Image<{ size: number }>`
+const ImageSource = styled.Image`
   width: 100%;
-  height: ${Platform.OS === "android" ? 100 : 100}%;
+  height: 100%;
+  background-color: burlywood;
 `;
 
 function ImageSelecter(props: FeedCreateScreenProps) {
@@ -128,7 +129,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
   const [imageURI, setImageURI] = useState<any>("");
   const [choiceImage, setChoiceImage] = useState();
   const [loading, setLoading] = useState(false);
-  // const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [alert, alertSet] = useState(true);
   const [response, setResponse] = useState(null);
   const [isSubmitShow, setSubmitShow] = useState(true);
@@ -164,12 +165,12 @@ function ImageSelecter(props: FeedCreateScreenProps) {
 
   const pickImage = async () => {
     //사진허용
-    /*    if(!status?.granted){
+        if(!status?.granted){
           const permission=await requestPermission();
           if(!permission.granted){
             return null;
           }
-        }*/
+        }
 
     let result: any = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -321,29 +322,6 @@ function ImageSelecter(props: FeedCreateScreenProps) {
     );*/
 // console.log(choiceImage)
 // console.log(imageList)
-  const { width } = Dimensions.get('window');
-  const scale = new Animated.Value(1);
-
-  const onZoomEvent = Animated.event(
-    [
-      {
-        nativeEvent: { scale: scale }
-      }
-    ],
-    {
-      useNativeDriver: true
-    }
-  );
-
-  const onZoomStateChange = (event:any) => {
-    if (event.nativeEvent.oldState === State.ACTIVE) {
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true
-      }).start();
-    }
-  };
-
   return (
     <Container>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -351,17 +329,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
           <>
           <ImagePickerView>
               {Object.keys(imageURI).length !== 0 ? (
-                <PinchGestureHandler
-                  onGestureEvent={onZoomEvent}
-                  onHandlerStateChange={onZoomStateChange}>
-                <Animated.Image source={{ uri: choiceImage }}
-                                style={{
-                                  width: width,
-                                  height: 380,
-                                  transform: [{ scale: scale }]
-                                }}
-                />
-                </PinchGestureHandler>
+                <ImageSource source={{uri: choiceImage}} size={0} resizeMode="cover"/>
               ) : (
                 <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
                   <PickBackground>

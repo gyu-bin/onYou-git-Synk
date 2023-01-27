@@ -47,7 +47,7 @@ const Container = styled.SafeAreaView`
 `;
 const FeedUser = styled.View`
   flex-direction: row;
-  padding: 20px 0 0 20px;
+  padding: 20px;
 `;
 
 const UserInfo = styled.View`
@@ -73,7 +73,7 @@ const ClubModIcon=styled.View`
   display: flex;
   flex-direction: row;
 `
-const ClubBox = styled.TouchableOpacity`
+const ClubBox = styled.View`
   padding: 3px 6px 3px 6px;
   background-color: #c4c4c4;
   justify-content: center;
@@ -91,7 +91,6 @@ const ClubName = styled(CustomText)`
 `;
 
 const FeedImage = styled.View`
-  padding: 10px 0 0 0;
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -337,16 +336,20 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
             <UserImage source={{ uri: userInfo?.data.thumbnail }} />
             <UserInfo>
               <UserId>{data.userName}</UserId>
-              <ClubBox onPress={onOpen}>
-                <ClubName>{data.clubName}</ClubName>
-                <Ionicons name="pencil" size={18} style={{left: 3, top: 2}} color="gray" />
-              </ClubBox>
+              <View style={{display: 'flex', flexDirection: 'row'}}>
+                <ClubBox>
+                  <ClubName>{data.clubName}</ClubName>
+                </ClubBox>
+                <TouchableOpacity onPress={onOpen}>
+                  <Ionicons name="pencil" size={18} style={{left: 3, top: 2}} color="gray" />
+                </TouchableOpacity>
+              </View>
             </UserInfo>
           </FeedUser>
           {/* <TouchableOpacity>
               <Ionicons name="pencil" size={18} style={{left: 3, top: 2}} color="gray" />
             </TouchableOpacity>*/}
-          <Modalize ref={modalizeRef} modalHeight={300}
+          <Modalize ref={modalizeRef} modalHeight={400}
                     handlePosition="inside" modalStyle={{top: 280}}
                     disableScrollIfPossible={false}
           >
@@ -395,7 +398,7 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
                   indicatorContainerStyle={{ bottom: 0 }}
                 />
               ):(
-                <ImageSource source={{uri: data.imageUrls[0]}} size={400}/>
+                <ImageSource source={{uri: data.imageUrls[0]}} size={0} resizeMode="contain"/>
               )}
           </FeedImage>
           <ContentArea>
