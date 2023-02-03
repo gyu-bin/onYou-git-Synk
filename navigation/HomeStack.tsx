@@ -5,7 +5,7 @@ import ModifiyFeed from "../screens/HomeRelevant/ModifiyFeed";
 import ImageSelecter from "../screens/HomeRelevant/ImageSelecter";
 import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
 import { Text, TouchableOpacity, Alert } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import {Entypo, Ionicons} from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 
@@ -60,20 +60,6 @@ const HomeStack = ({
         name="ImageSelecter"
         component={ImageSelecter}
         initialParams={{ userId, clubId }}
-        options={{
-          title: "",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => navigate("HomeStack", { screen: "MyClubSelector" })}>
-              <Ionicons name="chevron-back" size={25} color="black" />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
-              <Text style={{ color: "#2995fa" }}>저장</Text>
-            </TouchableOpacity>
-          ),
-          headerShown: true,
-        }}
       />
       <NativeStack.Screen
         name="MyClubSelector"
@@ -82,18 +68,20 @@ const HomeStack = ({
         options={{
           title: "나의 모임",
           headerLeft: () => (
-            <TouchableOpacity onPress={cancleCreate}>
+            // <TouchableOpacity onPress={cancleCreate}>
+              <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
               <Ionicons name="chevron-back" size={20} color="black" />
             </TouchableOpacity>
           ),
           headerShown: true,
         }}
       />
+
       <NativeStack.Screen
         name="ModifiyFeed"
         component={ModifiyFeed}
         initialParams={{ feedData }}
-        options={{
+/*        options={{
           title: "수정",
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
@@ -105,7 +93,7 @@ const HomeStack = ({
               <Text>완료</Text>
             </TouchableOpacity>
           ),
-        }}
+        }}*/
       />
     </NativeStack.Navigator>
   );

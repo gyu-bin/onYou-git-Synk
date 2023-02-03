@@ -27,7 +27,7 @@ import CustomText from "../../components/CustomText";
 import { ImageSlider } from "react-native-image-slider-banner";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-paper";
-import { MaterialIcons, Ionicons } from "@expo/vector-icons";
+import {MaterialIcons, Ionicons, Entypo} from "@expo/vector-icons";
 
 const Container = styled.SafeAreaView`
   flex: 1;
@@ -292,8 +292,15 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
       mutation.mutate(requestData);
     }
   };
+
+
   useEffect(() => {
     navigation.setOptions({
+      headerLeft: () => (
+          <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
+            <Entypo name="chevron-thin-left" size={20} color="black" />
+          </TouchableOpacity>
+      ),
       headerRight: () => (
         <TouchableOpacity onPress={FixComplete}>{isSummitShow ? <CustomText style={{ color: "#2995FA", fontSize: 18, lineHeight: 20 }}>저장</CustomText> : <ActivityIndicator />}</TouchableOpacity>
       ),

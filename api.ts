@@ -256,7 +256,7 @@ export interface FeedCreationRequest {
     userId?: number;
     content?: string;
   };
-  token: string;
+  token: string | null;
 }
 
 export interface FeedUpdateRequest {

@@ -247,7 +247,7 @@ const ReplyPage:React.FC<ModifiyFeedScreenProps> = ({
       mutation.mutate(likeRequestData);
     }
   }
-  const ReplyDeleteMutation = useMutation( FeedApi.ReplyDelete, {
+  const ReplyDeleteMutation = useMutation( FeedApi.deleteFeedComment, {
     onSuccess: (res) => {
       if (res.status === 200) {
         console.log(res)

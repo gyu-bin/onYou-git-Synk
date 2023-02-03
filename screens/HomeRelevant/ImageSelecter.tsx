@@ -1,4 +1,4 @@
-import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
+import {AntDesign, Entypo, MaterialCommunityIcons} from "@expo/vector-icons";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
@@ -123,7 +123,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
     route: {
       params: { clubId, userId },
     },
-    navigation: { navigate },
+    navigation: { navigate,goBack },
   } = props;
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
@@ -253,9 +253,30 @@ function ImageSelecter(props: FeedCreateScreenProps) {
       mutation.mutate(requestData);
     }
   };
+  const cancleCreate = () => {
+    Alert.alert(
+        "게시글을 생성을 취소하시겠어요?",
+        "",
+        // "30일 이내에 내 활동의 최근 삭제 항목에서 이 게시물을 복원할 수 있습니다." + "30일이 지나면 영구 삭제 됩니다. ",
+        [
+          {
+            text: "아니요",
+            onPress: () => console.log(""),
+            style: "cancel",
+          },
+          { text: "네", onPress: () => navigate("Tabs", { screen: "Home" }) },
+        ],
+        { cancelable: false }
+    );
+  };
 
   useEffect(() => {
     navigation.setOptions({
+      headerLeft: () => (
+          <TouchableOpacity onPress={cancleCreate}>
+            <Entypo name="chevron-thin-left" size={20} color="black" />
+          </TouchableOpacity>
+      ),
       headerRight: () => (
         <TouchableOpacity
           onPress={() => {

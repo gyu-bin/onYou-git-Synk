@@ -1,12 +1,14 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, View, Text } from "react-native";
+import React, {useEffect, useLayoutEffect, useState} from "react";
+import {ActivityIndicator, FlatList, View, Text, TouchableOpacity, DeviceEventEmitter} from "react-native";
 import { useInfiniteQuery, useQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 import { Club, ClubApi, ClubResponse, ClubsParams, ClubsResponse, Feed, MyClub, MyClubResponse, UserApi } from "../../api";
 import { MyClubSelectorScreenProps } from "../../types/feed";
 import CustomText from "../../components/CustomText";
+import {Entypo} from "@expo/vector-icons";
+import {useNavigation} from "@react-navigation/native";
 const Container = styled.SafeAreaView`
   flex: 1;
   height: 100%;
@@ -105,13 +107,14 @@ const CreatorName = styled(CustomText)`
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({
-  navigation: { navigate },
+  navigation: {setOptions,navigate,goBack },
   route: {
     params: { userId },
   },
 }) => {
   const token = useSelector((state: any) => state.auth.token);
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
   const [params, setParams] = useState<ClubsParams>({
     token,
     categoryId: 0,
@@ -145,6 +148,19 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({
     await queryClient.refetchQueries(["selectMyClubs"]);
     setRefreshing(false);
   };
+
+  useLayoutEffect(() => {
+    setOptions({
+      headerLeft: () => (
+          <TouchableOpacity onPress={() => goBack()}>
+            <Entypo name="chevron-thin-left" size={20} color="black" />
+          </TouchableOpacity>
+      ),
+    });
+    return () => {
+      DeviceEventEmitter.emit("HomeFeedRefetch");
+    };
+  }, []);
 
   return (
     <Container>
