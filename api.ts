@@ -289,7 +289,7 @@ export interface FeedReportRequest {
     id: number;
     reason: string;
   };
-  token: string;
+  token: string | null;
 }
 
 export interface ClubUpdateRequest {
@@ -467,7 +467,7 @@ export interface FeedDeleteRequest {
   data: {
     id: number;
   };
-  token: string;
+  token: string | null;
 } // Categories
 const getCategories = () => fetch(`${BASE_URL}/api/categories`).then((res) => res.json());
 

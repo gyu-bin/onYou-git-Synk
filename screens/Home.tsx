@@ -43,7 +43,7 @@ const HeaderButton = styled.TouchableOpacity`
   height: 100%;
   align-items: center;
   justify-content: center;
-  padding: 0px 10px;
+  padding: 0 10px;
 `;
 
 const Home: React.FC<HomeScreenProps> = () => {
@@ -132,7 +132,8 @@ const Home: React.FC<HomeScreenProps> = () => {
       });
     },
   });
-  const deleteFeedMutation = useMutation(FeedApi.feedDelete, {
+
+  const deleteFeedMutation = useMutation(FeedApi.deleteFeed, {
     onSuccess: (res) => {
       if (res.status === 200) {
         console.log(res);
@@ -172,6 +173,10 @@ const Home: React.FC<HomeScreenProps> = () => {
     });
   }, [me]);
 
+  const goToUpdateFeed = useCallback((feedId: number) => {
+    navigation.navigate("HomeStack", { screen: "ModifiyFeed", feedId });
+  }, []);
+
   const openFeedOption = (userId: number, feedId: number) => {
     setSelectFeedId(feedId);
     if (userId === me?.id) openMyFeedOption();
@@ -208,16 +213,15 @@ const Home: React.FC<HomeScreenProps> = () => {
           text: "네",
           onPress: () => {
             deleteFeedMutation.mutate(requestData);
+            toast.show(`게시글이 삭제되었습니다.`, {
+              type: "success",
+            });
           },
         },
       ],
       { cancelable: false }
     );
   };
-
-  const goToUpdateFeed = useCallback((feedId: number) => {
-    navigation.navigate("HomeStack", { screen: "ModifiyFeed", feedId });
-  }, []);
 
   const complainSubmit = () => {
     if (selectFeedId === -1) {
