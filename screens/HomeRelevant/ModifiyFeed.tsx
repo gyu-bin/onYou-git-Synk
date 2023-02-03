@@ -1,53 +1,40 @@
-import React, { useEffect, useState,useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components/native";
 import {
-  ActivityIndicator, Alert,
+  ActivityIndicator,
+  Alert,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
-  Platform, SafeAreaView, ScrollView,
-  StatusBar, Text,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import { useSelector } from "react-redux";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient
-} from "react-query";
-import {
-  Feed,
-  FeedApi,
-  FeedUpdateRequest,
-  ModifiedReponse,
-  UserApi,
-  UserInfoResponse,
-  Club,
-  ClubResponse,
-  ClubApi
-} from "../../api";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { Feed, FeedApi, FeedUpdateRequest, ModifiedReponse, UserApi, UserInfoResponse, Club, ClubResponse, ClubApi } from "../../api";
 import { ModifiyFeedScreenProps } from "../../types/feed";
-import { RootStackParamList } from "../../types/Club";
+import { ClubStackParamList } from "../../types/Club";
 import { useNavigation } from "@react-navigation/native";
 import CustomTextInput from "../../components/CustomTextInput";
 import CustomText from "../../components/CustomText";
-import {
-  ImageSlider
-} from "react-native-image-slider-banner";
-import { Modalize,useModalize } from "react-native-modalize";
-import { Portal } from 'react-native-paper';
-import { MaterialIcons,Ionicons } from "@expo/vector-icons";
+import { ImageSlider } from "react-native-image-slider-banner";
+import { Modalize, useModalize } from "react-native-modalize";
+import { Portal } from "react-native-paper";
+import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 
 const Container = styled.SafeAreaView`
   flex: 1;
-  margin-bottom: ${Platform.OS === "ios" ? 20 : 30}px;
 `;
 const FeedUser = styled.View`
   flex-direction: row;
-  padding: 20px;
+  padding: 15px;
 `;
 
 const UserInfo = styled.View`
@@ -64,30 +51,30 @@ const UserImage = styled.Image`
   background-color: #c4c4c4;
 `;
 
-const UserId = styled(CustomText)`
+const UserId = styled.Text`
   color: black;
   font-size: 16px;
   font-weight: bold;
+  padding-bottom: 5px;
 `;
-const ClubModIcon=styled.View`
+const ClubModIcon = styled.View`
   display: flex;
   flex-direction: row;
-`
+`;
 const ClubBox = styled.View`
-  padding: 3px 6px 3px 6px;
+  padding: 1px 6px 1px 6px;
   background-color: #c4c4c4;
   justify-content: center;
   align-items: center;
   border-radius: 5px;
-  display: flex;
-  flex-direction: row;
+  top: 1%;
 `;
 
 const ClubName = styled(CustomText)`
   font-size: 10px;
   line-height: 15px;
   font-weight: 500;
-  color: white;
+  color: black;
 `;
 
 const FeedImage = styled.View`
@@ -99,12 +86,12 @@ const FeedImage = styled.View`
 
 const ContentArea = styled.View`
   padding: 10px 20px;
-  flex:1;
+  flex: 1;
 `;
 
 const Ment = styled(CustomTextInput)`
   width: 100%;
-  height: 100px;
+  height: 50px;
   color: black;
   font-size: 14px;
 `;
@@ -112,11 +99,12 @@ const Ment = styled(CustomTextInput)`
 const ImageSource = styled.Image<{ size: number }>`
   width: 100%;
   height: 400px;
+  background-color: lightgray;
 `;
 
 const ModalArea = styled.View`
   flex: 1;
-`
+`;
 
 //모달
 const ClubArea = styled.TouchableOpacity`
@@ -187,6 +175,20 @@ const ModalContainer = styled.View`
   top: 2%;
 `;
 
+const IntroTextLeft = styled(CustomText)`
+  text-align: left;
+  padding-left: 20px;
+  font-size: 10px;
+  color: #b0b0b0;
+`;
+
+const IntroTextRight = styled(CustomText)`
+  text-align: right;
+  font-size: 10px;
+  padding-right: 20px;
+  color: #b0b0b0;
+`;
+
 const ModalView = styled.View`
   background-color: white;
   opacity: 1;
@@ -198,18 +200,18 @@ const ModalView = styled.View`
 interface FeedEditItem {
   id: number;
   content: string;
-  screen: keyof RootStackParamList;
+  screen: keyof ClubStackParamList;
 }
 
 const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
-                                                         navigation: { navigate },
-                                                         route: {
-                                                           params: { feedData },
-                                                         },
-                                                       }) => {
+  navigation: { navigate },
+  route: {
+    params: { feedData },
+  },
+}) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
-  const token = useSelector((state:any) => state.AuthReducers.authToken);
+  const token = useSelector((state: any) => state.auth.token);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const SCREEN_PADDING_SIZE = 20;
   const FEED_IMAGE_SIZE = SCREEN_WIDTH - SCREEN_PADDING_SIZE * 2;
@@ -219,7 +221,7 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
   const navigation = useNavigation();
   const modalizeRef = useRef<Modalize>(null);
   const [loading, setLoading] = useState(false);
-  const [isSummitShow, setSummitShow] = useState(true)//저장버튼 로딩
+  const [isSummitShow, setSummitShow] = useState(true); //저장버튼 로딩
   const onOpen = () => {
     console.log("Before Modal Passed FeedId");
     modalizeRef.current?.open();
@@ -270,15 +272,15 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
 
   //피드업데이트
   const FixComplete = async () => {
-    if(content.length == 0){
-      Alert.alert('글을 수정하세요');
-    }else{
+    if (content.length == 0) {
+      Alert.alert("글을 수정하세요");
+    } else {
       setSummitShow(false);
       const data = {
         id: feedData.id,
         access: "PUBLIC",
         content: content,
-        clubId: feedData.clubId
+        clubId: feedData.clubId,
       };
       console.log("fixed Data:", data);
 
@@ -293,14 +295,10 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={FixComplete}>
-          {isSummitShow?
-            <CustomText style={{ color: "#2995FA", fontSize: 18, lineHeight: 20 }}>저장</CustomText>
-            :<ActivityIndicator/>}
-        </TouchableOpacity>
+        <TouchableOpacity onPress={FixComplete}>{isSummitShow ? <CustomText style={{ color: "#2995FA", fontSize: 18, lineHeight: 20 }}>저장</CustomText> : <ActivityIndicator />}</TouchableOpacity>
       ),
     });
-  }, [navigation, FixComplete,isSummitShow]);
+  }, [navigation, FixComplete, isSummitShow]);
 
   const imageList = [];
   for (let i = 0; i < feedData?.imageUrls?.length; i++) {
@@ -311,14 +309,13 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
     isLoading: myClubInfoLoading, // true or false
     data: myClub,
   } = useQuery<ClubResponse>(["selectMyClubs", token], ClubApi.selectMyClubs);
-  console.log(myClub?.data?.isApprovedRequired)
 
-  const ChangeClub = (id:any, name:any) =>{
+  const ChangeClub = (id: any, name: any) => {
     data.clubName = name;
     feedData.clubId = id;
     onRefresh();
     modalizeRef.current?.close();
-  }
+  };
 
   const onRefresh = async () => {
     console.log("onRefresh executed");
@@ -336,12 +333,12 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
             <UserImage source={{ uri: userInfo?.data.thumbnail }} />
             <UserInfo>
               <UserId>{data.userName}</UserId>
-              <View style={{display: 'flex', flexDirection: 'row'}}>
+              <View style={{ display: "flex", flexDirection: "row" }}>
                 <ClubBox>
                   <ClubName>{data.clubName}</ClubName>
                 </ClubBox>
                 <TouchableOpacity onPress={onOpen}>
-                  <Ionicons name="pencil" size={18} style={{left: 3, top: 2}} color="gray" />
+                  <Ionicons name="pencil" size={18} style={{ left: 3, top: 2 }} color="gray" />
                 </TouchableOpacity>
               </View>
             </UserInfo>
@@ -349,61 +346,61 @@ const ModifiyFeed: React.FC<ModifiyFeedScreenProps> = ({
           {/* <TouchableOpacity>
               <Ionicons name="pencil" size={18} style={{left: 3, top: 2}} color="gray" />
             </TouchableOpacity>*/}
-          <Modalize ref={modalizeRef} modalHeight={400}
-                    handlePosition="inside" modalStyle={{top: 280}}
-                    disableScrollIfPossible={false}
-          >
+          <Modalize ref={modalizeRef} modalHeight={400} handlePosition="inside" modalStyle={{ top: 280 }} disableScrollIfPossible={false}>
             <ModalContainer>
+              <View style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <IntroTextLeft>모임 변경</IntroTextLeft>
+                <IntroTextRight>가입한 모임 List</IntroTextRight>
+              </View>
               <ModalView>
-                  <FlatList
-                    refreshing={refreshing} onRefresh={onRefresh}
-                    keyExtractor={(item: Club, index: number) => String(index)}
-                    data={myClub?.data}
-                    renderItem={({ item, index }: { item: Club; index: number }) => (
-                      <>
-                        <ClubArea onPress={()=>ChangeClub(item.id, item.name)}>
-                          <ClubImg source={{ uri: item.thumbnail }} />
-                          <ClubMy>
-                            <CommentMent>
-                              <ClubId>{item.name}</ClubId>
-                            </CommentMent>
-                            <CommentRemainder>
-                              {item.categories?.map((name)=>{
-                                return (
-                                  <CtrgArea>
-                                    <CtgrText>
-                                      <ClubCtrgList>{name.name}</ClubCtrgList>
-                                    </CtgrText>
-                                  </CtrgArea>
-                                )
-                              })
-                              }
-                            </CommentRemainder>
-                          </ClubMy>
-                        </ClubArea>
-                      </>
-                    )}
-                  />
+                <FlatList
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  keyExtractor={(item: Club, index: number) => String(index)}
+                  data={myClub?.data}
+                  renderItem={({ item, index }: { item: Club; index: number }) => (
+                    <>
+                      <ClubArea onPress={() => ChangeClub(item.id, item.name)}>
+                        <ClubImg source={{ uri: item.thumbnail }} />
+                        <ClubMy>
+                          <CommentMent>
+                            <ClubId>{item.name}</ClubId>
+                          </CommentMent>
+                          <CommentRemainder>
+                            {item.categories?.map((name) => {
+                              return (
+                                <CtrgArea>
+                                  <CtgrText>
+                                    <ClubCtrgList>{name.name}</ClubCtrgList>
+                                  </CtgrText>
+                                </CtrgArea>
+                              );
+                            })}
+                          </CommentRemainder>
+                        </ClubMy>
+                      </ClubArea>
+                    </>
+                  )}
+                />
               </ModalView>
             </ModalContainer>
           </Modalize>
           <FeedImage>
-            {data.imageUrls?.length > 1 ?
-              (
-                <ImageSlider
-                  data={imageList}
-                  preview={false}
-                  caroselImageStyle={{resizeMode: 'cover',height: 350}}
-                  activeIndicatorStyle={{backgroundColor: 'orange'}}
-                  indicatorContainerStyle={{ bottom: 0 }}
-                />
-              ):(
-                <ImageSource source={{uri: data.imageUrls[0]}} size={0} resizeMode="contain"/>
-              )}
+            {data.imageUrls?.length > 1 ? (
+              <ImageSlider
+                data={imageList}
+                preview={false}
+                caroselImageStyle={{ resizeMode: "cover", height: 350 }}
+                activeIndicatorStyle={{ backgroundColor: "orange" }}
+                indicatorContainerStyle={{ bottom: 0 }}
+              />
+            ) : (
+              <ImageSource source={{ uri: data.imageUrls[0] }} size={0} resizeMode="contain" />
+            )}
           </FeedImage>
           <ContentArea>
             <Ment
-              onChangeText={(content:any) => setContent(content)}
+              onChangeText={(content: any) => setContent(content)}
               placeholderTextColor="#B0B0B0"
               placeholder="게시글 입력 ..."
               textAlign="left"

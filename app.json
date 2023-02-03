@@ -1,14 +1,12 @@
 {
   "expo": {
-    "name": "on-you-frontend",
-    "slug": "on-you-frontend",
-    "version": "1.0.0",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "name": "OnYou",
+    "slug": "OnYou",
+    "version": "1.0.2",
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "y"
     }
   },
-  "name": "on-you-frontend"
+  "name": "OnYou"
 }

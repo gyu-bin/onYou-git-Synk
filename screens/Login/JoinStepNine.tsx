@@ -1,12 +1,6 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useQuery, useMutation } from "react-query";
-import { Category, UserApi, CategoryResponse } from "../../api";
-import { useToast } from "react-native-toast-notifications";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
 import CustomText from "../../components/CustomText";
-import CustomTextInput from "../../components/CustomTextInput";
 import styled from "styled-components/native";
 
 const Container = styled.View`
@@ -89,102 +83,17 @@ const CategoryLabel = styled.TouchableOpacity<{ selected?: boolean }>`
   margin: 0px 5px;
 `;
 
-const JoinStepNine: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate }, route: { params: name, email, password, sex, birth, phone, church, category } }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
-  const toast = useToast();
-
-  const [userName, setUserName] = useState(name);
-  const [userEmail, setUserEmail] = useState(email);
-  const [userPw, setUserPw] = useState(password);
-  const [approvalMethod, setApprovalMethod] = useState(sex);
-  const [birthNumber, setBirthNumber] = useState(birth);
-  const [phoneNumber, setPhoneNumber] = useState(phone);
-  const [churchName, setChurchName] = useState(church);
-
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        // AsyncStorage에서 inputData에 저장된 값 가져오기
-        const value = await AsyncStorage.getItem("userInfo");
-        // value에 값이 있으면 콘솔에 찍어줘
-        if (value !== null) {
-          console.log(value);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    // 함수 실행
-    getData();
-  }, []);
-
-  const storeData = async () => {
-    try {
-      await AsyncStorage.setItem(
-        "userInfo",
-        JSON.stringify({
-          name: userName.name,
-          email: userName.email,
-          password: userName.password,
-          sex: userName.sex,
-          birth: userName.birth,
-          phone: userName.phone,
-          church: userName.church,
-          category: "",
-        }),
-        () => {
-          console.log("유저정보 저장 완료");
-        }
-      );
-      console.log("등록 완료");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  /* const { isLoading: categoiresLoading, data: categories } = useQuery<CategoryResponse>(["getCategories", token], UserApi.getCategories, {
-    onSuccess: (res) => {
-      const count = 4;
-      const bundle = [];
-      for (let i = 0; i < res.data.length; i += count) bundle.push(res.data.slice(i, i + count));
-      setCategoryBundle(bundle);
-    },
-  }); */
-
-  // console.log(categories?.data.length);
-
-  // const [selectCategory1, setCategory1] = useState(categories[0]?.id ?? -1);
-  // const [selectCategory2, setCategory2] = useState(categories[1]?.id ?? -1);
-  // const [categoryBundle, setCategoryBundle] = useState<Array<Category[]>>();
-
-  /* const onPressCategory = (id: number) => {
-    if (selectCategory1 === id) {
-      return setCategory1(-1);
-    } else if (selectCategory2 === id) {
-      return setCategory2(-1);
-    }
-    if (selectCategory1 === -1) {
-      return setCategory1(id);
-    } else if (selectCategory2 === -1) {
-      return setCategory2(id);
-    } else {
-      toast.show("카테고리는 2개만 고를 수 있습니다.", {
-        type: "warning",
-      });
-    }
-  }; */
-
+const JoinStepNine: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate }, route: { params: name, email, password, sex, birth, phone, church } }) => {
   const goToNext = () => {
-    storeData();
     navigate("LoginStack", {
       screen: "JoinConfirm",
-      name: userName.name,
-      email: userName.email,
-      password: userName.password,
-      sex: userName.sex,
-      birth: userName.birth,
-      phone: userName.phone,
-      church: userName.church,
+      name,
+      email,
+      password,
+      sex,
+      birth,
+      phone,
+      church,
       category: "",
     });
   };

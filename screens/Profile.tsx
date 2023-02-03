@@ -1,23 +1,31 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import styled from "styled-components/native";
-import { Logout } from "../store/Actions";
-import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { useQuery } from "react-query";
-import { UserApi, UserInfoResponse, ClubApi, CategoryResponse } from "../api";
+import { UserApi, UserInfoResponse } from "../api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { DeviceEventEmitter } from "react-native";
+import { useToast } from "react-native-toast-notifications";
+import CustomText from "../components/CustomText";
+import CircleIcon from "../components/CircleIcon";
+import { RootState } from "../redux/store/reducers";
+import { useAppDispatch } from "../redux/store";
+import { logout, updateUser } from "../redux/slices/auth";
 
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
 const UserInfoSection = styled.View`
   background-color: #fff;
-  box-shadow: 2px 2px 1px rgba(0, 0, 0, 0.25);
-  padding-horizontal: 20px;
+  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+  border-bottom-width: 1px;
+  border-bottom-color: #dbdbdb;
+  padding: 0px 20px;
   height: 100px;
   flex-direction: row;
   align-items: center;
+  elevation: 10;
 `;
 
 const LogoBox = styled.View`
@@ -65,20 +73,23 @@ const MenuWrapper = styled.View`
 const MenuItem = styled.TouchableOpacity`
   flex-direction: row;
   align-items: center;
-  padding-top: 15px;
-  padding-bottom: 15px;
-  padding-horizontal: 20px;
+  padding: 10px 20px;
+  justify-content: center;
+  align-items: center;
 `;
 
-const MenuItemText = styled.Text`
+const MenuItemText = styled(CustomText)`
   color: #2e2e2e;
+  font-family: "NotoSansKR-Medium";
   font-size: 16px;
+  line-height: 22px;
 `;
 
 const TouchMenu = styled.View`
   height: 50px;
   border-bottom-width: 1px;
   border-bottom-color: #dbdbdb;
+  justify-content: center;
 `;
 
 const LogoutButton = styled.TouchableOpacity`
@@ -109,18 +120,49 @@ const EditBox = styled.View`
   justify-content: center;
 `;
 
+const EditButton = styled.TouchableWithoutFeedback``;
+
 const Profile: React.FC<NativeStackScreenProps<any, "Profile">> = ({ navigation: { navigate } }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state: RootState) => state.auth.token);
+  const dispatch = useAppDispatch();
+  const toast = useToast();
 
   const {
     isLoading: userInfoLoading, // true or false
+    refetch: userInfoRefetch,
     data: userInfo,
-  } = useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo);
+  } = useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo, {
+    onSuccess: (res) => {
+      if (res.status === 200 && res.resultCode === "OK") {
+        dispatch(updateUser({ user: res.data }));
+      } else {
+        console.log(`getUserInfo success but please check status code`);
+        console.log(`status: ${res.status}`);
+        console.log(res);
+        toast.show(`유저 정보를 불러오지 못했습니다. (Error Code: ${res.status})`, {
+          type: "warning",
+        });
+      }
+    },
+    onError: (error) => {
+      console.log("--- Error getUserInfo ---");
+      console.log(`error: ${error}`);
+      toast.show(`Error Code: ${error}`, {
+        type: "warning",
+      });
+    },
+  });
 
-  const dispatch = useDispatch();
+  useEffect(() => {
+    let subscription = DeviceEventEmitter.addListener("ProfileRefresh", () => {
+      console.log("Profile - Refresh Event");
+      userInfoRefetch();
+    });
+    return () => subscription.remove();
+  }, []);
 
   const goLogout = () => {
-    dispatch(Logout());
+    dispatch(logout());
   };
 
   const goToEditProfile = () => {
@@ -136,22 +178,12 @@ const Profile: React.FC<NativeStackScreenProps<any, "Profile">> = ({ navigation:
     });
   };
 
-  const goToNotificationSettings = () => {
+  const goToChangePw = () => {
     navigate("ProfileStack", {
-      screen: "NotificationSettings",
+      screen: "ChangePw",
     });
   };
 
-  const goToNotice = () => {
-    navigate("ProfileStack", {
-      screen: "Notice",
-    });
-  };
-  const goToHelp = () => {
-    navigate("ProfileStack", {
-      screen: "Help",
-    });
-  };
   const goToTerms = () => {
     navigate("ProfileStack", {
       screen: "Terms",
@@ -161,19 +193,15 @@ const Profile: React.FC<NativeStackScreenProps<any, "Profile">> = ({ navigation:
   return (
     <Container>
       <UserInfoSection>
-        <LogoBox>
-          <LogoImage
-            source={{
-              uri: userInfo?.data?.thumbnail,
-            }}
-          />
-        </LogoBox>
+        <CircleIcon size={65} uri={userInfo?.data?.thumbnail} />
         <InfoBox>
           <Email>{userInfo?.data?.email}</Email>
           <Title>{userInfo?.data?.name}</Title>
         </InfoBox>
         <EditBox>
-          <MaterialCommunityIcons name="pencil-outline" color="#295AF5" size={20} onPress={goToEditProfile} />
+          <EditButton onPress={goToEditProfile}>
+            <MaterialCommunityIcons name="pencil-outline" color="#295AF5" size={20} />
+          </EditButton>
         </EditBox>
       </UserInfoSection>
       <MenuWrapper>
@@ -187,23 +215,15 @@ const Profile: React.FC<NativeStackScreenProps<any, "Profile">> = ({ navigation:
           </MenuItem>
         </TouchMenu>
         <TouchMenu>
-          <MenuItem onPress={goToNotificationSettings}>
+          <MenuItem onPress={goToChangePw}>
             <MaterialCommunityIcons name="bell-outline" color="#2E2E2E" size={16} style={{ marginRight: 10 }} />
-            <MenuItemText>알림설정</MenuItemText>
+            <MenuItemText>비밀번호 재설정</MenuItemText>
             <ChevronBox>
               <MaterialCommunityIcons name="chevron-right" color="#A0A0A0" size={24} style={{}} />
             </ChevronBox>
           </MenuItem>
         </TouchMenu>
-        <TouchMenu>
-          <MenuItem onPress={goToNotice}>
-            <MaterialCommunityIcons name="gate-not" color="#2E2E2E" size={16} style={{ marginRight: 10 }} />
-            <MenuItemText>공지사항</MenuItemText>
-            <ChevronBox>
-              <MaterialCommunityIcons name="chevron-right" color="#A0A0A0" size={24} style={{}} />
-            </ChevronBox>
-          </MenuItem>
-        </TouchMenu>
+        {/* 
         <TouchMenu>
           <MenuItem onPress={goToHelp}>
             <MaterialCommunityIcons name="comment-question-outline" color="#2E2E2E" size={16} style={{ marginRight: 10 }} />
@@ -212,7 +232,7 @@ const Profile: React.FC<NativeStackScreenProps<any, "Profile">> = ({ navigation:
               <MaterialCommunityIcons name="chevron-right" color="#A0A0A0" size={24} style={{}} />
             </ChevronBox>
           </MenuItem>
-        </TouchMenu>
+        </TouchMenu> */}
         <TouchMenu>
           <MenuItem onPress={goToTerms}>
             <MaterialCommunityIcons name="file-document-outline" color="#2E2E2E" size={16} style={{ marginRight: 10 }} />

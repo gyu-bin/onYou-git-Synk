@@ -1,12 +1,10 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useState, useEffect, createRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Keyboard, ScrollView, Alert, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
-import { useMutation } from "react-query";
-import { CommonApi } from "../../api";
-import { useDispatch } from "react-redux";
-import { Login } from "../../store/Actions";
+import React, { useState, useEffect, createRef, useLayoutEffect } from "react";
+import { Keyboard, TouchableWithoutFeedback, TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
+import { Entypo } from "@expo/vector-icons";
+import CustomText from "../../components/CustomText";
+import CustomTextInput from "../../components/CustomTextInput";
 
 const Container = styled.View`
   width: 100%;
@@ -76,11 +74,12 @@ const Error = styled.Text`
   margin-bottom: 20px;
 `;
 
-const JoinStepSix: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate }, route: { params: name, email, password, sex } }) => {
-  const [userName, setUserName] = useState(name);
-  const [userEmail, setUserEmail] = useState(email);
-  const [userPw, setUserPw] = useState(password);
-  const [approvalMethod, setApprovalMethod] = useState(sex);
+const JoinStepSix: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({
+  navigation: { navigate, setOptions },
+  route: {
+    params: { name, email, password, sex },
+  },
+}) => {
   const [birthNumber, setBirthNumber] = useState("");
   const [errortext, setErrortext] = useState(false);
   const birthInputRef = createRef();
@@ -99,51 +98,32 @@ const JoinStepSix: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navig
     }
   }, [birthNumber]);
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        // AsyncStorage에서 inputData에 저장된 값 가져오기
-        const value = await AsyncStorage.getItem("userInfo");
-        // value에 값이 있으면 콘솔에 찍어줘
-        if (value !== null) {
-          console.log(value);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    // 함수 실행
-    getData();
-  }, []);
-
-  const storeData = async () => {
-    try {
-      await AsyncStorage.setItem("userInfo", JSON.stringify({ name: userName.name, email: userName.email, password: userName.password, sex: userName.sex, birth: birthNumber }), () => {
-        console.log("유저정보 저장 완료");
-      });
-      console.log("등록 완료");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const validate = () => {
     if (!birthReg.test(birthNumber)) {
       setErrortext(true);
       return;
     } else {
       setErrortext(false);
-      storeData();
       navigate("LoginStack", {
         screen: "JoinStepSeven",
-        name: userName.name,
-        email: userName.email,
-        password: userName.password,
-        sex: userName.sex,
+        name,
+        email,
+        password,
+        sex,
         birth: birthNumber,
       });
     }
   };
+
+  useLayoutEffect(() => {
+    setOptions({
+      headerLeft: () => (
+        <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "JoinStepFive", name, email, password, sex })}>
+          <Entypo name="chevron-thin-left" size={20} color="black" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [name, email, password, sex]);
 
   return (
     <TouchableWithoutFeedback
@@ -160,10 +140,10 @@ const JoinStepSix: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navig
           <SubText>정확한 생년월일을 입력해주세요.</SubText>
           <Input
             keyboardType="numeric"
-            placeholder="yyyy-MM-dd"
+            placeholder="yyyy-mm-dd"
             placeholderTextColor={"#B0B0B0"}
-            maxLength={8}
-            onChangeText={(birth) => setBirthNumber(birth)}
+            maxLength={10}
+            onChangeText={(birth: string) => setBirthNumber(birth)}
             value={birthNumber}
             ref={birthInputRef}
             returnKeyType="next"

@@ -16,22 +16,34 @@ export interface Category {
 
 export interface Club {
   id: number;
-  name: string;
-  clubShortDesc: string | null;
-  clubLongDesc: string | null;
-  announcement: string | null;
-  organizationName: string;
-  isApprovedRequired: string;
-  members: Member[];
-  maxNumber: number;
-  recruitNumber: number;
-  thumbnail: string | null;
-  recruitStatus: string | null;
-  creatorName: string;
-  created: string;
-  categories: Category[];
-  contactPhone: string | null;
+  name?: string;
+  clubShortDesc?: string | null;
+  clubLongDesc?: string | null;
+  announcement?: string | null;
+  organizationName?: string;
+  isApprovedRequired?: string;
+  members?: Member[];
+  maxNumber?: number;
+  recruitNumber?: number;
+  thumbnail?: string | null;
+  recruitStatus?: "OPEN" | "CLOSE" | null;
+  creatorName?: string;
+  created?: string;
+  categories?: Category[];
+  contactPhone?: string | null;
   customCursor?: string;
+}
+
+export interface Notification {
+  actionId: number;
+  actionerId?: number | null;
+  actionerName?: string | null;
+  actioneeId?: number | null;
+  actioneeName?: string | null;
+  actionType?: string;
+  applyMessage?: string | null;
+  created?: string;
+  processDone?: boolean;
 }
 
 export interface Member {
@@ -49,13 +61,13 @@ export interface Member {
 }
 
 export interface Schedule {
-  id: number;
-  name: string;
-  content: string;
-  members: Member[];
-  location: string;
-  startDate: string;
-  endDate: string | null;
+  id?: number;
+  name?: string;
+  content?: string;
+  members?: Member[];
+  location?: string;
+  startDate?: string;
+  endDate?: string | null;
 }
 
 export interface User {
@@ -78,6 +90,7 @@ export interface Feed {
   clubName: string;
   userId: number;
   userName: string;
+  thumbnail: string;
   content: string;
   imageUrls: string[] | null;
   hashtags: string | null;
@@ -88,14 +101,36 @@ export interface Feed {
   customCursor?: string;
 }
 
+export interface FeedComment {
+  commentId: number;
+  userId: number;
+  userName: string;
+  content: string;
+  created: string;
+  thumbnail: string;
+}
+
 export interface Reply {
-  id: number;
+  commentId: number;
   userId: number;
   userName: string;
   content: string;
   created: string;
   updated: string;
   thumbnail: string;
+}
+
+export interface MyClub {
+  id: number;
+  name: string;
+  clubShotDesc: string;
+  clubLongDesc: string;
+  organizationName: string;
+  categories?: Category[];
+  thumbnail?: string | null;
+  applyStatus?: "APPLIED" | "APPROVED";
+  createrName: string;
+  created?: string;
 }
 
 export interface Report {
@@ -105,8 +140,8 @@ export interface Report {
 export interface ClubRole {
   clubId: number;
   userId: number;
-  role: "MASTER" | "MANAGER" | "MEMBER" | undefined;
-  applyStatus: "APPLIED" | "APPROVED" | undefined;
+  role?: "MASTER" | "MANAGER" | "MEMBER" | "PENDING";
+  applyStatus?: "APPLIED" | "APPROVED";
 }
 
 export interface CategoryResponse extends BaseResponse {
@@ -115,6 +150,10 @@ export interface CategoryResponse extends BaseResponse {
 
 export interface ClubResponse extends BaseResponse {
   data: Club;
+}
+
+export interface MyClubResponse extends BaseResponse {
+  data: MyClub;
 }
 
 export interface ClubUpdateResponse extends BaseResponse {
@@ -129,14 +168,22 @@ export interface ClubsResponse extends BaseResponse {
   size: number;
 }
 
+export interface ClubNotificationsResponse extends BaseResponse {
+  data: Notification;
+}
+
 export interface FeedsResponse extends BaseResponse {
   hasNext: boolean;
-  data: Feed[];
   responses: {
     content: Feed[];
   };
   size: number;
 }
+
+export interface FeedCommentsResponse extends BaseResponse {
+  data: FeedComment[];
+}
+
 export interface ModifiedReponse extends BaseResponse {
   data: Feed;
 }
@@ -153,12 +200,12 @@ export interface ReportResponse extends BaseResponse {
   data: Report[];
 }
 export interface FeedsParams {
-  id: number | undefined;
+  clubId?: number;
   token: string;
 }
 
 export interface ClubsParams {
-  token: string;
+  token: string | null;
   categoryId: number | null;
   minMember: number | null;
   maxMember: number | null;
@@ -179,32 +226,32 @@ export interface ClubSchedulesResponse extends BaseResponse {
 export interface ClubRoleResponse extends BaseResponse {
   data: ClubRole;
 }
+export interface ClubCreationData {
+  category1Id: number;
+  category2Id?: number | null;
+  isApproveRequired: string;
+  clubShortDesc: string;
+  clubLongDesc: string | null;
+  clubName: string;
+  clubMaxMember: number;
+  contactPhone: string;
+  organizationName: string;
+}
+
+export interface ImageType {
+  uri: string;
+  type: string;
+  name?: string;
+}
+
 export interface ClubCreationRequest {
-  image?: {
-    uri: string;
-    type: string;
-    name: string | undefined;
-  } | null;
-  data: {
-    category1Id: number;
-    category2Id?: number | null;
-    isApproveRequired: string;
-    clubShortDesc: string;
-    clubLongDesc: string | null;
-    clubName: string;
-    clubMaxMember: number;
-    contactPhone: string;
-    organizationName: string;
-  };
+  image?: ImageType | null;
+  data: ClubCreationData;
   token: string;
 }
 
 export interface FeedCreationRequest {
-  image?: {
-    uri: string;
-    type: string;
-    name: string | undefined;
-  } | null;
+  image?: ImageType[] | null;
   data: {
     userId?: number;
     content?: string;
@@ -213,11 +260,7 @@ export interface FeedCreationRequest {
 }
 
 export interface FeedUpdateRequest {
-  image?: {
-    uri: string;
-    type: string;
-    name: string | undefined;
-  };
+  image?: ImageType[] | null;
   data: {
     id: number | undefined;
     // access: string
@@ -243,19 +286,14 @@ export interface FeedReverseLikeRequest {
 
 export interface FeedReportRequest {
   data: {
-    id: number | undefined;
-    userId: number;
+    id: number;
     reason: string;
   };
   token: string;
 }
 
 export interface ClubUpdateRequest {
-  image?: {
-    uri: string;
-    type: string;
-    name: string | undefined;
-  };
+  image?: ImageType;
   data?: {
     clubName?: string;
     clubMaxMember?: number;
@@ -264,6 +302,8 @@ export interface ClubUpdateRequest {
     clubLongDesc?: string | null;
     contactPhone?: string | null;
     recruitStatus?: string | null;
+    category1Id?: number;
+    category2Id?: number;
   };
   token: string;
   clubId: number;
@@ -281,9 +321,48 @@ export interface ClubScheduleCreationRequest {
   };
 }
 
+export interface ClubScheduleUpdateRequest {
+  token: string;
+  clubId: number;
+  scheduleId: number;
+  body: {
+    content: string;
+    location: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+  };
+}
+
+export interface ClubScheduleDeleteRequest {
+  token: string;
+  clubId: number;
+  scheduleId: number;
+}
+
+export interface ClubScheduleJoinOrCancelRequest {
+  token: string;
+  clubId: number;
+  scheduleId: number;
+}
+
 export interface ClubApplyRequest {
   clubId: number;
   memo: string;
+  token: string;
+}
+
+export interface ClubApproveRequest {
+  clubId: number;
+  actionId: number;
+  userId: number;
+  token: string;
+}
+
+export interface ClubRejectRequest {
+  clubId: number;
+  actionId: number;
+  userId: number;
   token: string;
 }
 
@@ -299,7 +378,8 @@ export interface ChangeRole {
 }
 
 export interface LoginRequest {
-  token: string;
+  email: string;
+  password: string;
 }
 
 export interface FindIdRequest {
@@ -316,7 +396,7 @@ export interface FindPwRequest {
 
 export interface UserInfoRequest {
   token: string;
-  image: {
+  image?: {
     uri: string;
     type: string;
     name: string | undefined;
@@ -332,6 +412,18 @@ export interface UserInfoRequest {
   };
 }
 
+export interface UserUpdateRequest {
+  image?: ImageType | null;
+  data?: {
+    birthday?: string;
+    name?: string;
+    organizationName?: string;
+    sex?: string;
+    phoneNumber?: string;
+  };
+  token: string;
+}
+
 export interface SignUp {
   birthday?: string;
   email?: string;
@@ -342,6 +434,13 @@ export interface SignUp {
   phoneNumber?: string;
 }
 
+export interface PostChangePw {
+  data: {
+    password?: string;
+  };
+  token: string;
+}
+
 export interface getFeedLike {
   data: {
     id?: number;
@@ -349,50 +448,28 @@ export interface getFeedLike {
   token: string;
 }
 
-export interface FeedReplyRequest {
-  data: {
-    id?: number;
-    content?: string;
-  };
+export interface FeedCommentCreationRequest {
   token: string;
+  data: {
+    id: number;
+    content: string;
+  };
+}
+
+export interface FeedCommentDeleteRequest {
+  token: string;
+  data: {
+    id: number;
+  };
 }
 
 export interface FeedDeleteRequest {
   data: {
-    id?: number;
+    id: number;
   };
   token: string;
-}
-
-// Categories
+} // Categories
 const getCategories = () => fetch(`${BASE_URL}/api/categories`).then((res) => res.json());
-
-/**피드호출*/
-const getFeeds = ({ queryKey }: any) => {
-  const [_key, feedsParams]: [string, FeedsParams] = queryKey;
-  return fetch(`${BASE_URL}/api/feeds`, {
-    headers: {
-      authorization: `${feedsParams.token}`,
-    },
-  }).then(async (res) => {
-    if (res.status === 200) return { status: res.status, ...(await res.json()) };
-    else return { status: res.status };
-  });
-};
-/**피드 무한스크롤*/
-/*const getFeeds = ({ queryKey,pageParams }: any) => {
-  const [_key, feedsParams]: [string, FeedsParams] = queryKey;
-  let parameters = pageParams ? `&cursor=${pageParams}`:"";
-  console.log(parameters)
-  return fetch(`${BASE_URL}/api/feeds`, {
-    headers: {
-      authorization: `${feedsParams.token}`,
-    },
-  }).then(async (res) => {
-    if (res.status === 200) return { status: res.status, ...(await res.json()) };
-    else return { status: res.status };
-  });
-};*/
 
 /**피드 선택*/
 const getSelectFeeds = ({ queryKey }: any) => {
@@ -409,6 +486,32 @@ const getSelectFeeds = ({ queryKey }: any) => {
   });
 };
 
+const getFeeds = ({ queryKey, pageParam }: any) => {
+  const [_key, feedsParams]: [string, FeedsParams] = queryKey;
+  let parameters = feedsParams ? `cursor=${pageParam}` : "";
+  console.log("feed parameter: ", parameters);
+  return fetch(`${BASE_URL}/api/feeds?${parameters}`, {
+    headers: {
+      authorization: `${feedsParams.token}`,
+    },
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
+const getClubFeeds = ({ queryKey, pageParam }: any) => {
+  const [_key, feedsParams]: [string, FeedsParams] = queryKey;
+  let parameters = pageParam ? `cursor=${pageParam}` : "";
+  console.log("feed parameter: ", parameters);
+  return fetch(`${BASE_URL}/api/clubs/${feedsParams.clubId}/feeds?${parameters}`, {
+    headers: {
+      authorization: `${feedsParams.token}`,
+    },
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
 const getClubs = ({ queryKey, pageParam }: any) => {
   const [_key, clubsParams]: [string, ClubsParams] = queryKey;
   let parameters = `categoryId=${clubsParams.categoryId ?? 0}&showMy=${clubsParams.showMy}&showRecruitingOnly=${clubsParams.showRecruiting}`;
@@ -416,7 +519,7 @@ const getClubs = ({ queryKey, pageParam }: any) => {
   parameters += clubsParams.maxMember !== null ? `&max=${clubsParams.maxMember}` : "";
   parameters += `&sort=${clubsParams.sortType}&orderBy=${clubsParams.orderBy}`;
   parameters += pageParam ? `&cursor=${pageParam}` : "";
-  console.log(parameters);
+  console.log("club parameter: ", parameters);
   return fetch(`${BASE_URL}/api/clubs?${parameters}`, {
     headers: {
       authorization: `${clubsParams.token}`,
@@ -443,23 +546,16 @@ const getClubRole = ({ queryKey }: any) => {
     headers: {
       authorization: `${token}`,
     },
-  })
-    .then((res) => res.json())
-    .then((res) => {
-      if (res.resultCode !== "OK") new Error("API Response Error.");
-      else {
-        res.data.applyStatus = res.data.applyStatus ?? undefined;
-        res.data.role = res.data.role ?? undefined;
-      }
-      return res;
-    });
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
 };
 
 const createFeed = async (req: FeedCreationRequest) => {
   const body = new FormData();
 
-  if (req.image !== null) {
-    body.append("file", req.image);
+  if (req.image) {
+    for (let i = 0; i < req.image?.length; i++) body.append("file", req.image[i]);
   }
 
   body.append("feedCreateRequest", {
@@ -470,7 +566,7 @@ const createFeed = async (req: FeedCreationRequest) => {
   return fetch(`${BASE_URL}/api/feeds`, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
+      "Content-Type": "multipart/form-data",
       authorization: `${req.token}`,
       Accept: "*/*",
     },
@@ -563,6 +659,39 @@ const applyClub = (req: ClubApplyRequest) => {
   });
 };
 
+const approveToClubJoin = (req: ClubApproveRequest) => {
+  return fetch(`${BASE_URL}/api/clubs/approve`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `${req.token}`,
+    },
+    body: JSON.stringify({ clubId: req.clubId, actionId: req.actionId, userId: req.userId }),
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
+const rejectToClubJoin = (req: ClubRejectRequest) => {
+  return fetch(`${BASE_URL}/api/clubs/reject`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `${req.token}`,
+    },
+    body: JSON.stringify({ clubId: req.clubId, actionId: req.actionId, userId: req.userId }),
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
+const getClubNotifications = ({ queryKey }: any) => {
+  const [_key, clubId]: [string, number] = queryKey;
+  return fetch(`${BASE_URL}/api/notifications/club/${clubId}`).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
 const changeRole = (req: ChangeRoleRequest) => {
   console.log(req);
   return fetch(`${BASE_URL}/api/clubs/${req.clubId}/changeRole`, {
@@ -584,7 +713,7 @@ const getClubSchedules = ({ queryKey }: any) => {
   });
 };
 
-const createClubSchedule = async (req: ClubScheduleCreationRequest) => {
+const createClubSchedule = (req: ClubScheduleCreationRequest) => {
   return fetch(`${BASE_URL}/api/clubs/schedules`, {
     method: "POST",
     headers: {
@@ -598,7 +727,48 @@ const createClubSchedule = async (req: ClubScheduleCreationRequest) => {
   });
 };
 
-const getJWT = (req: LoginRequest) => {
+const updateClubSchedule = (req: ClubScheduleUpdateRequest) => {
+  return fetch(`${BASE_URL}/api/clubs/${req.clubId}/schedules/${req.scheduleId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `${req.token}`,
+      Accept: "*/*",
+    },
+    body: JSON.stringify(req.body),
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
+const deleteClubSchedule = (req: ClubScheduleDeleteRequest) => {
+  console.log(req);
+  return fetch(`${BASE_URL}/api/clubs/${req.clubId}/schedules/${req.scheduleId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `${req.token}`,
+      Accept: "*/*",
+    },
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
+const joinOrCancelClubSchedule = (req: ClubScheduleJoinOrCancelRequest) => {
+  return fetch(`${BASE_URL}/api/clubs/${req.clubId}/schedules/${req.scheduleId}/joinOrCancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `${req.token}`,
+      Accept: "*/*",
+    },
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
+};
+
+const getUserToken = (req: LoginRequest) => {
   return fetch(`${BASE_URL}/api/user/login`, {
     method: "POST",
     headers: {
@@ -617,20 +787,24 @@ const getUserInfo = ({ queryKey }: any) => {
     headers: {
       authorization: `${token}`,
     },
-  }).then((response) => response.json());
+  }).then(async (res) => {
+    return { ...(await res.json()), status: res.status };
+  });
 };
 
 const updateUserInfo = (req: UserInfoRequest) => {
   const body = new FormData();
 
-  if (req.image !== null) {
+  if (req.image) {
     body.append("file", req.image);
   }
 
-  body.append("UserInfoRequest", {
-    string: JSON.stringify(req.data),
-    type: "application/json",
-  });
+  if (req.data) {
+    body.append("userUpdateRequest", {
+      string: JSON.stringify(req.data),
+      type: "application/json",
+    });
+  }
 
   return fetch(`${BASE_URL}/api/user`, {
     method: "PUT",
@@ -641,7 +815,8 @@ const updateUserInfo = (req: UserInfoRequest) => {
     },
     body,
   }).then(async (res) => {
-    return { status: res.status, json: await res.json() };
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
 };
 
@@ -653,7 +828,8 @@ const registerUserInfo = (req: SignUp) => {
     },
     body: JSON.stringify(req),
   }).then(async (res) => {
-    return { ...(await res.json()), status: res.status };
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
   });
 };
 
@@ -683,20 +859,33 @@ const FindUserPw = (req: FindPwRequest) => {
   });
 };
 
+const changePassword = (req: PostChangePw) => {
+  return fetch(`${BASE_URL}/api/user/changePw`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      Authorization: `${req.token}`,
+    },
+    body: JSON.stringify(req.data),
+  }).then(async (res) => {
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
+  });
+};
+
 const selectMyClubs = ({ queryKey }: any) => {
   const [_key, token]: [string, string] = queryKey;
   return fetch(`${BASE_URL}/api/clubs/my`, {
-    method: "GET",
     headers: {
       authorization: `${token}`,
     },
-  }).then((res) => res.json());
+  }).then(async (res) => {
+    return { status: res.status, ...(await res.json()) };
+  });
 };
 
 /**피드신고*/
 const reportFeed = (req: FeedReportRequest) => {
-  console.log(req.data.id);
-  console.log(req.data.reason);
   return fetch(`${BASE_URL}/api/feeds/${req.data.id}/report?reason=${req.data.reason}`, {
     method: "PUT",
     headers: {
@@ -738,28 +927,20 @@ const likeCountReverse = (req: getFeedLike) => {
   });
 };
 
-/**댓글호출*/
-const getReply = ({ queryKey }: any) => {
-  const [_key, token, id]: [string, string, number] = queryKey;
-  return fetch(`${BASE_URL}/api/feeds/${id}/comments`, {
+const getFeedComments = ({ queryKey }: any) => {
+  const [_key, token, feedId]: [string, string, number] = queryKey;
+  return fetch(`${BASE_URL}/api/feeds/${feedId}/comments`, {
     method: "GET",
     headers: {
       Authorization: `${token}`,
     },
-  })
-    .then((res) => res.json())
-    .then((res) => {
-      if (res.resultCode !== "OK") new Error("API Response Error.");
-      else {
-        res.data.applyStatus = res.data.applyStatus ?? undefined;
-        res.data.role = res.data.role ?? undefined;
-      }
-      return res;
-    });
+  }).then(async (res) => {
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
+  });
 };
 
-/**댓글달기*/
-const ReplyFeed = (req: FeedReplyRequest) => {
+const createFeedComment = (req: FeedCommentCreationRequest) => {
   return fetch(`${BASE_URL}/api/feeds/${req.data.id}/comment`, {
     method: "POST",
     headers: {
@@ -773,10 +954,8 @@ const ReplyFeed = (req: FeedReplyRequest) => {
   });
 };
 
-/**피드삭제*/
-const feedDelete = (req: FeedDeleteRequest) => {
-  console.log("feedDelete");
-  return fetch(`${BASE_URL}/api/feeds/${req.data.id}`, {
+const deleteFeedComment = (req: FeedCommentDeleteRequest) => {
+  return fetch(`${BASE_URL}/api/comments/${req.data.id}`, {
     method: "DELETE",
     headers: {
       authorization: `${req.token}`,
@@ -787,6 +966,17 @@ const feedDelete = (req: FeedDeleteRequest) => {
   });
 };
 
+const deleteFeed = (req: FeedDeleteRequest) => {
+  return fetch(`${BASE_URL}/api/feeds/${req.data.id}`, {
+    method: "DELETE",
+    headers: {
+      authorization: `${req.token}`,
+    },
+  }).then(async (res) => {
+    if (res.status === 200) return { status: res.status, ...(await res.json()) };
+    else return { status: res.status };
+  });
+};
 export const ClubApi = {
   getCategories,
   getClub,
@@ -796,9 +986,15 @@ export const ClubApi = {
   changeRole,
   getClubSchedules,
   createClubSchedule,
+  updateClubSchedule,
+  deleteClubSchedule,
+  joinOrCancelClubSchedule,
   getClubRole,
   applyClub,
   selectMyClubs,
+  getClubNotifications,
+  approveToClubJoin,
+  rejectToClubJoin,
 };
 
 export const UserApi = {
@@ -809,19 +1005,22 @@ export const UserApi = {
   selectMyClubs,
   FindUserId,
   FindUserPw,
+  changePassword,
 };
 
 export const FeedApi = {
   getFeeds,
+  getClubFeeds,
+  getFeedComments,
+  createFeedComment,
+  deleteFeedComment,
   createFeed,
+  deleteFeed,
   reportFeed,
   updateFeed,
   likeCount,
   likeCountReverse,
-  getReply,
-  ReplyFeed,
   getSelectFeeds,
-  feedDelete,
 };
 
-export const CommonApi = { getJWT };
+export const CommonApi = { getUserToken };

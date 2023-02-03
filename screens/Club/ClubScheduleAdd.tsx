@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, StatusBar, TouchableOpacity } from "react-native";
+import { DeviceEventEmitter, KeyboardAvoidingView, Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import styled from "styled-components/native";
 import CustomText from "../../components/CustomText";
 import { Calendar } from "react-native-calendars";
@@ -7,6 +7,12 @@ import CustomTextInput from "../../components/CustomTextInput";
 import Collapsible from "react-native-collapsible";
 import DatePicker from "react-native-date-picker";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
+import { useSelector } from "react-redux";
+import { useToast } from "react-native-toast-notifications";
+import { ClubApi, ClubScheduleCreationRequest } from "../../api";
+import { useMutation } from "react-query";
+import moment from "moment";
+import { RootState } from "../../redux/store/reducers";
 
 const Container = styled.SafeAreaView`
   flex: 1;
@@ -75,20 +81,89 @@ const MemoInput = styled(CustomTextInput)`
 `;
 
 const ClubScheduleAdd = ({
-  navigation: { navigate, setOptions },
+  navigation: { navigate, goBack, setOptions },
   route: {
     params: { clubData },
   },
 }) => {
+  const token = useSelector((state: RootState) => state.auth.token);
+  const toast = useToast();
   const [place, setPlace] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [date, setDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date().toString().split("T")[0]);
+  const [dateTime, setDateTime] = useState(new Date(moment.tz("Asia/Seoul").format("YYYY-MM-DDTHH:mm:ss")));
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const markedDate = {
     [selectedDate]: { selected: true },
   };
-  const save = () => {};
+
+  const scheduleMutation = useMutation(ClubApi.createClubSchedule, {
+    onSuccess: (res) => {
+      if (res.status === 200 && res.resultCode === "OK") {
+        toast.show("일정 등록이 완료되었습니다.", {
+          type: "success",
+        });
+        DeviceEventEmitter.emit("SchedulesRefetch");
+        goBack();
+      } else {
+        toast.show("일정 등록에 실패했습니다.", {
+          type: "warning",
+        });
+        console.log(`mutation success but please check status code`);
+        console.log(`status: ${res.status}`);
+        console.log(res);
+      }
+    },
+    onError: (error) => {
+      toast.show("일정 등록에 실패했습니다.", {
+        type: "warning",
+      });
+      console.log("--- Error ---");
+      console.log(`error: ${error}`);
+    },
+  });
+
+  const save = () => {
+    /** Data Validation */
+    let validate = true;
+    let dangerMsg = "";
+    if (selectedDate === "") {
+      validate = false;
+      dangerMsg = "달력에서 날짜를 선택하세요.";
+    } else if (place === "") {
+      validate = false;
+      dangerMsg = "모임 장소를 입력하세요.";
+    } else if (memo === "") {
+      validate = false;
+      dangerMsg = "메모를 입력하세요.";
+    }
+
+    if (!validate) {
+      toast.show(dangerMsg, {
+        type: "danger",
+      });
+      return;
+    }
+
+    const startDate = `${selectedDate}T${dateTime.toTimeString().split(" ")[0]}`;
+    const endDate = `${startDate.split("T")[0]}T23:59:59`;
+
+    const requestData: ClubScheduleCreationRequest = {
+      token,
+      body: {
+        clubId: clubData.id,
+        content: memo,
+        location: place,
+        name: "schedule",
+        startDate,
+        endDate,
+      },
+    };
+
+    console.log(requestData);
+    scheduleMutation.mutate(requestData);
+  };
+
   useLayoutEffect(() => {
     setOptions({
       headerRight: () => (
@@ -97,11 +172,11 @@ const ClubScheduleAdd = ({
         </TouchableOpacity>
       ),
     });
-  }, []);
+  }, [selectedDate, dateTime, place, memo]);
 
   return (
     <Container>
-      <StatusBar barStyle={"default"} />
+      <StatusBar barStyle={"dark-content"} />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={10} style={{ flex: 1 }}>
         <MainView>
           <Calendar
@@ -109,7 +184,10 @@ const ClubScheduleAdd = ({
               arrowColor: "#6F6F6F",
               dotColor: "#FF714B",
               selectedDayBackgroundColor: "#FF714B",
+              todayTextColor: "#FF714B",
             }}
+            minDate={dateTime.toString()}
+            context={{ date: "" }}
             markedDates={markedDate}
             onDayPress={(day) => {
               setSelectedDate(day.dateString);
@@ -118,7 +196,7 @@ const ClubScheduleAdd = ({
             onPressArrowRight={(addMonth) => addMonth()}
             renderHeader={(date) => (
               <CalendarHeader>
-                <CustomText style={{ fontFamily: "NotoSansKR-Bold", fontSize: 18, lineHeight: 24 }}>{date.getMonth()}</CustomText>
+                <CustomText style={{ fontFamily: "NotoSansKR-Bold", fontSize: 18, lineHeight: 24 }}>{date.getMonth() + 1}</CustomText>
                 <CustomText style={{ fontSize: 12, color: "#737373" }}>{date.getFullYear()}</CustomText>
               </CalendarHeader>
             )}
@@ -127,20 +205,23 @@ const ClubScheduleAdd = ({
             <ItemView>
               <TouchableItem onPress={() => setShowDatePicker((prev) => !prev)}>
                 <ItemTitle>모임 시간</ItemTitle>
-                <ItemText>오전 10시 00분</ItemText>
+                <ItemText>
+                  {dateTime.getHours() < 12 ? "오전" : "오후"} {dateTime.getHours() > 12 ? dateTime.getHours() - 12 : dateTime.getHours() === 0 ? 12 : dateTime.getHours()}시{" "}
+                  {dateTime.getMinutes().toString().padStart(2, "0")}분
+                </ItemText>
               </TouchableItem>
             </ItemView>
 
             {Platform.OS === "android" ? (
-              <Collapsible collapsed={!showDatePicker} style={{ alignItems: "center", paddingVertical: 10 }}>
-                <ItemView>
-                  <DatePicker date={date} mode="time" onDateChange={setDate} />
+              <Collapsible collapsed={!showDatePicker}>
+                <ItemView style={{ width: "100%", alignItems: "center" }}>
+                  <DatePicker date={dateTime} mode="time" onDateChange={setDateTime} textColor="black" />
                 </ItemView>
               </Collapsible>
             ) : (
-              <Collapsible collapsed={!showDatePicker} style={{ paddingVertical: 10 }}>
+              <Collapsible collapsed={!showDatePicker}>
                 <ItemView>
-                  <RNDateTimePicker mode="time" value={date} display="spinner" onChange={(_, value: Date) => setDate(value)} />
+                  <RNDateTimePicker mode="time" value={dateTime} display="spinner" onChange={(_, value: Date) => setDateTime(value)} textColor="black" />
                 </ItemView>
               </Collapsible>
             )}
@@ -148,19 +229,33 @@ const ClubScheduleAdd = ({
             <ItemView>
               <InputItem>
                 <ItemTitle>모임 장소</ItemTitle>
-                <ItemTextInput value={place} placeholder="직접 입력" maxLength={16} onChangeText={(text) => setPlace(text)} returnKeyType="done" returnKeyLabel="done" textAlign="right" />
+                <ItemTextInput
+                  value={place}
+                  placeholder="직접 입력"
+                  placeholderTextColor="#B0B0B0"
+                  maxLength={16}
+                  onChangeText={(text: string) => setPlace(text)}
+                  onEndEditing={() => setPlace((prev) => prev.trim())}
+                  returnKeyType="done"
+                  returnKeyLabel="done"
+                  textAlign="right"
+                  includeFontPadding={false}
+                />
               </InputItem>
             </ItemView>
             <MemoView>
               <ItemTitle>메모</ItemTitle>
               <MemoInput
                 placeholder="스케줄에 대한 메모를 남겨주세요."
+                placeholderTextColor="#B0B0B0"
                 value={memo}
                 textAlign="left"
                 multiline={true}
                 maxLength={1000}
                 textAlignVertical="top"
                 onChangeText={(value: string) => setMemo(value)}
+                onEndEditing={() => setMemo((prev) => prev.trim())}
+                includeFontPadding={false}
               />
             </MemoView>
           </Content>

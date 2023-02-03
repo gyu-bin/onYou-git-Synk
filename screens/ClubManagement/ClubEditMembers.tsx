@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useState } from "react";
-import { FlatList, SectionList, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { DeviceEventEmitter, FlatList, SectionList, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import styled from "styled-components/native";
-import { ChangeRole, ChangeRoleRequest, Member } from "../../api";
+import { ChangeRole, Member } from "../../api";
 import CircleIcon from "../../components/CircleIcon";
 import CustomText from "../../components/CustomText";
 import { AntDesign } from "@expo/vector-icons";
@@ -11,6 +11,7 @@ import { useToast } from "react-native-toast-notifications";
 import { useSelector } from "react-redux";
 import { useMutation } from "react-query";
 import { ClubApi } from "../../api";
+import { RootState } from "../../redux/store/reducers";
 
 const Container = styled.SafeAreaView`
   flex: 1;
@@ -73,7 +74,7 @@ const ClubEditMembers: React.FC<ClubEditMembersProps> = ({
     params: { clubData },
   },
 }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state: RootState) => state.auth.token);
   const toast = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [bundles, setBundles] = useState<MemberBundle[]>();
@@ -97,7 +98,7 @@ const ClubEditMembers: React.FC<ClubEditMembersProps> = ({
         console.log(`status: ${res.status}`);
         console.log(res);
         toast.show(`${res.message} (Error Code: ${res.status})`, {
-          type: "error",
+          type: "warning",
         });
       }
     },
@@ -105,7 +106,7 @@ const ClubEditMembers: React.FC<ClubEditMembersProps> = ({
       console.log("--- Error changeRole ---");
       console.log(`error: ${error}`);
       toast.show(`Error Code: ${error}`, {
-        type: "error",
+        type: "warning",
       });
     },
     onSettled: (res, error) => {},
@@ -139,7 +140,7 @@ const ClubEditMembers: React.FC<ClubEditMembersProps> = ({
     let masterCount = 0;
 
     const data: ChangeRole[] = [];
-    clubData.members.map((member) => {
+    clubData?.members?.map((member) => {
       const modifiedMember = memberMap.get(member.id);
       const isKicked = kickOutMap.get(member.id);
       if (isKicked === true) {

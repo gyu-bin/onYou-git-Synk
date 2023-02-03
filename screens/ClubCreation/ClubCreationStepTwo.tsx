@@ -150,9 +150,9 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
   const [imageURI, setImageURI] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [organizationName, setOrganizationName] = useState<string>("");
-
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 4) * 3);
+  let specialChar = /[`~!@#$%^&*|\\\'\";:\/?]/gi;
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -163,7 +163,7 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
     });
 
     if (result.canceled === false) {
-      setImageURI(result.uri);
+      setImageURI(result.assets[0].uri);
     }
   };
 
@@ -200,19 +200,26 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
             <ItemTitle>모임 이름</ItemTitle>
             <ItemTextInput
               value={clubName}
-              placeholder="모임명 16자 이내 (특수문자 불가)"
+              placeholder="모임명 8자 이내 (특수문자 불가)"
               placeholderTextColor="#B0B0B0"
-              maxLength={16}
+              maxLength={8}
               onEndEditing={() => {
-                if (clubName === "") {
+                if (clubName.trim() === "") {
                   toast.show("모임 이름을 공백으로 설정할 수 없습니다.", {
                     type: "warning",
                   });
                 }
+                if (specialChar.test(clubName)) {
+                  toast.show("모임 이름에 특수문자가 있습니다.", {
+                    type: "warning",
+                  });
+                }
+                setClubName((prev) => prev.trim());
               }}
-              onChangeText={(name) => setClubName(name)}
+              onChangeText={(name: string) => setClubName(name)}
               returnKeyType="done"
               returnKeyLabel="done"
+              includeFontPadding={false}
             />
           </ContentItem>
           <ContentItem>
@@ -227,13 +234,14 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
                 }}
                 onEndEditing={() =>
                   setMaxNumber((prev) => {
+                    prev = prev.trim();
                     if (prev === "" || prev === "0") return "";
                     else return `${prev} 명`;
                   })
                 }
                 value={maxNumber}
                 maxLength={6}
-                onChangeText={(num) => {
+                onChangeText={(num: string) => {
                   if (num.length < 3) setMaxNumber(num);
                   else
                     toast.show("최대 99명까지 가능합니다.", {
@@ -241,6 +249,7 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
                     });
                 }}
                 editable={!maxNumberInfinity}
+                includeFontPadding={false}
               />
               <CheckButton
                 onPress={() => {
@@ -271,7 +280,7 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
           </ContentItem>
           <ContentItem>
             <ItemTitle>모임 담당자 연락처</ItemTitle>
-            <ItemTextInput keyboardType="numeric" placeholder="010-0000-0000" maxLength={13} onChangeText={(phone) => setPhoneNumber(phone)} value={phoneNumber} />
+            <ItemTextInput keyboardType="numeric" placeholder="010-0000-0000" maxLength={13} onChangeText={(phone) => setPhoneNumber(phone)} value={phoneNumber} includeFontPadding={false} />
           </ContentItem>
           <ContentItem>
             <ItemTitle>모임 소속 교회</ItemTitle>
@@ -280,9 +289,11 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
               placeholder="모임이 소속된 교회 또는 담당자가 섬기는 교회명"
               placeholderTextColor="#B0B0B0"
               maxLength={16}
-              onChangeText={(name) => setOrganizationName(name)}
+              onChangeText={(name: string) => setOrganizationName(name)}
+              onEndEditing={() => setOrganizationName((prev) => prev.trim())}
               returnKeyType="done"
               returnKeyLabel="done"
+              includeFontPadding={false}
             />
           </ContentItem>
         </Content>
@@ -291,6 +302,15 @@ const ClubCreationStepTwo: React.FC<ClubCreationStepTwoScreenProps> = ({
           <NextButton
             onPress={() => {
               /** Validation */
+              if (clubName === "") {
+                return toast.show("모임 이름은 공백으로 설정할 수 없습니다.", {
+                  type: "warning",
+                });
+              } else if (specialChar.test(clubName)) {
+                return toast.show("모임 이름에 특수문자가 포함되어 있습니다.", {
+                  type: "warning",
+                });
+              }
               navigate("ClubCreationStepThree", {
                 category1,
                 category2,

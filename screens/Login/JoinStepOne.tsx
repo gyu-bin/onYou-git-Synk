@@ -1,12 +1,10 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useState, useEffect, createRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Keyboard, ScrollView, Alert, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
-import { useMutation } from "react-query";
-import { CommonApi } from "../../api";
-import { useDispatch } from "react-redux";
-import { Login } from "../../store/Actions";
+import React, { useState, createRef } from "react";
+import { Keyboard, TouchableWithoutFeedback, Modal, ScrollView } from "react-native";
 import styled from "styled-components/native";
+import CustomText from "../../components/CustomText";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import Terms from "../Profile/Terms";
 
 const Container = styled.View`
   width: 100%;
@@ -15,43 +13,79 @@ const Container = styled.View`
   justify-content: space-between;
   background-color: #fff;
   padding-horizontal: 20px;
-  padding-top: 30px;
+  padding-top: 15px;
 `;
 
 const Wrap = styled.View`
   width: 100%;
 `;
 
-const BorderWrap = styled.View`
+const ModalWrap = styled.View`
+  align-items: center;
   width: 100%;
-  height: 2px;
-  background-color: #d0d0d0;
+  height: 100%;
 `;
 
-const Border = styled.View`
-  width: 10%;
-  height: 2px;
-  background-color: #295af5;
-`;
-
-const AskText = styled.Text`
-  color: #000000;
-  font-size: 20px;
-  font-weight: bold;
-  margin-top: 24px;
-`;
-
-const SubText = styled.Text`
-  color: #a0a0a0;
-  font-size: 12px;
-  margin-top: 7px;
-`;
-
-const Input = styled.TextInput`
+const Header = styled.View`
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  margin-top: 30px;
+  padding: 0 20px;
   border-bottom-width: 1px;
-  border-bottom-color: #b3b3b3;
-  margin-top: 47px;
-  font-size: 18px;
+  border-color: #c4c4c4;
+`;
+
+const HeaderTitle = styled.Text`
+  width: 85%;
+  color: #2b2b2b;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+`;
+
+const HeaderButton = styled.TouchableOpacity`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const Text = styled.Text`
+  color: #2b2b2b;
+  font-size: 16px;
+`;
+
+const RedText = styled.Text`
+  margin-right: 5px;
+  color: #ff714b;
+  font-size: 16px;
+`;
+
+const TermsWrap = styled.TouchableOpacity`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 20px;
+`;
+
+const LeftBox = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const RightBox = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const CheckBox = styled.View<{ check: boolean }>`
+  align-items: center;
+  width: 23px;
+  height: 23px;
+  border: 1px solid;
+  border-radius: 100px;
+  border-color: ${(props) => (props.check ? "white" : "#fff")}; ;
 `;
 
 const Button = styled.TouchableOpacity`
@@ -69,49 +103,17 @@ const ButtonTitle = styled.Text`
   font-weight: 700;
 `;
 
-const Error = styled.Text`
-  color: #ff714b;
-  font-size: 12px;
-  margin-top: 7px;
-`;
-
 const JoinStepOne: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate } }) => {
-  const [userName, setUserName] = useState("");
-  const [errortext, setErrortext] = useState(false);
+  const [check, setCheck] = useState(false);
+  const [check2, setCheck2] = useState(false);
+  const [click, setClick] = useState(false);
+  const [click2, setClick2] = useState(false);
 
-  const storeData = async () => {
-    try {
-      await AsyncStorage.setItem("userInfo", JSON.stringify({ name: userName }), () => {
-        console.log("유저정보 저장 완료");
-      });
-      console.log("등록 완료");
-    } catch (error) {
-      console.log(error);
-    }
+  const goToNext = () => {
+    navigate("LoginStack", {
+      screen: "JoinStepTwo",
+    });
   };
-
-  const nameInputRef = createRef();
-  const nameReg = /^[가-힣]+$/;
-
-  const validate = () => {
-    if (!nameReg.test(userName)) {
-      setErrortext(true);
-      return;
-    } else {
-      setErrortext(false);
-      storeData();
-      navigate("LoginStack", {
-        screen: "JoinStepTwo",
-        name: userName,
-      });
-    }
-  };
-
-  // const goToNext = () => {
-  //   navigate("LoginStack", {
-  //     screen: "JoinStepTwo",
-  //   });
-  // };
 
   return (
     <TouchableWithoutFeedback
@@ -120,27 +122,68 @@ const JoinStepOne: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navig
       }}
     >
       <Container>
+        <Modal animationType={"fade"} transparent={false} visible={click}>
+          <ModalWrap>
+            <Header>
+              <HeaderButton
+                onPress={() => {
+                  setClick(false);
+                  setCheck(true);
+                }}
+              >
+                <MaterialCommunityIcons name="chevron-left" color="#6F6F6F" size={24} style={{}} />
+              </HeaderButton>
+              <HeaderTitle>서비스 이용 약관</HeaderTitle>
+            </Header>
+            <Terms />
+          </ModalWrap>
+        </Modal>
+        <Modal animationType={"fade"} transparent={false} visible={click2}>
+          <ModalWrap>
+            <Header>
+              <HeaderButton
+                onPress={() => {
+                  setClick2(false);
+                  setCheck2(true);
+                }}
+              >
+                <MaterialCommunityIcons name="chevron-left" color="#6F6F6F" size={24} style={{}} />
+              </HeaderButton>
+              <HeaderTitle>개인정보 수집 및 이용 동의서</HeaderTitle>
+            </Header>
+            <Terms />
+          </ModalWrap>
+        </Modal>
         <Wrap>
-          <BorderWrap>
-            <Border></Border>
-          </BorderWrap>
-          <AskText>성함이 어떻게 되시나요?</AskText>
-          <SubText>정확한 성함을 입력해 주세요.</SubText>
-          <Input
-            keyboardType={"name-phone-pad"}
-            placeholder="홍길동"
-            maxLength={10}
-            autoCorrect={false}
-            onChangeText={(UserName) => setUserName(UserName)}
-            ref={nameInputRef}
-            returnKeyType="next"
-            blurOnSubmit={false}
-            placeholderTextColor={"#B0B0B0"}
-          />
-          {errortext === true || !nameReg.test(userName) ? <Error>입력을 다시 한번 확인해주세요.</Error> : null}
+          <Text>On You에 오신 것을 환영합니다.</Text>
+          <Text>앱 사용을 위해서는 아래의 약관동의와</Text>
+          <Text>회원가입이 필요합니다.</Text>
+
+          <TermsWrap onPress={() => setClick(true)}>
+            <LeftBox>
+              <CheckBox check={check}>{!check ? <Ionicons name="checkmark-circle-outline" size={20} color={"#FF714B"} /> : <Ionicons name="checkmark-circle" size={20} color={"#FF714B"} />}</CheckBox>
+              <RedText>(필수)</RedText>
+              <Text>On You 서비스 이용약관</Text>
+            </LeftBox>
+            <RightBox>
+              <MaterialCommunityIcons name="chevron-right" color="#6F6F6F" size={24} style={{}} />
+            </RightBox>
+          </TermsWrap>
+          <TermsWrap onPress={() => setClick2(true)}>
+            <LeftBox>
+              <CheckBox check={check2}>
+                {!check2 ? <Ionicons name="checkmark-circle-outline" size={20} color={"#FF714B"} /> : <Ionicons name="checkmark-circle" size={20} color={"#FF714B"} />}
+              </CheckBox>
+              <RedText>(필수)</RedText>
+              <Text>개인정보 수집 및 이용 동의서</Text>
+            </LeftBox>
+            <RightBox>
+              <MaterialCommunityIcons name="chevron-right" color="#6F6F6F" size={24} style={{}} />
+            </RightBox>
+          </TermsWrap>
         </Wrap>
         <Wrap>
-          <Button onPress={validate} disabled={!nameReg.test(userName)}>
+          <Button onPress={goToNext} disabled={!check && !check2}>
             <ButtonTitle>다음</ButtonTitle>
           </Button>
         </Wrap>

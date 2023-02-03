@@ -1,14 +1,12 @@
-import { useMutation } from "react-query";
-import { CommonApi, LoginRequest } from "../../api";
-import { useDispatch } from "react-redux";
-import { Login } from "../../store/Actions";
-import { NavigationContainer, useNavigation } from "@react-navigation/native";
-import Root from "../../navigation/Root";
+import { useMutation, useQuery } from "react-query";
+import { CommonApi, LoginRequest, UserApi, UserInfoResponse } from "../../api";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useState, useEffect, useRef } from "react";
-import { TouchableOpacity, Text, NativeModules, Alert, Keyboard, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
+import React, { useState } from "react";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import styled from "styled-components/native";
-import { Ionicons } from "@expo/vector-icons";
+import { useToast } from "react-native-toast-notifications";
+import { useAppDispatch } from "../../redux/store";
+import { login } from "../../redux/slices/auth";
 
 const Container = styled.View`
   width: 100%;
@@ -43,15 +41,18 @@ const Input = styled.TextInput`
 `;
 
 const View = styled.TouchableOpacity`
-  width: 147px;
+  width: 100%;
   margin-top: 10px;
-  border-bottom-width: 1px;
-  border-bottom-color: #6f6f6f;
+  padding: 0;
+  /* border-bottom-width: 1px;
+  border-bottom-color: #6f6f6f; */
 `;
 
 const ForgetText = styled.Text`
+  width: 100%;
   color: #6f6f6f;
   font-size: 12px;
+  text-decoration: underline;
 `;
 
 const LoginButton = styled.TouchableOpacity`
@@ -70,30 +71,55 @@ const LoginTitle = styled.Text`
 `;
 
 const SignIn: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate } }) => {
-  const navigation = useNavigation();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const toast = useToast();
+  const [token, setToken] = useState<string>("");
 
-  const mutation = useMutation(CommonApi.getJWT, {
+  useQuery<UserInfoResponse>(["getUserInfo", token], UserApi.getUserInfo, {
     onSuccess: (res) => {
-      console.log(res.status);
-      // redux 저장
-      dispatch(Login(res.token));
+      if (res.status === 200 && res.resultCode === "OK") {
+        dispatch(login({ user: res.data, token }));
+      } else {
+        console.log(res);
+        console.log(`getUserInfo query success but please check status code`);
+        toast.show(`유저 정보를 불러올 수 없습니다. (Error Code: ${res.status})`, {
+          type: "warning",
+        });
+      }
     },
     onError: (error) => {
-      console.log("--- Error ---");
+      console.log("--- getUserInfo Error ---");
       console.log(error);
-      // Toast Message 출력.
+      toast.show(`유저 정보를 불러올 수 없습니다. (Error Code: ${error})`, {
+        type: "warning",
+      });
+    },
+    enabled: token ? true : false,
+  });
+
+  const mutation = useMutation(CommonApi.getUserToken, {
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        setToken(res.token);
+      } else {
+        console.log(`getUserToken mutation success but please check status code`);
+        console.log(res);
+        toast.show(`로그인에 실패했습니다. (Error Code: ${res.status})`, {
+          type: "warning",
+        });
+      }
+    },
+    onError: (error) => {
+      console.log("--- getUserToken Error ---");
+      console.log(error);
+      toast.show(`로그인에 실패했습니다. (Error Code: ${error})`, {
+        type: "warning",
+      });
     },
   });
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // const signInWithKakao = async () => {
-  //   const token: KakaoOAuthToken = await kakaoLogin();
-
-  //   mutation.mutate({ token: token.accessToken });
-  // };
 
   const goToFindLoginInfo = () => {
     navigate("LoginStack", {
@@ -102,20 +128,12 @@ const SignIn: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation
   };
 
   const onSubmit = () => {
-    const token = {
-      email: email,
-      password: password,
+    const requestData: LoginRequest = {
+      email,
+      password,
     };
 
-    const requestData: LoginRequest = token;
-
-    console.log(requestData);
-
     mutation.mutate(requestData);
-  };
-
-  const goToRoot = () => {
-    return <NavigationContainer>{<Root />}</NavigationContainer>;
   };
 
   return (

@@ -5,7 +5,9 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated, Dimensions,
+  Animated,
+  DeviceEventEmitter,
+  Dimensions,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +15,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import styled from "styled-components/native";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -23,6 +25,7 @@ import { FeedCreateScreenProps } from "../../types/feed";
 import { useNavigation } from "@react-navigation/native";
 import CustomText from "../../components/CustomText";
 import { PinchGestureHandler, State } from "react-native-gesture-handler";
+import { RootState } from "../../redux/store/reducers";
 
 interface ValueInfo {
   str: string;
@@ -110,18 +113,17 @@ const FeedCreateText = styled(CustomText)`
   padding: 10px;
 `;
 
-const ImageSource = styled.Image`
+const ImageSource = styled.Image<{ size: number }>`
   width: 100%;
-  height: 100%;
-  background-color: burlywood;
+  height: ${Platform.OS === "android" ? 100 : 100}%;
 `;
 
 function ImageSelecter(props: FeedCreateScreenProps) {
   let {
     route: {
-      params: { clubId, userId }
+      params: { clubId, userId },
     },
-    navigation: { navigate }
+    navigation: { navigate },
   } = props;
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
@@ -129,7 +131,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
   const [imageURI, setImageURI] = useState<any>("");
   const [choiceImage, setChoiceImage] = useState();
   const [loading, setLoading] = useState(false);
-  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  // const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [alert, alertSet] = useState(true);
   const [response, setResponse] = useState(null);
   const [isSubmitShow, setSubmitShow] = useState(true);
@@ -145,7 +147,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
       return {
         str,
         isHT: str.startsWith("#") || str.startsWith("@"),
-        idxArr
+        idxArr,
       };
     });
   };
@@ -156,7 +158,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
 
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
-  const token = useSelector((state: any) => state.AuthReducers.authToken);
+  const token = useSelector((state: RootState) => state.auth.token);
   const [content, setContent] = useState("");
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -165,19 +167,19 @@ function ImageSelecter(props: FeedCreateScreenProps) {
 
   const pickImage = async () => {
     //사진허용
-        if(!status?.granted){
+    /*    if(!status?.granted){
           const permission=await requestPermission();
           if(!permission.granted){
             return null;
           }
-        }
+        }*/
 
     let result: any = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
       aspect: [16, 9],
       allowsMultipleSelection: true,
-      selectionLimit: 5
+      selectionLimit: 5,
     });
 
     let array = [];
@@ -192,11 +194,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
   };
   console.log(imageURI);
 
-  const {
-    isLoading: feedsLoading,
-    data: feeds,
-    isRefetching: isRefetchingFeeds
-  } = useQuery<FeedsResponse>(["getFeeds", { token }], FeedApi.getFeeds, {});
+  const { isLoading: feedsLoading, data: feeds, isRefetching: isRefetchingFeeds } = useQuery<FeedsResponse>(["getFeeds", { token }], FeedApi.getFeeds, {});
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -207,9 +205,9 @@ function ImageSelecter(props: FeedCreateScreenProps) {
   const mutation = useMutation(FeedApi.createFeed, {
     onSuccess: (res) => {
       if (res.status === 200 && res.resultCode === "OK") {
+        DeviceEventEmitter.emit("HomeFeedRefetch");
         navigate("Tabs", {
           screen: "Home",
-          feedData: res.data
         });
       } else {
         console.log(`mutation success but please check status code`);
@@ -220,8 +218,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
       console.log("--- Error ---");
       console.log(`error: ${error}`);
     },
-    onSettled: (res, error) => {
-    }
+    onSettled: (res, error) => {},
   });
 
   const onSubmit = () => {
@@ -233,13 +230,13 @@ function ImageSelecter(props: FeedCreateScreenProps) {
       setSubmitShow(false);
       const data = {
         clubId: clubId,
-        content: content
+        content: content,
       };
 
       let requestData: FeedCreationRequest = {
         image: [],
         data,
-        token
+        token,
       };
       if (imageURI.length == 0) requestData.image = null;
 
@@ -249,7 +246,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
           requestData.image.push({
             uri: Platform.OS === "android" ? imageURI[i] : imageURI[i].replace("file://", ""),
             type: "image/jpeg",
-            name: splitedURI[splitedURI.length - 1]
+            name: splitedURI[splitedURI.length - 1],
           });
         }
       }
@@ -260,16 +257,14 @@ function ImageSelecter(props: FeedCreateScreenProps) {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => {
-          onSubmit();
-        }}>
-          {
-            isSubmitShow ?
-              <FeedCreateText>저장</FeedCreateText> :
-              <ActivityIndicator />
-          }
+        <TouchableOpacity
+          onPress={() => {
+            onSubmit();
+          }}
+        >
+          {isSubmitShow ? <FeedCreateText>저장</FeedCreateText> : <ActivityIndicator />}
         </TouchableOpacity>
-      )
+      ),
     });
   }, [imageURI, content, isSubmitShow]);
 
@@ -320,23 +315,54 @@ function ImageSelecter(props: FeedCreateScreenProps) {
                  indicatorContainerStyle={{ bottom: 0 }}
     />
     );*/
-// console.log(choiceImage)
-// console.log(imageList)
+  // console.log(choiceImage)
+  // console.log(imageList)
+  const { width } = Dimensions.get("window");
+  const scale = new Animated.Value(1);
+
+  const onZoomEvent = Animated.event(
+    [
+      {
+        nativeEvent: { scale: scale },
+      },
+    ],
+    {
+      useNativeDriver: true,
+    }
+  );
+
+  const onZoomStateChange = (event: any) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      Animated.spring(scale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
   return (
     <Container>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "padding"} style={{ flex: 1 }}>
           <>
-          <ImagePickerView>
+            <ImagePickerView>
               {Object.keys(imageURI).length !== 0 ? (
-                <ImageSource source={{uri: choiceImage}} size={0} resizeMode="cover"/>
+                <PinchGestureHandler onGestureEvent={onZoomEvent} onHandlerStateChange={onZoomStateChange}>
+                  <Animated.Image
+                    source={{ uri: choiceImage }}
+                    style={{
+                      width: width,
+                      height: 380,
+                      transform: [{ scale: scale }],
+                    }}
+                  />
+                </PinchGestureHandler>
               ) : (
                 <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
                   <PickBackground>
                     {alert ? (
                       <ImageCrop>
-                        <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red"
-                                                style={{ textAlign: "center", top: 40 }} />
+                        <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
                         <ImagePickerText>
                           손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
                         </ImagePickerText>
@@ -347,9 +373,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
               )}
             </ImagePickerView>
             <SelectImageView>
-              <View style={{ display: "flex", flexDirection: "row" }}>
-                {imagePreview}
-              </View>
+              <View style={{ display: "flex", flexDirection: "row" }}>{imagePreview}</View>
             </SelectImageView>
             <FeedText
               placeholder="사진과 함께 남길 게시글을 작성해 보세요."
@@ -388,8 +412,3 @@ function ImageSelecter(props: FeedCreateScreenProps) {
 }
 
 export default ImageSelecter;
-/**이미지 슬라이더.
- *  <ImageSlider data={imageList} preview={false} caroselImageStyle={{ resizeMode: "stretch", height: 420 }}
- *                              indicatorContainerStyle={{ bottom: 0 }}
- *                 />
- * */

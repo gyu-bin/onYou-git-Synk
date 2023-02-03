@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, TouchableOpacity, useWindowDimensions } from "react-native";
+import { DeviceEventEmitter, KeyboardAvoidingView, Platform, TouchableOpacity, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { ClubEditBasicsProps } from "../../Types/Club";
 import * as ImagePicker from "expo-image-picker";
@@ -10,6 +10,7 @@ import { useToast } from "react-native-toast-notifications";
 import CustomText from "../../components/CustomText";
 import CustomTextInput from "../../components/CustomTextInput";
 import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store/reducers";
 
 const Container = styled.SafeAreaView`
   flex: 1;
@@ -24,7 +25,7 @@ const Header = styled.View`
 
 const ImagePickerButton = styled.TouchableOpacity<{ height: number }>`
   width: 100%;
-  height: ${(props) => props.height}px;
+  height: ${(props: any) => props.height}px;
   justify-content: center;
   align-items: center;
   background-color: #d3d3d3;
@@ -39,7 +40,7 @@ const ImagePickerText = styled(CustomText)`
 
 const PickedImage = styled.Image<{ height: number }>`
   width: 100%;
-  height: ${(props) => props.height}px;
+  height: ${(props: any) => props.height}px;
 `;
 
 const Content = styled.View`
@@ -102,14 +103,14 @@ const CheckButton = styled.TouchableOpacity`
 
 const CheckBox = styled.View<{ check: boolean }>`
   border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: ${(props) => (props.check ? "white" : "#E8E8E8")};
+  background-color: ${(props: any) => (props.check ? "white" : "#E8E8E8")};
 `;
 
 const CategoryText = styled(CustomText)<{ selected?: boolean }>`
   font-size: 14px;
   line-height: 21px;
   text-align: center;
-  color: ${(props) => (props.selected ? "white" : "black")};
+  color: ${(props: any) => (props.selected ? "white" : "black")};
 `;
 
 const CategoryView = styled.View`
@@ -123,7 +124,7 @@ const CategoryLabel = styled.TouchableOpacity<{ selected?: boolean }>`
   padding: 3px 5px;
   border-radius: 20px;
   border: 1px solid #d7d7d7;
-  background-color: ${(props) => (props.selected ? "#295AF5" : "white")};
+  background-color: ${(props: any) => (props.selected ? "#295AF5" : "white")};
   margin: 0px 5px;
 `;
 
@@ -133,16 +134,16 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
     params: { clubData },
   },
 }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state: RootState) => state.auth.token);
   const toast = useToast();
-  const [clubName, setClubName] = useState(clubData.name);
-  const [maxNumber, setMaxNumber] = useState(clubData.maxNumber === 0 ? "무제한 정원" : `${String(clubData.maxNumber)} 명`);
+  const [clubName, setClubName] = useState<string>(clubData.name ?? "");
+  const [maxNumber, setMaxNumber] = useState<string>(clubData.maxNumber === 0 ? "무제한 정원" : `${String(clubData.maxNumber)} 명`);
   const [maxNumberInfinity, setMaxNumberInfinity] = useState<boolean>(clubData.maxNumber ? false : true);
-  const [phoneNumber, setPhoneNumber] = useState(clubData.contactPhone ?? "");
-  const [organizationName, setOrganizationName] = useState(clubData.organizationName ?? "");
-  const [isApproveRequired, setIsApproveRequired] = useState(clubData.isApprovedRequired);
-  const [selectCategory1, setCategory1] = useState(clubData.categories[0]?.id ?? -1);
-  const [selectCategory2, setCategory2] = useState(clubData.categories[1]?.id ?? -1);
+  const [phoneNumber, setPhoneNumber] = useState<string>(clubData.contactPhone ?? "");
+  const [organizationName, setOrganizationName] = useState<string>(clubData.organizationName ?? "");
+  const [isApproveRequired, setIsApproveRequired] = useState<string>(clubData.isApprovedRequired ?? "");
+  const [selectCategory1, setCategory1] = useState((clubData.categories && clubData.categories[0]?.id) ?? -1);
+  const [selectCategory2, setCategory2] = useState((clubData.categories && clubData.categories[1]?.id) ?? -1);
   const [categoryBundle, setCategoryBundle] = useState<Array<Category[]>>();
   const [imageURI, setImageURI] = useState<string | null>(null);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
@@ -168,7 +169,7 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
         console.log(`status: ${res.status}`);
         console.log(res);
         toast.show(`Error Code: ${res.status}`, {
-          type: "error",
+          type: "warning",
         });
       }
     },
@@ -176,7 +177,7 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
       console.log("--- Error updateClub ---");
       console.log(`error: ${error}`);
       toast.show(`Error Code: ${error}`, {
-        type: "error",
+        type: "warning",
       });
     },
     onSettled: (res, error) => {},
@@ -205,14 +206,28 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
   }, [phoneNumber]);
 
   const save = () => {
+    let category1 = selectCategory1;
+    let category2 = selectCategory2;
+    if (category1 === -1 && category2 === -1) {
+      toast.show(`카테고리가 설정되어있지 않습니다.`, {
+        type: "warning",
+      });
+      return;
+    } else if (category1 === -1 && category2 !== -1) {
+      category1 = category2;
+      category2 = -1;
+    }
+
     const contactPhone = phoneNumber.replace(/-/g, "");
-    const data = {
+    let data = {
+      category1Id: category1,
       clubName,
       clubMaxMember: maxNumberInfinity ? 0 : Number(maxNumber.split(" ")[0]),
       isApproveRequired,
       organizationName,
       contactPhone: contactPhone === "" ? null : contactPhone,
     };
+    if (category2 !== -1) data.category2Id = category2;
 
     const splitedURI = new String(imageURI).split("/");
 
@@ -225,7 +240,7 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
           }
         : {
             image: {
-              uri: imageURI.replace("file://", ""),
+              uri: Platform.OS === "android" ? imageURI : imageURI.replace("file://", ""),
               type: "image/jpeg",
               name: splitedURI[splitedURI.length - 1],
             },
@@ -233,6 +248,8 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
             token,
             clubId: clubData.id,
           };
+
+    console.log(data);
 
     mutation.mutate(updateData);
   };
@@ -245,8 +262,8 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
       quality: 1,
     });
 
-    if (result.cancelled === false) {
-      setImageURI(result.uri);
+    if (result.canceled === false) {
+      setImageURI(result.assets[0].uri);
     }
   };
 
@@ -281,20 +298,21 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
               <ItemTitle>모임 이름</ItemTitle>
               <ItemTextInput
                 value={clubName}
-                placeholder="모임명 16자 이내 (특수문자 불가)"
+                placeholder="모임명 8자 이내 (특수문자 불가)"
                 placeholderTextColor="#B0B0B0"
-                maxLength={16}
+                maxLength={8}
                 onEndEditing={() => {
                   if (clubName === "") {
                     toast.show("모임 이름을 공백으로 설정할 수 없습니다.", {
                       type: "warning",
                     });
-                    setClubName(clubData.name);
-                  }
+                    setClubName(clubData.name ?? "");
+                  } else setClubName((prev) => prev.trim());
                 }}
-                onChangeText={(name) => setClubName(name)}
+                onChangeText={(name: string) => setClubName(name)}
                 returnKeyType="done"
                 returnKeyLabel="done"
+                includeFontPadding={false}
               />
             </ContentItem>
             <ContentItem>
@@ -309,13 +327,13 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
                   }}
                   onEndEditing={() =>
                     setMaxNumber((prev) => {
-                      if (prev === "" || prev === "0") return `${clubData.maxNumber} 명`;
+                      if (prev.trim() === "" || prev.trim() === "0") return `${clubData.maxNumber} 명`;
                       else return `${prev} 명`;
                     })
                   }
                   value={maxNumber}
                   maxLength={6}
-                  onChangeText={(num) => {
+                  onChangeText={(num: string) => {
                     if (num.length < 3) setMaxNumber(num);
                     else
                       toast.show("최대 99명까지 가능합니다.", {
@@ -323,6 +341,7 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
                       });
                   }}
                   editable={!maxNumberInfinity}
+                  includeFontPadding={false}
                 />
                 <CheckButton
                   onPress={() => {
@@ -354,7 +373,7 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
             </ContentItem>
             <ContentItem>
               <ItemTitle>모임 담당자 연락처</ItemTitle>
-              <ItemTextInput keyboardType="numeric" placeholder="010-0000-0000" maxLength={13} onChangeText={(phone) => setPhoneNumber(phone)} value={phoneNumber} />
+              <ItemTextInput keyboardType="numeric" placeholder="010-0000-0000" maxLength={13} onChangeText={(phone: string) => setPhoneNumber(phone)} value={phoneNumber} includeFontPadding={false} />
             </ContentItem>
             <ContentItem>
               <ItemTitle>모임 소속 교회</ItemTitle>
@@ -363,9 +382,11 @@ const ClubEditBasics: React.FC<ClubEditBasicsProps> = ({
                 placeholder="모임이 소속된 교회 또는 담당자가 섬기는 교회명"
                 placeholderTextColor="#B0B0B0"
                 maxLength={16}
-                onChangeText={(name) => setOrganizationName(name)}
+                onChangeText={(name: string) => setOrganizationName(name)}
+                onEndEditing={() => setOrganizationName((prev) => prev.trim())}
                 returnKeyType="done"
                 returnKeyLabel="done"
+                includeFontPadding={false}
               />
             </ContentItem>
             {categoryLoading ? (

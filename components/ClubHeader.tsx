@@ -1,11 +1,13 @@
 import React from "react";
-import { ImageBackground, Platform, SafeAreaView, StatusBar, Text, View } from "react-native";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styled from "styled-components/native";
 import { Animated } from "react-native";
 import { BlurView } from "expo-blur";
 import { ClubHomeHaederProps } from "../Types/Club";
 import CustomText from "./CustomText";
+import moment from "moment-timezone";
+import FastImage from "react-native-fast-image";
 
 const Header = styled.View`
   width: 100%;
@@ -88,14 +90,6 @@ const DetailInfoContent = styled.View`
   margin-right: 5px;
 `;
 
-const ApplyButton = styled.TouchableOpacity`
-  background-color: #295af5;
-  padding: 5px;
-  border-radius: 5px;
-  align-items: center;
-  margin-bottom: 25px;
-`;
-
 const CollapsedView = styled.SafeAreaView<{ height: number }>`
   justify-content: center;
   align-items: center;
@@ -121,10 +115,9 @@ const ClubHeader: React.FC<ClubHomeHaederProps> = ({ imageURI, name, shortDesc, 
     inputRange: [0, headerDiff / 2, headerDiff],
     outputRange: [1, 0, 0],
   });
-
   return (
     <Header>
-      <ImageBackground style={{ width: "100%", height: heightExpanded }} source={imageURI === null ? require("../assets/basic.jpg") : { uri: imageURI }} height={heightExpanded}>
+      <FastImage style={{ width: "100%", height: heightExpanded }} source={imageURI ? { uri: imageURI } : require("../assets/basic.jpg")}>
         <AnimatedBlurView
           intensity={70}
           tint="dark"
@@ -151,14 +144,14 @@ const ClubHeader: React.FC<ClubHomeHaederProps> = ({ imageURI, name, shortDesc, 
           <AnimatedFadeOutBox style={{ opacity: fadeOut }}>
             <InformationView>
               <CategoryView>
-                {categories[0] ? (
+                {categories && categories?.length > 0 ? (
                   <CategoryBox>
                     <CategoryNameText>{categories[0].name}</CategoryNameText>
                   </CategoryBox>
                 ) : (
                   <></>
                 )}
-                {categories[1] ? (
+                {categories && categories?.length > 1 ? (
                   <CategoryBox>
                     <CategoryNameText>{categories[1].name}</CategoryNameText>
                   </CategoryBox>
@@ -176,7 +169,7 @@ const ClubHeader: React.FC<ClubHomeHaederProps> = ({ imageURI, name, shortDesc, 
               <DetailInfoView>
                 <DetailInfoContent>
                   <Ionicons name="calendar" size={15} color="yellow" style={{ marginRight: 5 }} />
-                  {schedules && schedules.length > 0 ? <ContentText>구현하세요</ContentText> : <ContentText>일정 없음</ContentText>}
+                  {schedules && schedules.length > 1 ? <ContentText>{moment(schedules[0].startDate).format("MMM Do  |  A hh:mm")}</ContentText> : <ContentText>일정 없음</ContentText>}
                 </DetailInfoContent>
                 <DetailInfoContent>
                   <Ionicons name="md-person-circle-outline" size={15} color="yellow" style={{ marginRight: 5 }} />
@@ -186,7 +179,7 @@ const ClubHeader: React.FC<ClubHomeHaederProps> = ({ imageURI, name, shortDesc, 
             </InformationView>
           </AnimatedFadeOutBox>
         </FilterView>
-      </ImageBackground>
+      </FastImage>
     </Header>
   );
 };

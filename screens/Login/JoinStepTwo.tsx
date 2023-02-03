@@ -1,11 +1,6 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useState, useEffect, createRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Keyboard, ScrollView, Alert, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
-import { useMutation } from "react-query";
-import { CommonApi } from "../../api";
-import { useDispatch } from "react-redux";
-import { Login } from "../../store/Actions";
+import React, { useState, createRef } from "react";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import styled from "styled-components/native";
 
 const Container = styled.View`
@@ -29,7 +24,7 @@ const BorderWrap = styled.View`
 `;
 
 const Border = styled.View`
-  width: 20%;
+  width: 10%;
   height: 2px;
   background-color: #295af5;
 `;
@@ -75,62 +70,25 @@ const Error = styled.Text`
   margin-top: 7px;
 `;
 
-const JoinStepTwo: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate }, route: { params: name } }) => {
-  const [userName, setUserName] = useState(name);
-  const [userEmail, setUserEmail] = useState("");
+const JoinStepTwo: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate } }) => {
+  const [userName, setUserName] = useState("");
   const [errortext, setErrortext] = useState(false);
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        // AsyncStorage에서 inputData에 저장된 값 가져오기
-        const value = await AsyncStorage.getItem("userInfo");
-        // value에 값이 있으면 콘솔에 찍어줘
-        if (value !== null) {
-          console.log(value);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    // 함수 실행
-    getData();
-  }, []);
-
-  const storeData = async () => {
-    try {
-      await AsyncStorage.setItem("userInfo", JSON.stringify({ name: userName.name, email: userEmail }), () => {
-        console.log("유저정보 저장 완료");
-      });
-      console.log("등록 완료");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const emailInputRef = createRef();
-  const emailReg = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/;
+  const nameInputRef = createRef();
+  const nameReg = /^[가-힣]+$/;
 
   const validate = () => {
-    if (!emailReg.test(userEmail)) {
+    if (!nameReg.test(userName)) {
       setErrortext(true);
       return;
     } else {
       setErrortext(false);
-      storeData();
       navigate("LoginStack", {
         screen: "JoinStepThree",
-        name: userName.name,
-        email: userEmail,
+        name: userName,
       });
     }
   };
-
-  /* const goToNext = () => {
-    navigate("LoginStack", {
-      screen: "JoinStepThree",
-    });
-  }; */
 
   return (
     <TouchableWithoutFeedback
@@ -143,21 +101,23 @@ const JoinStepTwo: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navig
           <BorderWrap>
             <Border></Border>
           </BorderWrap>
-          <AskText>이메일을 적어주세요.</AskText>
-          <SubText>로그인 ID로 활용됩니다.</SubText>
+          <AskText>성함이 어떻게 되시나요?</AskText>
+          <SubText>정확한 성함을 입력해 주세요.</SubText>
           <Input
-            placeholder="example@gmail.com"
-            placeholderTextColor={"#B0B0B0"}
+            keyboardType={"name-phone-pad"}
+            placeholder="홍길동"
+            maxLength={10}
             autoCorrect={false}
-            onChangeText={(Email) => setUserEmail(Email)}
-            ref={emailInputRef}
+            onChangeText={(UserName: string) => setUserName(UserName)}
+            ref={nameInputRef}
             returnKeyType="next"
             blurOnSubmit={false}
+            placeholderTextColor={"#B0B0B0"}
           />
-          {errortext === true || !emailReg.test(userEmail) ? <Error>입력을 다시 한번 확인해주세요.</Error> : null}
+          {errortext === true || !nameReg.test(userName) ? <Error>입력을 다시 한번 확인해주세요.</Error> : null}
         </Wrap>
         <Wrap>
-          <Button onPress={validate} disabled={!emailReg.test(userEmail)}>
+          <Button onPress={validate} disabled={!nameReg.test(userName)}>
             <ButtonTitle>다음</ButtonTitle>
           </Button>
         </Wrap>

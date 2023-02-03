@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect } from "react";
-import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import styled from "styled-components/native";
-import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons, Ionicons, createIconSetFromFontello } from "@expo/vector-icons";
 import ClubList from "../components/ClubList";
 import { useInfiniteQuery, useQuery, useQueryClient } from "react-query";
 import { Category, CategoryResponse, ClubApi, Club, ClubsResponse, ClubsParams } from "../api";
@@ -11,6 +11,7 @@ import CustomText from "../components/CustomText";
 import { Modalize, useModalize } from "react-native-modalize";
 import { Portal } from "react-native-portalize";
 import { Slider } from "@miblanchard/react-native-slider";
+import { RootState } from "../redux/store/reducers";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -64,8 +65,8 @@ const HeaderItem = styled.View`
 `;
 
 const HeaderItemText = styled(CustomText)`
-  font-size: 11px;
-  line-height: 15px;
+  font-size: 13px;
+  line-height: 18px;
 `;
 
 const MainView = styled.View`
@@ -81,6 +82,8 @@ const EmptyView = styled.View`
 const EmptyText = styled(CustomText)`
   font-size: 14px;
   color: #bdbdbd;
+  justify-content: center;
+  align-items: center;
 `;
 
 const FloatingButton = styled.TouchableOpacity`
@@ -101,7 +104,7 @@ const FloatingButton = styled.TouchableOpacity`
 
 const ModalContainer = styled.View`
   flex: 1;
-  padding: 30px 20px 20px 20px;
+  padding: 35px 20px 20px 20px;
 `;
 
 const ItemView = styled.View`
@@ -111,43 +114,49 @@ const ItemView = styled.View`
 `;
 
 const ItemLeftView = styled.View`
-  flex: 1;
+  flex: 0.23;
 `;
 const ItemRightView = styled.View`
-  flex: 4;
+  flex: 0.77;
 `;
 const ItemNameText = styled(CustomText)`
   font-family: "NotoSansKR-Medium";
-  font-size: 15px;
-  line-height: 21px;
+  font-size: 16px;
+  line-height: 22px;
 `;
 const ItemContentView = styled.View``;
 const ItemContentText = styled(CustomText)`
+  font-size: 14px;
+`;
+const ItemContentSubText = styled(CustomText)`
   font-size: 13px;
 `;
-const ItemContentSubText = styled(CustomText)``;
 const ItemContentButton = styled.TouchableOpacity`
   flex-direction: row;
   align-items: center;
 `;
 
 const CheckBox = styled.View`
-  height: 75%;
+  height: 17px;
+  width: 17px;
+  justify-content: center;
+  align-items: center;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  margin-left: 5px;
+  margin-left: 8px;
   background-color: white;
 `;
 
 const SubmitButton = styled.TouchableOpacity`
-  height: 50px;
+  height: 60px;
   justify-content: center;
   align-items: center;
   background-color: #ff714b;
 `;
 const SubmitText = styled(CustomText)`
-  font-size: 20px;
-  line-height: 26px;
+  font-size: 23px;
+  line-height: 32px;
   font-family: "NotoSansKR-Medium";
+  padding-bottom: 10px;
   color: white;
 `;
 
@@ -160,9 +169,10 @@ const SortingItemButton = styled.TouchableOpacity`
   margin: 3px 0px;
 `;
 const SortingItemText = styled(CustomText)<{ selected: boolean }>`
-  font-size: 13px;
-  color: ${(props) => (props.selected ? "#FF714B" : "#b0b0b0")};
-  font-family: ${(props) => (props.selected ? "NotoSansKR-Medium" : "NotoSansKR-Regular")};
+  font-size: 15px;
+  line-height: 20px;
+  color: ${(props: any) => (props.selected ? "#FF714B" : "#b0b0b0")};
+  font-family: ${(props: any) => (props.selected ? "NotoSansKR-Medium" : "NotoSansKR-Regular")};
 `;
 
 interface ClubSortItem {
@@ -172,7 +182,7 @@ interface ClubSortItem {
 }
 
 const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state: RootState) => state.auth.token);
   const queryClient = useQueryClient();
   const [params, setParams] = useState<ClubsParams>({
     token,
@@ -185,7 +195,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
     showMy: 0,
   });
   const [memberRange, setMemberRange] = useState<number | number[]>([0, 100]);
-  let sliderTimeoutId: NodeJS.Timeout;
+  let sliderTimeoutId: number;
   const [showRecruiting, setShowRecruiting] = useState<number>(0);
   const [showMy, setShowMy] = useState<number>(0);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -196,6 +206,9 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
   const { ref: sortingSheetRef, open: openSortingSheet, close: closeSortingSheet } = useModalize();
   const [sortItem, setSortItem] = useState<ClubSortItem[]>();
   const [selectedSortIndex, setSelectedSortIndex] = useState<number>(0);
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const colSize = Math.round(SCREEN_WIDTH / 2);
+
   const {
     isLoading: clubsLoading,
     data: clubs,
@@ -204,9 +217,9 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
     refetch: clubsRefetch,
     fetchNextPage,
   } = useInfiniteQuery<ClubsResponse>(["clubs", params], ClubApi.getClubs, {
-    getNextPageParam: (currentPage) => {
-      if (currentPage) {
-        return currentPage.hasNext === false ? null : currentPage.responses?.content[currentPage.responses?.content.length - 1].customCursor;
+    getNextPageParam: (lastPage) => {
+      if (lastPage) {
+        return lastPage.hasNext === false ? null : lastPage.responses?.content[lastPage.responses?.content.length - 1].customCursor;
       }
     },
     onSuccess: (res) => {
@@ -336,6 +349,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
   ) : (
     <>
       <Container>
+        <StatusBar barStyle={"dark-content"} />
         <HeaderView>
           <FlatList
             showsHorizontalScrollIndicator={false}
@@ -382,7 +396,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
               }}
             ></View>
             <HeaderItem>
-              <HeaderItemText>최신순</HeaderItemText>
+              <HeaderItemText>{sortItem ? sortItem[selectedSortIndex].title : "최신순"}</HeaderItemText>
               <TouchableOpacity
                 style={{
                   height: 35,
@@ -408,10 +422,11 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
               refreshing={refreshing}
               onRefresh={onRefresh}
               onEndReached={loadMore}
-              data={clubs?.pages.map((page) => page?.responses?.content).flat()}
+              data={clubs?.pages?.map((page) => page?.responses?.content).flat()}
               columnWrapperStyle={{ justifyContent: "space-between" }}
               ItemSeparatorComponent={() => <View style={{ height: 25 }} />}
-              ListFooterComponent={() => <View style={{ height: 60 }} />}
+              ListFooterComponent={() => <View />}
+              ListFooterComponentStyle={{ marginBottom: 60 }}
               numColumns={2}
               keyExtractor={(item: Club, index: number) => String(index)}
               renderItem={({ item, index }: { item: Club; index: number }) => (
@@ -425,16 +440,17 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
                     thumbnailPath={item.thumbnail}
                     organizationName={item.organizationName}
                     clubName={item.name}
-                    memberNum={item.members.filter((member) => member.role !== "PENDING").length}
+                    memberNum={item.members?.filter((member) => member.role !== "PENDING").length}
                     clubShortDesc={item.clubShortDesc}
                     categories={item.categories}
                     recruitStatus={item.recruitStatus}
+                    colSize={colSize}
                   />
                 </TouchableOpacity>
               )}
               ListEmptyComponent={() => (
                 <EmptyView>
-                  <EmptyText style={{ justifyContent: "center", alignItems: "center" }}>{`조건에 해당하는 모임이 없습니다.`}</EmptyText>
+                  <EmptyText>{`조건에 해당하는 모임이 없습니다.`}</EmptyText>
                 </EmptyView>
               )}
             />
@@ -448,8 +464,9 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
       <Portal>
         <Modalize
           ref={filteringSheetRef}
-          modalHeight={250}
+          modalHeight={270}
           handlePosition="inside"
+          handleStyle={{ top: 14, height: 3, width: 35 }}
           modalStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
           FooterComponent={
             <SubmitButton
@@ -475,7 +492,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
                 >
                   <ItemContentText>멤버 모집중인 모임만 보기</ItemContentText>
                   <CheckBox>
-                    <Ionicons name="checkmark-sharp" size={10} color={showRecruiting ? "#FF714B" : "white"} />
+                    <Ionicons name="checkmark-sharp" size={15} color={showRecruiting ? "#FF714B" : "white"} />
                   </CheckBox>
                 </ItemContentButton>
               </ItemRightView>
@@ -521,7 +538,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
                 >
                   <ItemContentText>내가 가입된 모임만 보기</ItemContentText>
                   <CheckBox>
-                    <Ionicons name="checkmark-sharp" size={10} color={showMy ? "#FF714B" : "#e8e8e8"} />
+                    <Ionicons name="checkmark-sharp" size={15} color={showMy ? "#FF714B" : "#e8e8e8"} />
                   </CheckBox>
                 </ItemContentButton>
               </ItemRightView>
@@ -531,7 +548,7 @@ const Clubs: React.FC<ClubListScreenProps> = ({ navigation: { navigate } }) => {
       </Portal>
 
       <Portal>
-        <Modalize ref={sortingSheetRef} modalHeight={250} handlePosition="inside" modalStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+        <Modalize ref={sortingSheetRef} modalHeight={260} handlePosition="inside" handleStyle={{ top: 14, height: 3, width: 35 }} modalStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
           <ModalContainer>
             <SortingItemView>
               {sortItem?.map((item, index) => (

@@ -1,6 +1,7 @@
 # OSX
 #
 .DS_Store
+.vscode
 
 # Xcode
 #
@@ -20,6 +21,7 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
+project.xcworkspace
 
 # Android/IntelliJ
 #
@@ -28,6 +30,8 @@ build/
 .gradle
 local.properties
 *.iml
+*.hprof
+.cxx/
 
 # node.js
 #
@@ -40,6 +44,7 @@ yarn-error.log
 .expo/settings.json
 .expo/packager-info.json
 web-build/
+dist/
 
 # BUCK
 buck-out/

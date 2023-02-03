@@ -1,13 +1,11 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useState, createRef, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Keyboard, ScrollView, Alert, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
-import { useMutation, useQuery } from "react-query";
-import { UserApi, UserInfoRequest, User, SignUp } from "../../api";
-import { useSelector, useDispatch } from "react-redux";
-import { Login } from "../../store/Actions";
+import React, { useLayoutEffect } from "react";
+import { TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
-import { resolveUri } from "expo-asset/build/AssetSources";
+import { Entypo } from "@expo/vector-icons";
+import { useMutation } from "react-query";
+import { UserApi, SignUp } from "../../api";
+import { useToast } from "react-native-toast-notifications";
 
 const Container = styled.View`
   width: 100%;
@@ -93,51 +91,73 @@ const ButtonTitle = styled.Text`
   font-weight: 700;
 `;
 
-const JoinConfirm: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate }, route: { params: name, email, password } }) => {
-  const [userName, setUserName] = useState(name);
+const JoinConfirm: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({
+  navigation: { navigate, setOptions },
+  route: {
+    params: { name, email, password, sex, birth, phone, church },
+  },
+}) => {
+  const toast = useToast();
 
   const mutation = useMutation(UserApi.registerUserInfo, {
     onSuccess: (res) => {
-      if (res.status === 200 && res.resultCode === "OK") {
-        console.log(`success`);
-      } else {
-        console.log(`mutation success but please check status code`);
+      if (res.status === 200) {
+        navigate("LoginStack", {
+          screen: "JoinStepSuccess",
+          email,
+          password,
+          token: res.token,
+        });
+      } else if (res.status === 404) {
         console.log(res);
+        toast.show("이미 가입된 사용자입니다.", {
+          type: "warning",
+        });
+        navigate("LoginStack", {
+          screen: "Login",
+        });
+      } else {
+        console.log(`user register mutation success but please check status code`);
+        console.log(res);
+        toast.show(`회원가입에 실패했습니다. (Error Code: ${res.status})`, {
+          type: "warning",
+        });
       }
     },
     onError: (error) => {
-      console.log("--- Error ---");
+      console.log("--- regeister Error ---");
       console.log(`error: ${error}`);
+      toast.show(`회원가입에 실패했습니다. (Error Code: ${error})`, {
+        type: "warning",
+      });
     },
-    onSettled: (res, error) => {},
   });
 
   const onSubmit = () => {
     const data = {
-      name: name?.name,
-      email: name?.email,
-      password: name?.password,
-      sex: name?.sex === "남성" ? "M" : "F",
-      birthday: name?.birth,
-      phoneNumber: name?.phone,
-      organizationName: name?.church,
+      name,
+      email,
+      password,
+      sex: sex === "남성" ? "M" : "F",
+      birthday: birth,
+      phoneNumber: phone,
+      organizationName: church,
     };
 
     const requestData: SignUp = data;
 
-    console.log(requestData);
-
     mutation.mutate(requestData);
   };
 
-  const goToNext = () => {
-    onSubmit();
-    navigate("LoginStack", {
-      screen: "JoinStepSuccess",
-      email: name?.email,
-      password: name?.password,
+  useLayoutEffect(() => {
+    setOptions({
+      headerLeft: () => (
+        <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "JoinStepEight", name, email, password, sex, birth, phone, church })}>
+          <Entypo name="chevron-thin-left" size={20} color="black" />
+        </TouchableOpacity>
+      ),
     });
-  };
+  }, [name, email, password, sex, birth, phone, church]);
 
   return (
     <Container>
@@ -151,11 +171,11 @@ const JoinConfirm: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navig
           </TitleBorder>
           <TextWrap>
             <TextTitle>이름</TextTitle>
-            <TextInfo>{name?.name}</TextInfo>
+            <TextInfo>{name}</TextInfo>
           </TextWrap>
           <TextWrap>
             <TextTitle>이메일</TextTitle>
-            <TextInfo>{name?.email}</TextInfo>
+            <TextInfo>{email}</TextInfo>
           </TextWrap>
         </Form>
         <Form>
@@ -164,29 +184,24 @@ const JoinConfirm: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navig
           </TitleBorder>
           <TextWrap>
             <TextTitle>성별</TextTitle>
-            <TextInfo>{name?.sex}</TextInfo>
+            <TextInfo>{sex}</TextInfo>
           </TextWrap>
           <TextWrap>
             <TextTitle>생년월일</TextTitle>
-            <TextInfo>{name?.birth}</TextInfo>
+            <TextInfo>{birth}</TextInfo>
           </TextWrap>
           <TextWrap>
             <TextTitle>연락처</TextTitle>
-            <TextInfo>{name?.phone}</TextInfo>
+            <TextInfo>{phone}</TextInfo>
           </TextWrap>
           <TextWrap>
             <TextTitle>출석교회</TextTitle>
-            <TextInfo>{name?.church}</TextInfo>
+            <TextInfo>{church}</TextInfo>
           </TextWrap>
-        </Form>
-        <Form>
-          <TitleBorder>
-            <Title>관심 카테고리</Title>
-          </TitleBorder>
         </Form>
       </Wrap>
       <Wrap>
-        <Button onPress={goToNext}>
+        <Button onPress={onSubmit}>
           <ButtonTitle>일치합니다</ButtonTitle>
         </Button>
       </Wrap>

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Animated, StatusBar, TouchableOpacity } from "react-native";
+import { Animated, DeviceEventEmitter, StatusBar, TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
 import { Feather, AntDesign, FontAwesome5, Entypo, Ionicons } from "@expo/vector-icons";
-import { ClubManagementMainProps, RootStackParamList } from "../../types/Club";
+import { ClubManagementMainProps, ClubStackParamList } from "../../types/Club";
 import CircleIcon from "../../components/CircleIcon";
 import CustomText from "../../components/CustomText";
 import { Shadow } from "react-native-shadow-2";
@@ -11,6 +11,7 @@ import { Club, ClubApi, ClubResponse, ClubUpdateRequest } from "../../api";
 import { useSelector } from "react-redux";
 import { useFocusEffect } from "@react-navigation/native";
 import { useToast } from "react-native-toast-notifications";
+import { RootState } from "../../redux/store/reducers";
 
 const Container = styled.SafeAreaView`
   flex: 1;
@@ -139,7 +140,7 @@ const AnimatedDot = Animated.createAnimatedComponent(Dot);
 interface ClubEditItem {
   icon: React.ReactNode;
   title: string;
-  screen: keyof RootStackParamList;
+  screen: keyof ClubStackParamList;
 }
 
 const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
@@ -148,11 +149,34 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
     params: { clubData, refresh },
   },
 }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state: RootState) => state.auth.token);
   const toast = useToast();
   const [data, setData] = useState<Club>(clubData);
-  const [items, setItems] = useState<ClubEditItem[]>();
   const [isToggle, setIsToggle] = useState(false);
+  const iconSize = 14;
+  const items: ClubEditItem[] = [
+    {
+      icon: <Feather name="tool" size={iconSize} color="black" />,
+      title: "모임 기본 사항 수정",
+      screen: "ClubEditBasics",
+    },
+    {
+      icon: <Feather name="edit-3" size={iconSize} color="black" />,
+      title: "소개글 수정",
+      screen: "ClubEditIntroduction",
+    },
+    {
+      icon: <Feather name="users" size={iconSize} color="black" />,
+      title: "관리자 / 멤버 관리",
+      screen: "ClubEditMembers",
+    },
+    {
+      icon: <Feather name="trash-2" size={iconSize} color="red" />,
+      title: "모임 삭제",
+      screen: "ClubDelete",
+    },
+  ];
+
   const X = useRef(new Animated.Value(0)).current;
   const { refetch: clubDataRefetch } = useQuery<ClubResponse>(["getClub", token, clubData.id], ClubApi.getClub, {
     onSuccess: (res) => {
@@ -166,7 +190,7 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
         }
       } else {
         toast.show(`Error Code: ${res.status}`, {
-          type: "error",
+          type: "warning",
         });
       }
     },
@@ -174,7 +198,7 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
       console.log("--- Error getClub ---");
       console.log(`error: ${error}`);
       toast.show(`Error Code: ${error}`, {
-        type: "error",
+        type: "warning",
       });
     },
   });
@@ -195,12 +219,13 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
             type: "success",
           });
         }
+        DeviceEventEmitter.emit("ClubRefetch");
       } else {
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
         console.log(res);
         toast.show(`Error Code: ${res.status}`, {
-          type: "error",
+          type: "warning",
         });
       }
     },
@@ -208,7 +233,7 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
       console.log("--- Error ---");
       console.log(`error: ${error}`);
       toast.show(`Error Code: ${error}`, {
-        type: "error",
+        type: "warning",
       });
     },
   });
@@ -221,33 +246,6 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
       }
     }, [refresh])
   );
-
-  useLayoutEffect(() => {
-    const iconSize = 14;
-    setItems([
-      {
-        icon: <Feather name="tool" size={iconSize} color="black" />,
-        title: "모임 기본 사항 수정",
-        screen: "ClubEditBasics",
-      },
-      {
-        icon: <Feather name="edit-3" size={iconSize} color="black" />,
-        title: "소개글 수정",
-        screen: "ClubEditIntroduction",
-      },
-      {
-        icon: <Feather name="users" size={iconSize} color="black" />,
-        title: "관리자 / 멤버 관리",
-        screen: "ClubEditMembers",
-      },
-      {
-        icon: <Feather name="trash-2" size={iconSize} color="red" />,
-        title: "모임 삭제",
-        screen: "ClubDelete",
-      },
-    ]);
-  }, []);
-
   useLayoutEffect(() => {
     if (isToggle) {
       // CLOSE -> OPEN
@@ -266,23 +264,27 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
     }
   }, [isToggle]);
 
-  const goToScreen = (screen: keyof RootStackParamList) => {
+  const goToScreen = (screen: keyof ClubStackParamList) => {
     return navigate(screen, { clubData: data });
   };
 
   const onPressToggle = () => {
     let updateData: ClubUpdateRequest = {
-      data: { recruitStatus: isToggle ? "CLOSE" : "OPEN" },
+      data: { recruitStatus: isToggle ? "CLOSE" : "OPEN", category1Id: data.categories.length > 0 ? data.categories[0].id : -1, category2Id: data.categories.length > 1 ? data.categories[1].id : -1 },
       token,
       clubId: clubData.id,
     };
+
+    if (data?.categories?.length === 1) {
+      delete updateData.data?.category2Id;
+    }
 
     mutation.mutate(updateData);
   };
 
   return (
     <Container>
-      <StatusBar barStyle={"default"} />
+      <StatusBar barStyle={"dark-content"} />
       <MainView>
         <Shadow distance={3} sides={{ top: false }} style={{ width: "100%" }}>
           <Header>
@@ -309,20 +311,11 @@ const ClubManagementMain: React.FC<ClubManagementMainProps> = ({
                   <FontAwesome5 name="cross" size={6} color="#A5A5A5" />
                   <TagText style={{ color: "#A5A5A5", marginLeft: 3 }}>{data.organizationName}</TagText>
                 </Tag>
-                {data.categories[0] ? (
-                  <Tag color={"#B4B4B4"}>
-                    <TagText style={{ color: "white" }}>{data.categories[0].name}</TagText>
+                {data?.categories?.map((category, index) => (
+                  <Tag key={index} color={"#B4B4B4"}>
+                    <TagText style={{ color: "white" }}>{category.name}</TagText>
                   </Tag>
-                ) : (
-                  <></>
-                )}
-                {data.categories[1] ? (
-                  <Tag color={"#B4B4B4"}>
-                    <TagText style={{ color: "white" }}>{data.categories[1].name}</TagText>
-                  </Tag>
-                ) : (
-                  <></>
-                )}
+                ))}
               </TagView>
               <Title>{data.name}</Title>
             </InformationView>

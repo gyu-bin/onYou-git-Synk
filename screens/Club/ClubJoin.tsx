@@ -1,5 +1,5 @@
-import React, { useLayoutEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, StatusBar, TouchableOpacity } from "react-native";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { DeviceEventEmitter, KeyboardAvoidingView, Platform, StatusBar, TouchableOpacity } from "react-native";
 import CustomText from "../../components/CustomText";
 import styled from "styled-components/native";
 import CustomTextInput from "../../components/CustomTextInput";
@@ -7,13 +7,14 @@ import { useMutation } from "react-query";
 import { ClubApi, ClubApplyRequest } from "../../api";
 import { useSelector } from "react-redux";
 import { useToast } from "react-native-toast-notifications";
+import { RootState } from "../../redux/store/reducers";
 
 const Container = styled.SafeAreaView`
   flex: 1;
-  padding: 0px 20px;
 `;
 const MainView = styled.ScrollView`
   height: 100%;
+  padding: 0px 20px;
 `;
 
 const Header = styled.View`
@@ -48,7 +49,7 @@ const ClubJoin = ({
   },
 }) => {
   const [memo, setMemo] = useState<string>("");
-  const token = useSelector((state) => state.AuthReducers.authToken);
+  const token = useSelector((state: RootState) => state.auth.token);
   const toast = useToast();
 
   const clubApplyMutation = useMutation(ClubApi.applyClub, {
@@ -62,8 +63,8 @@ const ClubJoin = ({
         console.log(`mutation success but please check status code`);
         console.log(`status: ${res.status}`);
         console.log(res);
-        toast.show(`Error Code: ${res.status}`, {
-          type: "error",
+        toast.show(`${res.message} (Error Code: ${res.status})`, {
+          type: "warning",
         });
       }
     },
@@ -71,7 +72,7 @@ const ClubJoin = ({
       console.log("--- Error ---");
       console.log(`error: ${error}`);
       toast.show(`Error Code: ${error}`, {
-        type: "error",
+        type: "warning",
       });
     },
   });
@@ -97,9 +98,15 @@ const ClubJoin = ({
     });
   }, [memo]);
 
+  useEffect(() => {
+    return () => {
+      DeviceEventEmitter.emit("ClubRefetch");
+    };
+  }, []);
+
   return (
     <Container>
-      <StatusBar barStyle={"default"} />
+      <StatusBar barStyle={"dark-content"} />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={10} style={{ flex: 1 }}>
         <MainView>
           <Header>
@@ -111,9 +118,11 @@ const ClubJoin = ({
             placeholderTextColor="#B0B0B0"
             textAlign="left"
             multiline={true}
-            maxLength={500}
+            maxLength={100}
             textAlignVertical="top"
             onChangeText={(text: string) => setMemo(text)}
+            onEndEditing={() => setMemo((prev) => prev.trim())}
+            includeFontPadding={false}
           />
         </MainView>
       </KeyboardAvoidingView>

@@ -1,12 +1,10 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useState, useEffect, createRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Keyboard, ScrollView, Alert, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
-import { useMutation } from "react-query";
-import { CommonApi } from "../../api";
-import { useDispatch } from "react-redux";
-import { Login } from "../../store/Actions";
+import React, { useState, useLayoutEffect } from "react";
+import { Keyboard, TouchableWithoutFeedback, TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
+import { Entypo } from "@expo/vector-icons";
+import CustomText from "../../components/CustomText";
+import CustomTextInput from "../../components/CustomTextInput";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const Container = styled.View`
@@ -91,50 +89,33 @@ const ChoiceButton = styled.TouchableOpacity`
   align-items: center;
 `;
 
-const JoinStepFive: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({ navigation: { navigate }, route: { params: name, email, password } }) => {
-  const [userName, setUserName] = useState(name);
-  const [userEmail, setUserEmail] = useState(email);
-  const [userPw, setUserPw] = useState(password);
+const JoinStepFive: React.FC<NativeStackScreenProps<any, "AuthStack">> = ({
+  navigation: { navigate, setOptions },
+  route: {
+    params: { name, email, password },
+  },
+}) => {
   const [approvalMethod, setApprovalMethod] = useState<number>(0);
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        // AsyncStorage에서 inputData에 저장된 값 가져오기
-        const value = await AsyncStorage.getItem("userInfo");
-        // value에 값이 있으면 콘솔에 찍어줘
-        if (value !== null) {
-          console.log(value);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    // 함수 실행
-    getData();
-  }, []);
-
-  const storeData = async () => {
-    try {
-      await AsyncStorage.setItem("userInfo", JSON.stringify({ name: userName.name, email: userName.email, password: userName.password, sex: approvalMethod === 0 ? "남성" : "여성" }), () => {
-        console.log("유저정보 저장 완료");
-      });
-      console.log("등록 완료");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const goToNext = () => {
-    storeData();
     navigate("LoginStack", {
       screen: "JoinStepSix",
-      name: userName.name,
-      email: userName.email,
-      password: userName.password,
+      name,
+      email,
+      password,
       sex: approvalMethod === 0 ? "남성" : "여성",
     });
   };
+
+  useLayoutEffect(() => {
+    setOptions({
+      headerLeft: () => (
+        <TouchableOpacity onPress={() => navigate("LoginStack", { screen: "JoinStepFour", name, email, password })}>
+          <Entypo name="chevron-thin-left" size={20} color="black" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [name, email, password]);
 
   return (
     <TouchableWithoutFeedback

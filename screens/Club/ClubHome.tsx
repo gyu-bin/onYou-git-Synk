@@ -1,17 +1,14 @@
 import React, { useLayoutEffect, useState } from "react";
-import { ActivityIndicator, useWindowDimensions, Animated, FlatList } from "react-native";
+import { ActivityIndicator, useWindowDimensions, Animated, FlatList, DeviceEventEmitter } from "react-native";
 import styled from "styled-components/native";
 import { Feather, Entypo, Ionicons } from "@expo/vector-icons";
 import { ClubHomeScreenProps, ClubHomeParamList, RefinedSchedule } from "../../Types/Club";
-import { useMutation, useQuery } from "react-query";
-import { Club, ClubApi, ClubResponse, ClubRoleResponse, ClubSchedulesResponse, Member, Schedule } from "../../api";
+import { Member } from "../../api";
 import ScheduleModal from "./ClubScheduleModal";
 import CircleIcon from "../../components/CircleIcon";
-import ScheduleAddModal from "./ClubScheduleAddModal";
-import { useToast } from "react-native-toast-notifications";
-import { useSelector } from "react-redux";
-import moment from "moment-timezone";
 import CustomText from "../../components/CustomText";
+import { useAppDispatch } from "../../redux/store";
+import clubSlice from "../../redux/slices/club";
 
 const MEMBER_ICON_KERNING = 25;
 const MEMBER_ICON_SIZE = 50;
@@ -25,8 +22,8 @@ const Loader = styled.View`
 
 const Break = styled.View<{ sep: number }>`
   width: 100%;
-  margin-bottom: ${(props) => props.sep * 2}px;
-  margin-top: ${(props) => props.sep}px;
+  margin-bottom: ${(props: any) => props.sep}px;
+  margin-top: ${(props: any) => props.sep}px;
   border-bottom-width: 1px;
   border-bottom-color: rgba(0, 0, 0, 0.2);
   opacity: 0.5;
@@ -54,8 +51,8 @@ const SectionTitle = styled(CustomText)`
 `;
 
 const ContentView = styled.View<{ paddingSize?: number }>`
-  padding-left: ${(props) => (props.paddingSize ? props.paddingSize + 5 : 5)}px;
-  padding-right: ${(props) => (props.paddingSize ? props.paddingSize + 5 : 5)}px;
+  padding-left: ${(props: any) => (props.paddingSize ? props.paddingSize + 5 : 5)}px;
+  padding-right: ${(props: any) => (props.paddingSize ? props.paddingSize + 5 : 5)}px;
   margin-bottom: 15px;
 `;
 
@@ -107,7 +104,7 @@ const ScheduleBadgeText = styled(CustomText)`
 `;
 
 const ScheduleDateView = styled.View<{ index: number }>`
-  background-color: ${(props) => (props.index === 0 ? "#eaff87" : "#CCCCCC")};
+  background-color: ${(props: any) => (props.index === 0 ? "#FF6C45" : "#EBEBEB")};
   justify-content: center;
   align-items: center;
   padding: 7px 15px;
@@ -127,9 +124,10 @@ const ScheduleDetailItemView = styled.View`
   margin: 1px 5px;
 `;
 
-const ScheduleText = styled(CustomText)`
+const ScheduleText = styled(CustomText)<{ index: number }>`
   font-size: 11px;
   line-height: 15px;
+  color: ${(props: any) => (props.index === 0 ? "white" : "black")};
 `;
 
 const ScheduleSubText = styled(CustomText)`
@@ -139,10 +137,11 @@ const ScheduleSubText = styled(CustomText)`
   line-height: 13px;
 `;
 
-const ScheduleTitle = styled(CustomText)`
+const ScheduleTitle = styled(CustomText)<{ index: number }>`
   font-size: 18px;
   font-family: "NotoSansKR-Bold";
   line-height: 25px;
+  color: ${(props: any) => (props.index === 0 ? "white" : "black")};
 `;
 
 const MemberView = styled.View`
@@ -176,103 +175,32 @@ const MemberText = styled(CustomText)`
   color: #b0b0b0;
 `;
 
-const ModalHeaderRight = styled.View`
-  position: absolute;
-  right: 15px;
-`;
-
-const ModalCloseButton = styled.TouchableOpacity``;
-
 const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
   navigation: { navigate },
   route: {
     params: { clubData },
   },
   scrollY,
+  offsetY,
+  scheduleOffsetX,
   headerDiff,
   clubRole,
+  schedules,
 }) => {
-  const token = useSelector((state) => state.AuthReducers.authToken);
   const [scheduleVisible, setScheduleVisible] = useState(false);
-  const [scheduleAddVisible, setScheduleAddVisible] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(-1);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const [scheduleData, setScheduleData] = useState<Array<RefinedSchedule>>([]);
   const [memberLoading, setMemberLoading] = useState(true);
   const [memberData, setMemberData] = useState<Member[][]>();
   const [managerData, setManagerData] = useState<Member[][]>();
   const [masterData, setMasterData] = useState<Member>();
-  const toast = useToast();
   const memberCountPerLine = Math.floor((SCREEN_WIDTH - SCREEN_PADDING_SIZE) / (MEMBER_ICON_SIZE + MEMBER_ICON_KERNING));
+  const dispatch = useAppDispatch();
 
-  const {
-    isLoading: scheduleLoading,
-    data: schedules,
-    refetch: scheduleRefetch,
-    isRefetching: isRefetchingSchedules,
-  } = useQuery<ClubSchedulesResponse>(["getClubSchedules", clubData.id], ClubApi.getClubSchedules, {
-    onSuccess: (res) => {
-      const week = ["일", "월", "화", "수", "목", "금", "토"];
-      const result: RefinedSchedule[] = [];
-      for (let i = 0; i < res?.data?.length; ++i) {
-        const date = new Date(res.data[i].startDate);
-        const dayOfWeek = week[date.getDay()];
-        let refined: RefinedSchedule = {
-          id: res.data[i].id,
-          location: res.data[i].location,
-          name: res.data[i].name,
-          members: res.data[i].members,
-          startDate: res.data[i].startDate,
-          endDate: res.data[i].endDate,
-          content: res.data[i].content,
-          year: moment(res.data[i].startDate).format("YYYY"),
-          month: moment(res.data[i].startDate).format("MM"),
-          day: moment(res.data[i].startDate).format("DD"),
-          hour: moment(res.data[i].startDate).format("h"),
-          minute: moment(res.data[i].startDate).format("m"),
-          ampm: moment(res.data[i].startDate).format("A") === "AM" ? "오전" : "오후",
-          dayOfWeek: dayOfWeek,
-          isEnd: false,
-        };
-        result.push(refined);
-      }
-
-      result.push({ isEnd: true });
-
-      setScheduleData(result);
-    },
-    onError: (error) => {
-      toast.show(`스케줄 데이터를 불러오지 못했습니다. ${error}`, {
-        type: "error",
-      });
-    },
-  });
-
-  const scheduleMutation = useMutation(ClubApi.createClubSchedule, {
-    onSuccess: (res) => {
-      if (res.status === 200 && res.json?.resultCode === "OK") {
-        setScheduleAddVisible(false);
-        toast.show("일정 등록이 완료되었습니다.", {
-          type: "success",
-        });
-        scheduleRefetch();
-      } else {
-        toast.show("일정 등록에 실패했습니다.", {
-          type: "warning",
-        });
-        console.log(`mutation success but please check status code`);
-        console.log(`status: ${res.status}`);
-        console.log(res.json);
-      }
-    },
-    onError: (error) => {
-      toast.show("일정 등록에 실패했습니다.", {
-        type: "warning",
-      });
-      console.log("--- Error ---");
-      console.log(`error: ${error}`);
-    },
-  });
+  useLayoutEffect(() => {
+    console.log(`${clubData.id} clubHome useLayoutEffect`);
+    getData();
+  }, []);
 
   const getClubMembers = () => {
     const members: Member[] = [];
@@ -280,13 +208,15 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
     const memberBundle: Member[][] = [];
     const managerBundle: Member[][] = [];
 
-    for (let i = 0; i < clubData.members.length; ++i) {
-      if (clubData.members[i].role?.toUpperCase() === "MASTER") {
-        setMasterData(clubData.members[i]);
-      } else if (clubData.members[i].role?.toUpperCase() === "MANAGER") {
-        manager.push(clubData.members[i]);
-      } else if (clubData.members[i].role?.toUpperCase() === "MEMBER") {
-        members.push(clubData.members[i]);
+    if (clubData && clubData.members) {
+      for (let i = 0; i < clubData?.members?.length; ++i) {
+        if (clubData.members && clubData.members[i].role?.toUpperCase() === "MASTER") {
+          setMasterData(clubData.members[i]);
+        } else if (clubData.members && clubData.members[i].role?.toUpperCase() === "MANAGER") {
+          manager.push(clubData.members[i]);
+        } else if (clubData.members && clubData.members[i].role?.toUpperCase() === "MEMBER") {
+          members.push(clubData.members[i]);
+        }
       }
     }
 
@@ -297,7 +227,6 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
     for (var i = 0; i < manager.length; i += memberCountPerLine) {
       managerBundle.push(manager.slice(i, i + memberCountPerLine));
     }
-
     setMemberData(memberBundle);
     setManagerData(managerBundle);
   };
@@ -307,13 +236,16 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
     setMemberLoading(false);
   };
 
-  useLayoutEffect(() => {
-    console.log(`${clubData.id} clubHome useLayoutEffect`);
-    getData();
-  }, []);
+  const closeScheduleModal = (refresh: boolean) => {
+    setScheduleVisible(false);
+    if (refresh) DeviceEventEmitter.emit("SchedulesRefetch");
+  };
 
-  const loading = memberLoading || scheduleLoading;
+  const goToScheduleAdd = () => {
+    return navigate("ClubStack", { screen: "ClubScheduleAdd", clubData });
+  };
 
+  const loading = memberLoading;
   return loading ? (
     <Loader>
       <ActivityIndicator />
@@ -321,6 +253,8 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
   ) : (
     <Animated.ScrollView
       onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+      onMomentumScrollEnd={(event) => dispatch(clubSlice.actions.updateClubHomeScrollY({ scrollY: event.nativeEvent.contentOffset.y }))}
+      contentOffset={{ x: 0, y: offsetY ?? 0 }}
       style={{
         flex: 1,
         paddingTop: 15,
@@ -342,28 +276,30 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
     >
       <SectionView style={{ paddingHorizontal: SCREEN_PADDING_SIZE }}>
         <TitleView>
-          <Entypo name="megaphone" size={16} color="#295AF5" />
+          <Entypo name="megaphone" size={16} color="black" />
           <SectionTitle>ABOUT</SectionTitle>
         </TitleView>
         <ContentView>
           <ContentText>{clubData.clubLongDesc}</ContentText>
         </ContentView>
-        <Break sep={7} />
+        <Break sep={15} />
       </SectionView>
       <SectionView>
         <TitleView style={{ paddingHorizontal: SCREEN_PADDING_SIZE }}>
-          <Ionicons name="calendar" size={16} color="#295AF5" />
+          <Ionicons name="calendar" size={16} color="black" />
           <SectionTitle>SCHEDULE</SectionTitle>
         </TitleView>
         {clubRole?.role && clubRole?.role !== "PENDING" ? (
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => dispatch(clubSlice.actions.updateClubHomeScheduleScrollX({ scrollX: event.nativeEvent.contentOffset.x }))}
+            contentOffset={{ x: scheduleOffsetX ?? 0, y: 0 }}
             contentContainerStyle={{
               paddingVertical: 15,
               paddingHorizontal: SCREEN_PADDING_SIZE,
             }}
-            data={scheduleData}
+            data={schedules}
             keyExtractor={(item: RefinedSchedule, index: number) => String(index)}
             ItemSeparatorComponent={ScheduleSeparator}
             renderItem={({ item, index }: { item: RefinedSchedule; index: number }) =>
@@ -382,8 +318,8 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
                     <></>
                   )}
                   <ScheduleDateView index={index}>
-                    <ScheduleText>{item.year}</ScheduleText>
-                    <ScheduleTitle>
+                    <ScheduleText index={index}>{item.year}</ScheduleText>
+                    <ScheduleTitle index={index}>
                       {item.month}/{item.day} {item.dayOfWeek}
                     </ScheduleTitle>
                   </ScheduleDateView>
@@ -391,7 +327,7 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
                     <ScheduleDetailItemView>
                       <Feather name="clock" size={10} color="#CCCCCC" style={{ marginRight: 5 }} />
                       <ScheduleText>
-                        {`${item.ampm} ${item.hour}시`} {item.minute !== "0" ? `${item.minute} 분` : ""}
+                        {`${item.ampm} ${item.hour} 시`} {item.minute !== "0" ? `${item.minute} 분` : ""}
                       </ScheduleText>
                     </ScheduleDetailItemView>
                     <ScheduleDetailItemView>
@@ -402,7 +338,7 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
 
                     <ScheduleDetailItemView>
                       <Ionicons name="people-sharp" size={12} color="#CCCCCC" style={{ marginRight: 7 }} />
-                      <ScheduleText>{item.members.length}명 참석</ScheduleText>
+                      <ScheduleText>{item.members?.length}명 참석</ScheduleText>
                     </ScheduleDetailItemView>
                     <Break sep={2} />
                     <ScheduleDetailItemView style={{ justifyContent: "center" }}>
@@ -411,7 +347,7 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
                   </ScheduleDetailView>
                 </ScheduleView>
               ) : (
-                <ScheduleAddView onPress={() => navigate("ClubScheduleAdd", { clubData })}>
+                <ScheduleAddView onPress={goToScheduleAdd}>
                   <Feather name="plus" size={28} color="#6E6E6E" />
                   <ScheduleText style={{ textAlign: "center", color: "#6E6E6E" }}>{`스케줄을 등록해\n멤버들과 공유해보세요.`}</ScheduleText>
                 </ScheduleAddView>
@@ -426,9 +362,9 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
         )}
       </SectionView>
       <SectionView style={{ paddingHorizontal: SCREEN_PADDING_SIZE }}>
-        <Break sep={7} />
+        <Break sep={15} />
         <TitleView>
-          <Feather name="users" size={16} color="#295AF5" />
+          <Feather name="users" size={16} color="black" />
           <SectionTitle>MEMBER</SectionTitle>
         </TitleView>
         <MemberView>
@@ -453,7 +389,7 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
               return (
                 <MemberLineView key={index}>
                   {bundle.map((item, index) => {
-                    return <CircleIcon key={index} size={MEMBER_ICON_SIZE} uri={item.thumbnail} name={item.name} badge={"check-circle"} />;
+                    return <CircleIcon key={index} size={MEMBER_ICON_SIZE} uri={item.thumbnail} name={item.name} kerning={MEMBER_ICON_KERNING} badge={"check-circle"} />;
                   })}
                 </MemberLineView>
               );
@@ -484,17 +420,15 @@ const ClubHome: React.FC<ClubHomeScreenProps & ClubHomeParamList> = ({
         </MemberView>
       </SectionView>
 
-      <ScheduleModal visible={scheduleVisible} scheduleData={scheduleData} selectIndex={selectedSchedule}>
-        <ModalHeaderRight>
-          <ModalCloseButton
-            onPress={() => {
-              setScheduleVisible(false);
-            }}
-          >
-            <Ionicons name="close" size={24} color="black" />
-          </ModalCloseButton>
-        </ModalHeaderRight>
-      </ScheduleModal>
+      <ScheduleModal
+        visible={scheduleVisible}
+        clubId={clubData.id}
+        scheduleData={schedules}
+        selectIndex={selectedSchedule}
+        closeModal={(refresh: boolean) => {
+          closeScheduleModal(refresh);
+        }}
+      />
     </Animated.ScrollView>
   );
 };
