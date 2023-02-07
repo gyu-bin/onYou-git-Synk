@@ -7,7 +7,7 @@ import {
   Alert,
   Animated,
   DeviceEventEmitter,
-  Dimensions,
+  Dimensions, Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -38,8 +38,9 @@ const Container = styled.SafeAreaView`
 `;
 const ImagePickerView = styled.View`
   width: 100%;
-  height: ${Platform.OS === "android" ? 60 : 65}%;
+  height: ${Platform.OS === "android" ? 60 : 62}%;
   align-items: center;
+  background-color: burlywood;
 `;
 
 const PickBackground = styled.ImageBackground`
@@ -58,8 +59,8 @@ const ImagePickerButton = styled.TouchableOpacity<{ height: number }>`
 
 const ImageCrop = styled.View`
   background-color: rgba(63, 63, 63, 0.7);
-  width: 142px;
-  height: 142px;
+  width: 150px;
+  height: 150px;
   border-radius: 100px;
   opacity: 0.5;
   justify-content: center;
@@ -68,26 +69,42 @@ const ImageCrop = styled.View`
 `;
 
 const ImagePickerText = styled.Text`
-  font-size: 10px;
+  font-size: 14px;
   color: white;
   text-align: center;
-  padding: 50px 0;
+  padding: 30px 0;
+  top: 8px;
 `;
 
 const FeedText = styled.TextInput`
   color: black;
   height: ${Platform.OS === "ios" ? 90 : 100}px;
-  margin: 0 15px 0 15px;
-  top: ${Platform.OS === "ios" ? 5 : 0}%;
+  padding: 0 20px 0 20px;
+  top: ${Platform.OS === "ios" ? 2 : 0}%;
+  font-size: 15px;
 `;
 
 const SelectImageView = styled.View`
   background-color: rgba(0, 0, 0, 0.7);
-  height: 70px;
+  height: 100px;
   width: 100%;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-around;
+  padding: 10px 20px 10px 20px;
 `;
+
+const MyImage = styled.View`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  bottom: 3px;
+`
+
+const MoveImageText = styled.Text`
+  color: white;
+  font-size: 13px;
+  padding: 5px 0 5px 0;
+`
 
 const SelectImageArea = styled.TouchableOpacity``;
 const SelectImage = styled.Image`
@@ -106,11 +123,11 @@ const CancleIcon = styled.View`
 `;
 
 const FeedCreateBtn = styled.TouchableOpacity``;
-const FeedCreateText = styled(CustomText)`
-  font-size: 18px;
+const FeedCreateText = styled.Text`
+  font-size: 14px;
   color: #63abff;
-  font-weight: bold;
-  padding: 10px;
+  line-height: 20px;
+  padding-top: 5px;
 `;
 
 const ImageSource = styled.Image<{ size: number }>`
@@ -123,7 +140,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
     route: {
       params: { clubId, userId },
     },
-    navigation: { navigate,goBack },
+    navigation: { navigate },
   } = props;
   const Stack = createNativeStackNavigator();
   const [refreshing, setRefreshing] = useState(false);
@@ -131,7 +148,7 @@ function ImageSelecter(props: FeedCreateScreenProps) {
   const [imageURI, setImageURI] = useState<any>("");
   const [choiceImage, setChoiceImage] = useState();
   const [loading, setLoading] = useState(false);
-  // const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [alert, alertSet] = useState(true);
   const [response, setResponse] = useState(null);
   const [isSubmitShow, setSubmitShow] = useState(true);
@@ -167,12 +184,12 @@ function ImageSelecter(props: FeedCreateScreenProps) {
 
   const pickImage = async () => {
     //사진허용
-    /*    if(!status?.granted){
+        if(!status?.granted){
           const permission=await requestPermission();
           if(!permission.granted){
             return null;
           }
-        }*/
+        }
 
     let result: any = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -278,13 +295,13 @@ function ImageSelecter(props: FeedCreateScreenProps) {
           </TouchableOpacity>
       ),
       headerRight: () => (
-        <TouchableOpacity
-          onPress={() => {
-            onSubmit();
-          }}
-        >
-          {isSubmitShow ? <FeedCreateText>저장</FeedCreateText> : <ActivityIndicator />}
-        </TouchableOpacity>
+          <TouchableOpacity
+              onPress={() => {
+                onSubmit();
+              }}
+          >
+            {isSubmitShow ? <FeedCreateText>저장</FeedCreateText> : <ActivityIndicator />}
+          </TouchableOpacity>
       ),
     });
   }, [imageURI, content, isSubmitShow]);
@@ -311,16 +328,16 @@ function ImageSelecter(props: FeedCreateScreenProps) {
   const imagePreview = [];
   for (let i = 0; i < imageURI.length; i += 1) {
     imagePreview.push(
-      <SelectImageArea key={i} onPress={() => ImageFIx(i)}>
-        <SelectImage source={{ uri: imageURI[i] }} />
-        {imageURI === null ? null : (
-          <ImageCancleBtn onPress={() => ImageCancle(i)}>
-            <CancleIcon>
-              <AntDesign name="close" size={15} color="white" />
-            </CancleIcon>
-          </ImageCancleBtn>
-        )}
-      </SelectImageArea>
+        <SelectImageArea key={i} onPress={() => ImageFIx(i)}>
+          <SelectImage source={{ uri: imageURI[i] }} />
+          {imageURI === null ? null : (
+              <ImageCancleBtn onPress={() => ImageCancle(i)}>
+                <CancleIcon>
+                  <AntDesign name="close" size={15} color="white" />
+                </CancleIcon>
+              </ImageCancleBtn>
+          )}
+        </SelectImageArea>
     );
   }
 
@@ -338,97 +355,57 @@ function ImageSelecter(props: FeedCreateScreenProps) {
     );*/
   // console.log(choiceImage)
   // console.log(imageList)
-  const { width } = Dimensions.get("window");
-  const scale = new Animated.Value(1);
-
-  const onZoomEvent = Animated.event(
-    [
-      {
-        nativeEvent: { scale: scale },
-      },
-    ],
-    {
-      useNativeDriver: true,
-    }
-  );
-
-  const onZoomStateChange = (event: any) => {
-    if (event.nativeEvent.oldState === State.ACTIVE) {
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
 
   return (
-    <Container>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "padding"} style={{ flex: 1 }}>
-          <>
-            <ImagePickerView>
-              {Object.keys(imageURI).length !== 0 ? (
-                <PinchGestureHandler onGestureEvent={onZoomEvent} onHandlerStateChange={onZoomStateChange}>
-                  <Animated.Image
-                    source={{ uri: choiceImage }}
-                    style={{
-                      width: width,
-                      height: 380,
-                      transform: [{ scale: scale }],
-                    }}
-                  />
-                </PinchGestureHandler>
-              ) : (
-                <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
-                  <PickBackground>
-                    {alert ? (
-                      <ImageCrop>
-                        <MaterialCommunityIcons name="arrow-top-right-bottom-left" size={30} color="red" style={{ textAlign: "center", top: 40 }} />
-                        <ImagePickerText>
-                          손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 해보세요
-                        </ImagePickerText>
-                      </ImageCrop>
-                    ) : null}
-                  </PickBackground>
-                </ImagePickerButton>
-              )}
-            </ImagePickerView>
-            <SelectImageView>
-              <View style={{ display: "flex", flexDirection: "row" }}>{imagePreview}</View>
-            </SelectImageView>
-            <FeedText
-              placeholder="사진과 함께 남길 게시글을 작성해 보세요."
-              onChangeText={(content: any) => setContent(content)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              multiline={true}
-              returnKeyType="done"
-              returnKeyLabel="done"
-            >
-              {valueInfos.map(({ str, isHT, idxArr }, idx) => {
-                const [firstIdx, lastIdx] = idxArr;
-                let value = title.slice(firstIdx, lastIdx + 1);
-                const isLast = idx === valueInfos.length - 1;
-                if (isHT) {
-                  return (
-                    <Text style={{ color: "skyblue", backgroundColor: "black" }}>
-                      {value}
-                      {!isLast && <Text style={{ backgroundColor: "pink" }}> </Text>}
-                    </Text>
-                  );
+      <Container>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "padding"} style={{ flex: 1 }}>
+            <>
+              <ImagePickerView>
+                {Object.keys(imageURI).length !== 0 ? (
+                      <Image
+                          source={{ uri: choiceImage }}
+                          style={{
+                            height: 380,
+                          }}
+                      />
+                ) : (
+                    //Todo 사진 사이즈 맞추기
+                    <ImagePickerButton height={imageHeight} onPress={pickImage} activeOpacity={1}>
+                      <PickBackground>
+                        {alert ? (
+                            <ImageCrop>
+                              <AntDesign name="arrowsalt" size={30} color="red" style={{ textAlign: "center", top: 25 }} />
+                              <ImagePickerText>
+                                손가락을 좌우로{"\n"} 동시에 벌려{"\n"} 이미지 크롭을 {"\n"} 해보세요
+                              </ImagePickerText>
+                            </ImageCrop>
+                        ) : null}
+                      </PickBackground>
+                    </ImagePickerButton>
+                )}
+              </ImagePickerView>
+              <SelectImageView>
+                <MyImage>{imagePreview}</MyImage>
+                {Object.keys(imageURI).length !== 0 ? (
+                    <MoveImageText>사진을 옮겨 순서를 변경할 수 있습니다.</MoveImageText>
+                ):null
                 }
-                return (
-                  <Text style={{ color: "black" }}>
-                    {value}
-                    {!isLast && <Text> </Text>}
-                  </Text>
-                );
-              })}
-            </FeedText>
-          </>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    </Container>
+              </SelectImageView>
+              <FeedText
+                  placeholder="사진과 함께 남길 게시글을 작성해 보세요."
+                  onChangeText={(content: any) => setContent(content)}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  multiline={true}
+                  returnKeyType="done"
+                  returnKeyLabel="done"
+              >
+              </FeedText>
+            </>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </Container>
   );
 }
 

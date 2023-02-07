@@ -1,6 +1,13 @@
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, useWindowDimensions, Animated, TouchableOpacity, DeviceEventEmitter } from "react-native";
+import {
+  ActivityIndicator,
+  useWindowDimensions,
+  Animated,
+  TouchableOpacity,
+  DeviceEventEmitter,
+  Image
+} from "react-native";
 import FastImage from "react-native-fast-image";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
@@ -16,7 +23,7 @@ const Loader = styled.View`
   align-items: center;
 `;
 
-const FeedImage = styled(FastImage)<{ size: number }>`
+const FeedImage = styled(Image)<{ size: number }>`
   width: ${(props: any) => props.size}px;
   height: ${(props: any) => props.size}px;
 `;

@@ -12,6 +12,8 @@ import CustomTextInput from "../../components/CustomTextInput";
 import CircleIcon from "../../components/CircleIcon";
 import { SwipeListView, SwipeRow } from "react-native-swipe-list-view";
 import { RootState } from "../../redux/store/reducers";
+import { useAppDispatch } from "../../redux/store";
+import feedSlice from "../../redux/slices/feed";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -28,25 +30,26 @@ const FooterView = styled.View<{ padding: number }>`
   flex-direction: row;
   border-top-width: 1px;
   border-top-color: #c4c4c4;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 10px ${(props: any) => (props.padding ? props.padding : 0)}px 20px ${(props: any) => (props.padding ? props.padding : 0)}px;
-  background-color: white;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: peachpuff;  
+  top: ${Platform.OS === "ios" ? 20 : 20}px;;
 `;
 const CommentInput = styled(CustomTextInput)`
   flex: 1;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 `;
 const SubmitButton = styled.TouchableOpacity`
   align-items: center;
   padding-left: 5px;
+  padding-bottom: 6px;
 `;
 const SubmitButtonText = styled(CustomText)<{ disabled: boolean }>`
   font-size: 14px;
   line-height: 20px;
   color: #63abff;
-  padding-bottom: 5px;
-  opacity: ${(props: any) => (props.disabled ? 0.5 : 1)};
+  opacity: ${(props: any) => (props.disabled ? 0.3 : 1)};
 `;
 
 const EmptyView = styled.View`
@@ -80,11 +83,12 @@ const HiddenItemButton = styled.TouchableOpacity<{ width: number }>`
 const FeedComments = ({
   navigation: { setOptions, navigate, goBack },
   route: {
-    params: { feedId },
+    params: { feedIndex, feedId },
   },
 }) => {
   const token = useSelector((state: RootState) => state.auth.token);
   const me = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useAppDispatch();
   const toast = useToast();
   const [comment, setComment] = useState<string>("");
   const [validation, setValidation] = useState<boolean>(false);
@@ -95,7 +99,9 @@ const FeedComments = ({
     refetch: commentsRefetch,
   } = useQuery<FeedCommentsResponse>(["getFeedComments", token, feedId], FeedApi.getFeedComments, {
     onSuccess: (res) => {
-      if (res.status !== 200) {
+      if (res.status === 200) {
+        dispatch(feedSlice.actions.updateCommentCount({ feedIndex, count: res.data.length }));
+      } else {
         console.log("--- Error getFeedComments ---");
         console.log(res);
         toast.show(`Error Code: ${res.status}`, {
@@ -123,9 +129,6 @@ const FeedComments = ({
         </TouchableOpacity>
       ),
     });
-    return () => {
-      DeviceEventEmitter.emit("HomeFeedRefetch");
-    };
   }, []);
 
   const submit = () => {
@@ -211,7 +214,7 @@ const FeedComments = ({
   ) : (
     <Container>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}
-                            keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 180} style={{ flex: 1, top: Platform.OS==='ios'? 20: 0}}>
+                            keyboardVerticalOffset={Platform.OS === "ios" ? 110 : 110} style={{ flex: 1}}>
         <SwipeListView
           contentContainerStyle={{ flexGrow: 1 }}
           data={[...(comments?.data ?? [])].reverse()}
@@ -236,7 +239,7 @@ const FeedComments = ({
             </EmptyView>
           )}
         />
-        <FooterView padding={20}>
+        <FooterView>
           <CircleIcon uri={me?.thumbnail} size={35} kerning={10} />
           <CommentInput
             placeholder="댓글을 입력해보세요"
@@ -245,6 +248,11 @@ const FeedComments = ({
             textAlign="left"
             multiline={true}
             maxLength={255}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
+            returnKeyType="done"
+            returnKeyLabel="done"
             onChangeText={(value: string) => {
               setComment(value);
               if (!validation && value !== "") setValidation(true);

@@ -1,11 +1,11 @@
 import React, { PureComponent } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import { EvilIcons, Ionicons } from "@expo/vector-icons";
 import FastImage from "react-native-fast-image";
 import styled from "styled-components/native";
 import CustomText from "./CustomText";
 import CircleIcon from "./CircleIcon";
 import { Feed } from "../api";
-import { NativeSyntheticEvent, ScrollView, TextLayoutEventData, TouchableOpacity } from "react-native";
+import {Image, NativeSyntheticEvent, ScrollView, TextLayoutEventData, TouchableOpacity} from "react-native";
 import moment from "moment";
 import Carousel from "./Carousel";
 import Tag from "./Tag";
@@ -79,14 +79,16 @@ const ContentSubText = styled(CustomText)`
 
 interface FeedDetailProps {
   feedData: Feed;
+  feedIndex: number;
   feedSize: number;
   headerHeight: number;
   infoHeight: number;
   contentHeight: number;
   showClubName?: boolean;
-  openFeedOption: (userId: number, feedId: number) => void;
-  goToFeedComments: (feedId: number) => void;
+  openFeedOption: (userId: number, feedId: number, feedData: Feed) => void;
+  goToFeedComments: (feedIndex: number, feedId: number) => void;
   goToClub?: (clubId: number) => void;
+  likeFeed?: (feedIndex: number, feedId: number) => void;
 }
 
 interface FeedDetailState {
@@ -120,13 +122,13 @@ class FeedDetail extends PureComponent<FeedDetailProps, FeedDetailState> {
 
     const contentTextTouch = () => {
       if (this.state.moreContent && this.state.isCollapsed) this.setState({ ...this.state, isCollapsed: !this.state.isCollapsed });
-      else this.props.goToFeedComments(this.props.feedData.id);
+      else this.props.goToFeedComments(this.props.feedIndex, this.props.feedData.id);
     };
     return (
       <Container>
         <HeaderView padding={20} height={this.props.headerHeight}>
           <HeaderLeftView>
-            <CircleIcon uri={this.props.feedData.thumbnail} size={40} kerning={10} />
+            <CircleIcon uri={this.props.feedData.thumbnail} size={46} kerning={10} />
             <HeaderNameView>
               <HeaderText>{this.props.feedData.userName}</HeaderText>
               {this.props.showClubName ? (
@@ -139,8 +141,8 @@ class FeedDetail extends PureComponent<FeedDetailProps, FeedDetailState> {
             </HeaderNameView>
           </HeaderLeftView>
           <HeaderRightView>
-            <TouchableOpacity onPress={() => this.props.openFeedOption(this.props.feedData.userId, this.props.feedData.id)} style={{ paddingLeft: 10, paddingVertical: 5 }}>
-              <Ionicons name="ellipsis-vertical" size={14} color="black" />
+            <TouchableOpacity onPress={() => this.props.openFeedOption(this.props.feedData.userId, this.props.feedData.id, this.props.feedData)} style={{ paddingLeft: 10 }}>
+              <Ionicons name="ellipsis-vertical" size={15} color="black" />
             </TouchableOpacity>
           </HeaderRightView>
         </HeaderView>
@@ -153,24 +155,23 @@ class FeedDetail extends PureComponent<FeedDetailProps, FeedDetailState> {
           keyExtractor={(item: string, index: number) => String(index)}
           showIndicator={true}
           renderItem={({ item, index }: { item: string; index: number }) => (
-            <FastImage
+            <Image
               key={String(index)}
               source={item ? { uri: item } : require("../assets/basic.jpg")}
-              style={{ width: this.props.feedSize, height: this.props.feedSize }}
-              resizeMode={FastImage.resizeMode.contain}
+              style={{ width: this.props.feedSize, height: this.props.feedSize, backgroundColor: "#B7B7B7", resizeMode: 'contain' }}
             />
           )}
-          ListEmptyComponent={<FastImage source={require("../assets/basic.jpg")} style={{ width: this.props.feedSize, height: this.props.feedSize }} />}
+          ListEmptyComponent={<Image source={require("../assets/basic.jpg")} style={{ width: this.props.feedSize, height: this.props.feedSize }} />}
         />
         <ContentView padding={20}>
           <InformationView height={this.props.infoHeight}>
             <InformationLeftView>
-              <InformationButton>
-                <Ionicons name="heart-outline" size={20} color="black" />
+              <InformationButton onPress={() => (this.props.likeFeed ? this.props.likeFeed(this.props.feedIndex, this.props.feedData.id) : {})}>
+                {this.props.feedData.likeYn ? <Ionicons name="heart-outline" size={24} color="red" /> : <Ionicons name="heart-outline" size={24} color="black" />}
                 <CountingNumber>{this.props.feedData.likesCount}</CountingNumber>
               </InformationButton>
-              <InformationButton onPress={() => this.props.goToFeedComments(this.props.feedData.id)}>
-                <Ionicons name="md-chatbox-ellipses" size={20} color="black" />
+              <InformationButton onPress={() => this.props.goToFeedComments(this.props.feedIndex, this.props.feedData.id)}>
+                <Ionicons name="md-chatbox-ellipses" size={24} color="black" />
                 <CountingNumber>{this.props.feedData.commentCount}</CountingNumber>
               </InformationButton>
             </InformationLeftView>

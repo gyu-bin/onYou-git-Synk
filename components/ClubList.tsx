@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Category } from "../api";
 import CustomText from "./CustomText";
 import FastImage from "react-native-fast-image";
+import {Image} from "react-native";
 
 const Club = styled.View`
   align-items: flex-start;
@@ -12,7 +13,7 @@ const Club = styled.View`
 
 const ThumbnailView = styled.View``;
 
-const ThumbnailImage = styled(FastImage)<{ size: number }>`
+const ThumbnailImage = styled(Image)<{ size: number }>`
   position: absolute;
   width: ${(props: any) => props.size}px;
   height: ${(props: any) => props.size}px;

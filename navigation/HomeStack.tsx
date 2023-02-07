@@ -5,7 +5,7 @@ import ModifiyFeed from "../screens/HomeRelevant/ModifiyFeed";
 import ImageSelecter from "../screens/HomeRelevant/ImageSelecter";
 import MyClubSelector from "../screens/HomeRelevant/MyClubSelector";
 import { Text, TouchableOpacity, Alert } from "react-native";
-import {Entypo, Ionicons} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
 
@@ -60,6 +60,10 @@ const HomeStack = ({
         name="ImageSelecter"
         component={ImageSelecter}
         initialParams={{ userId, clubId }}
+        options={{
+          title: "",
+          headerShown: true,
+        }}
       />
       <NativeStack.Screen
         name="MyClubSelector"
@@ -67,33 +71,14 @@ const HomeStack = ({
         initialParams={{ userId }}
         options={{
           title: "나의 모임",
-          headerLeft: () => (
-            // <TouchableOpacity onPress={cancleCreate}>
-              <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
-              <Ionicons name="chevron-back" size={20} color="black" />
-            </TouchableOpacity>
-          ),
           headerShown: true,
         }}
       />
-
       <NativeStack.Screen
         name="ModifiyFeed"
         component={ModifiyFeed}
         initialParams={{ feedData }}
-/*        options={{
-          title: "수정",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
-              <Ionicons name="chevron-back" size={20} color="black" />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity onPress={() => navigate("Tabs", { screen: "Home" })}>
-              <Text>완료</Text>
-            </TouchableOpacity>
-          ),
-        }}*/
+        options={{title: "수정"}}
       />
     </NativeStack.Navigator>
   );

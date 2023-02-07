@@ -33,7 +33,7 @@ interface FeedOptionModalProps {
   modalRef: any;
   buttonHeight: number;
   isMyFeed: boolean;
-  goToUpdateFeed: (feedId: number) => void;
+  goToUpdateFeed: () => void;
   deleteFeed: () => void;
   goToComplain: () => void;
 }

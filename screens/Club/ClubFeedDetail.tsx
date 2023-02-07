@@ -51,6 +51,7 @@ const ClubFeedDetail: React.FC<ClubFeedDetailScreenProps> = ({
   const itemSeparatorGap = 30;
   const itemLength = SCREEN_WIDTH + feedDetailHeaderHeight + feedDetailInfoHeight + feedDetailContentHeight + itemSeparatorGap;
   const [selectFeedId, setSelectFeedId] = useState<number>(-1);
+  const [selectFeedData, setSelectFeedData] = useState<Feed>();
 
   const complainMutation = useMutation(FeedApi.reportFeed, {
     onSuccess: (res) => {
@@ -104,11 +105,12 @@ const ClubFeedDetail: React.FC<ClubFeedDetailScreenProps> = ({
     closeOtherFeedOption();
     openComplainOption();
   };
-  const goToFeedComments = (feedId: number) => {
-    navigate("FeedStack", { screen: "FeedComments", feedId });
+  const goToFeedComments = (feedIndex: number, feedId: number) => {
+    navigate("FeedStack", { screen: "FeedComments", feedIndex, feedId });
   };
-  const openFeedOption = (userId: number, feedId: number) => {
+  const openFeedOption = (userId: number, feedId: number, feedData: Feed) => {
     setSelectFeedId(feedId);
+    setSelectFeedData(feedData);
     if (userId === me?.id) openMyFeedOption();
     else openOtherFeedOption();
   };
@@ -146,7 +148,10 @@ const ClubFeedDetail: React.FC<ClubFeedDetailScreenProps> = ({
     );
   };
 
-  const goToUpdateFeed = () => {};
+  const goToUpdateFeed = () => {
+    closeMyFeedOption();
+    navigate("HomeStack", { screen: "ModifiyFeed", feedData: selectFeedData });
+  };
 
   const complainSubmit = () => {
     if (selectFeedId === -1) {
@@ -182,6 +187,7 @@ const ClubFeedDetail: React.FC<ClubFeedDetailScreenProps> = ({
       <FeedDetail
         key={`ClubFeed_${index}`}
         feedData={item}
+        feedIndex={index}
         feedSize={SCREEN_WIDTH}
         headerHeight={feedDetailHeaderHeight}
         infoHeight={feedDetailInfoHeight}

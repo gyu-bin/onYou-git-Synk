@@ -1,15 +1,28 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, DeviceEventEmitter, FlatList, Platform, StatusBar, Text, useWindowDimensions, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  DeviceEventEmitter,
+  FlatList,
+  Image,
+  Platform,
+  StatusBar,
+  Text,
+  useWindowDimensions,
+  View
+} from "react-native";
 import FastImage from "react-native-fast-image";
 import { useModalize } from "react-native-modalize";
 import { useToast } from "react-native-toast-notifications";
 import { useInfiniteQuery, useMutation, useQueryClient } from "react-query";
 import { useSelector } from "react-redux";
 import styled from "styled-components/native";
-import { Feed, FeedApi, FeedDeleteRequest, FeedReportRequest, FeedsResponse } from "../api";
+import { Feed, FeedApi, FeedDeleteRequest, FeedLikeRequest, FeedReportRequest, FeedsResponse } from "../api";
 import FeedDetail from "../components/FeedDetail";
+import feedSlice from "../redux/slices/feed";
+import { useAppDispatch } from "../redux/store";
 import { RootState } from "../redux/store/reducers";
 import { HomeScreenProps } from "../types/feed";
 import FeedOptionModal from "./Feed/FeedOptionModal";
@@ -43,13 +56,15 @@ const HeaderButton = styled.TouchableOpacity`
   height: 100%;
   align-items: center;
   justify-content: center;
-  padding: 0 10px;
+  padding: 0px 10px;
 `;
 
 const Home: React.FC<HomeScreenProps> = () => {
   const queryClient = useQueryClient();
   const token = useSelector((state: RootState) => state.auth.token);
   const me = useSelector((state: RootState) => state.auth.user);
+  const feeds = useSelector((state: RootState) => state.feed.data);
+  const dispatch = useAppDispatch();
   const toast = useToast();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const { ref: myFeedOptionRef, open: openMyFeedOption, close: closeMyFeedOption } = useModalize();
@@ -61,14 +76,15 @@ const Home: React.FC<HomeScreenProps> = () => {
   const feedDetailHeaderHeight = 62;
   const feedDetailInfoHeight = 36;
   const feedDetailContentHeight = 40;
-  const itemSeparatorGap = 30;
+  const itemSeparatorGap = 20;
   const [selectFeedId, setSelectFeedId] = useState<number>(-1);
+  const [selectFeedData, setSelectFeedData] = useState<Feed>();
   const navigation = useNavigation();
   //getFeeds ( 무한 스크롤 )
   const {
     isLoading: feedsLoading,
-    data: feeds,
     isRefetching: isRefetchingFeeds,
+    data: queryFeedData,
     hasNextPage,
     refetch: feedsRefetch,
     fetchNextPage,
@@ -79,7 +95,7 @@ const Home: React.FC<HomeScreenProps> = () => {
       }
     },
     onSuccess: (res) => {
-      console.log(res.pages.length);
+      dispatch(feedSlice.actions.addFeed(res.pages[res.pages.length - 1].responses.content));
     },
     onError: (err) => {
       console.log(err);
@@ -101,6 +117,7 @@ const Home: React.FC<HomeScreenProps> = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.refetchQueries(["feeds"]);
+    dispatch(feedSlice.actions.init(queryFeedData?.pages?.map((page) => page?.responses?.content).flat() ?? []));
     setRefreshing(false);
   };
 
@@ -132,7 +149,6 @@ const Home: React.FC<HomeScreenProps> = () => {
       });
     },
   });
-
   const deleteFeedMutation = useMutation(FeedApi.deleteFeed, {
     onSuccess: (res) => {
       if (res.status === 200) {
@@ -158,13 +174,45 @@ const Home: React.FC<HomeScreenProps> = () => {
       });
     },
   });
+  const likeFeedMutation = useMutation(FeedApi.likeFeed);
+
+  const likeFeed = useCallback((feedIndex: number, feedId: number) => {
+    const requestData: FeedLikeRequest = {
+      data: { id: feedId },
+      token,
+    };
+    likeFeedMutation.mutate(requestData, {
+      onSuccess: (res) => {
+        if (res.status === 200) {
+          dispatch(feedSlice.actions.likeToggle(feedIndex));
+        } else {
+          console.log(res);
+          toast.show(`Like Feed Fail (Error Code: ${res.status}`, {
+            type: "warning",
+          });
+        }
+      },
+      onError: (error) => {
+        console.log(error);
+        toast.show(`Error Code: ${error}`, {
+          type: "warning",
+        });
+      },
+    });
+  }, []);
+
   const goToClub = useCallback((clubId: number) => {
     navigation.navigate("ClubStack", { screen: "ClubTopTabs", clubData: { id: clubId } });
   }, []);
 
-  const goToFeedComments = useCallback((feedId: number) => {
-    navigation.navigate("FeedStack", { screen: "FeedComments", feedId });
+  const goToFeedComments = useCallback((feedIndex: number, feedId: number) => {
+    navigation.navigate("FeedStack", { screen: "FeedComments", feedIndex, feedId });
   }, []);
+
+  const goToUpdateFeed = () => {
+    closeMyFeedOption();
+    navigation.navigate("HomeStack", { screen: "ModifiyFeed", feedData: selectFeedData });
+  };
 
   const goToFeedCreation = useCallback(() => {
     navigation.navigate("HomeStack", {
@@ -173,12 +221,9 @@ const Home: React.FC<HomeScreenProps> = () => {
     });
   }, [me]);
 
-  const goToUpdateFeed = useCallback((feedId: number) => {
-    navigation.navigate("HomeStack", { screen: "ModifiyFeed", feedId });
-  }, []);
-
-  const openFeedOption = (userId: number, feedId: number) => {
+  const openFeedOption = (userId: number, feedId: number, feedData: Feed) => {
     setSelectFeedId(feedId);
+    setSelectFeedData(feedData);
     if (userId === me?.id) openMyFeedOption();
     else openOtherFeedOption();
   };
@@ -213,9 +258,6 @@ const Home: React.FC<HomeScreenProps> = () => {
           text: "네",
           onPress: () => {
             deleteFeedMutation.mutate(requestData);
-            toast.show(`게시글이 삭제되었습니다.`, {
-              type: "success",
-            });
           },
         },
       ],
@@ -248,6 +290,7 @@ const Home: React.FC<HomeScreenProps> = () => {
       <FeedDetail
         key={`Feed_${index}`}
         feedData={item}
+        feedIndex={index}
         feedSize={SCREEN_WIDTH}
         headerHeight={feedDetailHeaderHeight}
         infoHeight={feedDetailInfoHeight}
@@ -256,6 +299,7 @@ const Home: React.FC<HomeScreenProps> = () => {
         goToClub={goToClub}
         openFeedOption={openFeedOption}
         goToFeedComments={goToFeedComments}
+        likeFeed={likeFeed}
       />
     ),
     []
@@ -269,13 +313,13 @@ const Home: React.FC<HomeScreenProps> = () => {
     <Container>
       <StatusBar barStyle={"dark-content"} />
       <HeaderView height={homeHeaderHeight}>
-        <FastImage source={require("../assets/home_logo.png")} style={{ width: 100, height: 30 }} />
+        <Image source={require("../assets/home_logo.png")} style={{ width: 100, height: 30 }} />
         <HeaderRightView>
           <HeaderButton>
-            <MaterialIcons name="notifications" size={20} color="black" />
+            <MaterialIcons name="notifications" size={23} color="black" />
           </HeaderButton>
           <HeaderButton onPress={goToFeedCreation}>
-            <MaterialIcons name="add-photo-alternate" size={20} color="black" />
+            <MaterialIcons name="add-photo-alternate" size={23} color="black" />
           </HeaderButton>
         </HeaderRightView>
       </HeaderView>
@@ -283,7 +327,7 @@ const Home: React.FC<HomeScreenProps> = () => {
         refreshing={refreshing}
         onRefresh={onRefresh}
         onEndReached={loadMore}
-        data={feeds?.pages?.map((page) => page?.responses?.content).flat()}
+        data={feeds}
         ItemSeparatorComponent={ItemSeparatorComponent}
         ListFooterComponent={ListFooterComponent}
         keyExtractor={keyExtractor}
