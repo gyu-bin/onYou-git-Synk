@@ -33,8 +33,7 @@ const FooterView = styled.View<{ padding: number }>`
   justify-content: center;
   align-items: center;
   padding: 10px 20px;
-  background-color: peachpuff;  
-  top: ${Platform.OS === "ios" ? 20 : 20}px;;
+  top: ${Platform.OS === "ios" ? 20 : 5}px;
 `;
 const CommentInput = styled(CustomTextInput)`
   flex: 1;
@@ -212,9 +211,8 @@ const FeedComments = ({
       <ActivityIndicator />
     </Loader>
   ) : (
-    <Container>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}
-                            keyboardVerticalOffset={Platform.OS === "ios" ? 110 : 110} style={{ flex: 1}}>
+      <Container>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={100} style={{ flex: 1 }}>
         <SwipeListView
           contentContainerStyle={{ flexGrow: 1 }}
           data={[...(comments?.data ?? [])].reverse()}
@@ -225,11 +223,13 @@ const FeedComments = ({
             // 현재 타 유저의 댓글도 삭제 가능해서 테스트용으로 열어놓음.
             // <SwipeRow disableRightSwipe={true} disableLeftSwipe={item.userId !== me?.id} rightOpenValue={-hiddenItemWidth}>
             <SwipeRow disableRightSwipe={true} rightOpenValue={-hiddenItemWidth}>
-              <HiddenItemContainer>
+              {item.userId === me?.id ? (
+                  <HiddenItemContainer>
                 <HiddenItemButton width={hiddenItemWidth} onPress={() => deleteComment(item.commentId ?? -1)}>
                   <AntDesign name="delete" size={20} color="white" />
                 </HiddenItemButton>
-              </HiddenItemContainer>
+              </HiddenItemContainer>):<></>
+              }
               <Comment commentData={item} />
             </SwipeRow>
           )}
@@ -266,7 +266,7 @@ const FeedComments = ({
           </SubmitButton>
         </FooterView>
       </KeyboardAvoidingView>
-    </Container>
+        </Container>
   );
 };
 

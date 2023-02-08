@@ -28,9 +28,7 @@ export type FeedStackParamList = {
 export type HomeScreenProps = NativeStackScreenProps<FeedStackParamList, "Home">;
 export type FeedCreateScreenProps = NativeStackScreenProps<FeedStackParamList, "FeedCreater">;
 export type MyClubSelectorScreenProps = NativeStackScreenProps<FeedStackParamList, "MyClubSelector">;
-export type ReplyPageScreenProps = NativeStackScreenProps<FeedStackParamList, "ReplyPage">;
 export type ModifiyFeedScreenProps = NativeStackScreenProps<FeedStackParamList, "FeedUpdate">;
-export type ReportFeedScreenProps = NativeStackScreenProps<FeedStackParamList, "FeedReport">;
 
 export interface FeedData extends Feed {
   id: number;

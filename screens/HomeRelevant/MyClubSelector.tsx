@@ -157,9 +157,6 @@ const MyClubSelector: React.FC<MyClubSelectorScreenProps> = ({
           </TouchableOpacity>
       ),
     });
-    return () => {
-      DeviceEventEmitter.emit("HomeFeedRefetch");
-    };
   }, []);
 
   return (

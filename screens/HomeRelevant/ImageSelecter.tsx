@@ -32,15 +32,14 @@ interface ValueInfo {
   isHT: boolean;
   idxArr: number[];
 }
-
+const { height } = Dimensions.get('screen');
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
 const ImagePickerView = styled.View`
   width: 100%;
-  height: ${Platform.OS === "android" ? 60 : 62}%;
+   height: ${Platform.OS === "android" ? height/2 : height/2}px;
   align-items: center;
-  background-color: burlywood;
 `;
 
 const PickBackground = styled.ImageBackground`
@@ -77,11 +76,10 @@ const ImagePickerText = styled.Text`
 `;
 
 const FeedText = styled.TextInput`
-  color: black;
-  height: ${Platform.OS === "ios" ? 90 : 100}px;
   padding: 0 20px 0 20px;
   top: ${Platform.OS === "ios" ? 2 : 0}%;
   font-size: 15px;
+  color: black;
 `;
 
 const SelectImageView = styled.View`
@@ -355,19 +353,23 @@ function ImageSelecter(props: FeedCreateScreenProps) {
     );*/
   // console.log(choiceImage)
   // console.log(imageList)
+  const { width } = Dimensions.get('window');
+  const { height } = Dimensions.get('screen');
+  const scale = new Animated.Value(1);
 
   return (
       <Container>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "padding"} style={{ flex: 1 }}>
+          <KeyboardAvoidingView behavior={"position"} style={{ flex: 1 }}>
             <>
               <ImagePickerView>
                 {Object.keys(imageURI).length !== 0 ? (
-                      <Image
-                          source={{ uri: choiceImage }}
-                          style={{
-                            height: 380,
-                          }}
+                      <Image source={{ uri: choiceImage }}
+                                      style={{
+                                        width: width,
+                                        height: height/2,
+                                        resizeMode: 'contain'
+                                      }}
                       />
                 ) : (
                     //Todo 사진 사이즈 맞추기
