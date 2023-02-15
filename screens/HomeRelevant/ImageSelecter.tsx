@@ -158,8 +158,8 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
       width: 1080,
       minFiles: 1,
       maxFiles: 3,
-      cropperCancelText:'Cancle',
-      cropperChooseText:'Check'
+      cropperCancelText:"Cancle",
+      cropperChooseText:"Check",
     });
 
     if (images.length > 3) {
@@ -291,37 +291,38 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
     if (selectIndex == q) setSelectIndex(0);
   };
 
-  const [data,setData] = useState([imageURL])
-  const itemRefs = useRef(new Map());
+  const uniqueImageURL = Array.from(new Set(imageURL));
+  console.log(uniqueImageURL)
+  const [data,setData] = useState(imageURL)
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<any>) => {
+  const renderItem = useCallback(({ drag, isActive }: RenderItemParams<any>) => {
     return (
         <ScaleDecorator>
-          <TouchableOpacity
-              activeOpacity={1}
-              onLongPress={drag}
-              disabled={isActive}
-              style={{opacity: isActive? 0.5:1}}
-          >
-            <MyImage>
-              {imageURL?.map((image, index) => (
-                  <SelectImageArea key={index}>
-                    <SelectImage source={{ uri: imageURL[index] }} />
-                    <ImageCancleBtn onPress={() => ImageCancle(index)}>
-                      <CancleIcon>
-                        <AntDesign name="close" size={15} color="white" />
-                      </CancleIcon>
-                    </ImageCancleBtn>
-                  </SelectImageArea>
-              ))}
-            </MyImage>
-          </TouchableOpacity>
+          {uniqueImageURL?.map((image, index) => (
+              <SelectImageArea key={index}>
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onLongPress={drag}
+                    disabled={isActive}
+                    style={[
+                      {
+                        opacity: isActive ? 0.5 : 1,
+                      },
+                    ]}
+                >
+                  <SelectImage source={{ uri: uniqueImageURL[index] }} />
+                  <ImageCancleBtn onPress={() => ImageCancle(index)}>
+                    <CancleIcon>
+                      <AntDesign name="close" size={15} color="white" />
+                    </CancleIcon>
+                  </ImageCancleBtn>
+                </TouchableOpacity>
+              </SelectImageArea>
+          ))}
         </ScaleDecorator>
-
     );
-  };
+  }, [uniqueImageURL]);
 
-  const keyExtractor = (item: any) => item.key;
 
   return (
       <Container>
@@ -329,13 +330,13 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
           <KeyboardAvoidingView behavior={"padding"} style={{ flex: 1 }}>
             <>
               <SelectImageView>
-                  <DraggableFlatList
-                      horizontal
-                      data={data}
-                      onDragEnd={({ data }) => setData(data)}
-                      keyExtractor={keyExtractor}
-                      renderItem={renderItem}
-                  />
+                <DraggableFlatList
+                    horizontal
+                    data={imageURL}
+                    onDragEnd={({ data }) => setData(data)}
+                    keyExtractor={(item) => item}
+                    renderItem={renderItem}
+                />
                 {imageURL.length !== 0 ? (
                     <MoveImageText>사진을 옮겨 순서를 변경할 수 있습니다.</MoveImageText>) :null}
               </SelectImageView>
