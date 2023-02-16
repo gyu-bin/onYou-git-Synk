@@ -1,78 +1,38 @@
-import React, {memo, useCallback, useEffect, useRef, useState} from "react";
-import { AntDesign, Entypo } from "@expo/vector-icons";
+import React, {
+  useCallback,
+  useEffect,
+  useState
+} from "react";
+import {AntDesign, Entypo} from "@expo/vector-icons";
 import ImagePicker from "react-native-image-crop-picker";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   DeviceEventEmitter,
-  Dimensions,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  useWindowDimensions, View,
+  useWindowDimensions,
 } from "react-native";
 import styled from "styled-components/native";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import { useSelector } from "react-redux";
-import { FeedApi, FeedCreationRequest, FeedsResponse } from "../../api";
-import { FeedCreateScreenProps } from "../../types/feed";
-import { useNavigation } from "@react-navigation/native";
-import { PinchGestureHandler, State } from "react-native-gesture-handler";
-import { RootState } from "../../redux/store/reducers";
-import { useToast } from "react-native-toast-notifications";
-import GridView from 'react-native-draggable-gridview'
+import {useMutation} from "react-query";
+import {useSelector} from "react-redux";
+import {FeedApi, FeedCreationRequest} from "../../api";
+import {FeedCreateScreenProps} from "../../types/feed";
+import {useNavigation} from "@react-navigation/native";
+import {RootState} from "../../redux/store/reducers";
+import {useToast} from "react-native-toast-notifications";
 import DraggableFlatList, {
   RenderItemParams,
-  ScaleDecorator,
-  NestableDraggableFlatList,
-  NestableScrollContainer
+  ScaleDecorator
 } from 'react-native-draggable-flatlist';
 
 const Container = styled.SafeAreaView`
   flex: 1;
 `;
-const ImagePickerView = styled.View`
-  width: 100%;
-  height: 62%;
-  align-items: center;
-`;
 
-const PickBackground = styled.ImageBackground`
-  width: 100%;
-  height: 100%;
-  position: absolute;
-`;
-
-const ImagePickerButton = styled.TouchableOpacity<{ height: number }>`
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-  background-color: #c4c4c4;
-`;
-
-const ImageCrop = styled.View`
-  background-color: rgba(63, 63, 63, 0.7);
-  width: 150px;
-  height: 150px;
-  border-radius: 100px;
-  opacity: 0.5;
-  justify-content: center;
-  top: 30%;
-  left: 30%;
-`;
-
-const ImagePickerText = styled.Text`
-  font-size: 14px;
-  color: white;
-  text-align: center;
-  padding: 30px 0;
-  top: 8px;
-`;
 
 const FeedText = styled.TextInput`
   color: black;
@@ -92,10 +52,7 @@ const SelectImageView = styled.View`
 `;
 
 const MyImage = styled.View`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  bottom: 3px;
+  align-items: center;
 `;
 
 const MoveImageText = styled.Text`
@@ -104,7 +61,6 @@ const MoveImageText = styled.Text`
   padding: 5px 0 5px 0;
 `;
 
-const SelectImageArea = styled.TouchableOpacity``;
 const SelectImage = styled.Image`
   width: 55px;
   height: 55px;
@@ -140,9 +96,6 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
   const [selectIndex, setSelectIndex] = useState<number>();
   const [alert, alertSet] = useState(true);
   const [isSubmitShow, setSubmitShow] = useState(true);
-
-  const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const imageHeight = Math.floor(((SCREEN_WIDTH * 0.8) / 16) * 9);
   const [content, setContent] = useState("");
   const navigation = useNavigation();
 
@@ -157,12 +110,15 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
       height: 1080,
       width: 1080,
       minFiles: 1,
-      maxFiles: 3,
-      cropperCancelText:"Cancle",
-      cropperChooseText:"Check",
+      maxFiles: 5,
+      headerLeft: () => (
+          <TouchableOpacity onPress={cancleCreate}>
+            <Entypo name="chevron-thin-left" size={20} color="black" />
+          </TouchableOpacity>
+      ),
     });
 
-    if (images.length > 3) {
+    if (images.length > 5) {
       toast.show(`이미지는 3개까지 선택할 수 있습니다.`, {
         type: "warning",
       });
@@ -176,6 +132,8 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
         path: images[i].path,
         width: 1080,
         height: 1080,
+        cropperCancelText:"Cancle",
+        cropperChooseText:"Check",
       });
       url.push(croped.path);
     }
@@ -242,27 +200,29 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
       mutation.mutate(requestData);
     }
   };
-  const cancleCreate = () => {
-    Alert.alert(
-        "게시글을 생성을 취소하시겠어요?",
-        "",
-        // "30일 이내에 내 활동의 최근 삭제 항목에서 이 게시물을 복원할 수 있습니다." + "30일이 지나면 영구 삭제 됩니다. ",
-        [
-          {
-            text: "아니요",
-            onPress: () => console.log(""),
-            style: "cancel",
-          },
-          { text: "네", onPress: () => navigate("Tabs", { screen: "Home" }) },
-        ],
-        { cancelable: false }
-    );
-  };
+
+    const cancleCreate = () => {
+      Alert.alert(
+          "게시글을 생성을 취소하시겠어요?",
+          "",
+          // "30일 이내에 내 활동의 최근 삭제 항목에서 이 게시물을 복원할 수 있습니다." + "30일이 지나면 영구 삭제 됩니다. ",
+          [
+            {
+              text: "아니요",
+              onPress: () => console.log(""),
+              style: "cancel",
+            },
+            { text: "네", onPress: () => navigate("Tabs", { screen: "Home" }) },
+          ],
+          { cancelable: false }
+      );
+    };
 
   useEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
           <TouchableOpacity onPress={pickImage}>
+          {/*<TouchableOpacity onPress={cancleCreate}>*/}
             <Entypo name="chevron-thin-left" size={20} color="black" />
           </TouchableOpacity>
       ),
@@ -291,38 +251,29 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
     if (selectIndex == q) setSelectIndex(0);
   };
 
-  const uniqueImageURL = Array.from(new Set(imageURL));
-  console.log(uniqueImageURL)
-  const [data,setData] = useState(imageURL)
-
-  const renderItem = useCallback(({ drag, isActive }: RenderItemParams<any>) => {
+  const renderItem = useCallback(({ drag, isActive, item }: RenderItemParams<any> & { item: string }) => {
     return (
         <ScaleDecorator>
-          {uniqueImageURL?.map((image, index) => (
-              <SelectImageArea key={index}>
-                <TouchableOpacity
-                    activeOpacity={1}
-                    onLongPress={drag}
-                    disabled={isActive}
-                    style={[
-                      {
-                        opacity: isActive ? 0.5 : 1,
-                      },
-                    ]}
-                >
-                  <SelectImage source={{ uri: uniqueImageURL[index] }} />
-                  <ImageCancleBtn onPress={() => ImageCancle(index)}>
-                    <CancleIcon>
-                      <AntDesign name="close" size={15} color="white" />
-                    </CancleIcon>
-                  </ImageCancleBtn>
-                </TouchableOpacity>
-              </SelectImageArea>
-          ))}
+          <TouchableOpacity
+              activeOpacity={1}
+              onLongPress={drag}
+              disabled={isActive}
+              style={[
+                {
+                  opacity: isActive ? 0.5 : 1,
+                },
+              ]}
+          >
+            <SelectImage source={{ uri: item }} />
+            <ImageCancleBtn onPress={() => ImageCancle(imageURL.indexOf(item))}>
+              <CancleIcon>
+                <AntDesign name="close" size={15} color="white" />
+              </CancleIcon>
+            </ImageCancleBtn>
+          </TouchableOpacity>
         </ScaleDecorator>
     );
-  }, [uniqueImageURL]);
-
+  }, [imageURL]);
 
   return (
       <Container>
@@ -330,13 +281,15 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
           <KeyboardAvoidingView behavior={"padding"} style={{ flex: 1 }}>
             <>
               <SelectImageView>
-                <DraggableFlatList
-                    horizontal
-                    data={imageURL}
-                    onDragEnd={({ data }) => setData(data)}
-                    keyExtractor={(item) => item}
-                    renderItem={renderItem}
-                />
+                <MyImage>
+                  <DraggableFlatList
+                      horizontal
+                      data={imageURL}
+                      onDragEnd={({ data }) => setImageURL(data)}
+                      keyExtractor={(item) => item}
+                      renderItem={(props) => renderItem({ ...props })}
+                  />
+                </MyImage>
                 {imageURL.length !== 0 ? (
                     <MoveImageText>사진을 옮겨 순서를 변경할 수 있습니다.</MoveImageText>) :null}
               </SelectImageView>
