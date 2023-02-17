@@ -33,15 +33,6 @@ const Container = styled.SafeAreaView`
   flex: 1;
 `;
 
-
-const FeedText = styled.TextInput`
-  color: black;
-  height: ${Platform.OS === "ios" ? 90 : 100}px;
-  padding: 0 20px 0 20px;
-  top: ${Platform.OS === "ios" ? 2 : 0}%;
-  font-size: 15px;
-`;
-
 const SelectImageView = styled.View`
   background-color: #F2F2F2;
   height: 100px;
@@ -76,6 +67,14 @@ const CancleIcon = styled.View`
   bottom: 50px;
 `;
 
+const FeedText = styled.TextInput`
+  color: black;
+  height: ${Platform.OS === "ios" ? 90 : 100}px;
+  padding: 0 20px 0 20px;
+  top: ${Platform.OS === "ios" ? 2 : 0}%;
+  font-size: 15px;
+`;
+
 const FeedCreateText = styled.Text`
   font-size: 14px;
   color: #63abff;
@@ -86,7 +85,7 @@ const FeedCreateText = styled.Text`
 const ImageSelecter = (props: FeedCreateScreenProps) => {
   let {
     route: {
-      params: { clubId, userId },
+      params: { clubId },
     },
     navigation: { navigate },
   } = props;
@@ -94,7 +93,6 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
   const toast = useToast();
   const [imageURL, setImageURL] = useState<string[]>([]);
   const [selectIndex, setSelectIndex] = useState<number>();
-  const [alert, alertSet] = useState(true);
   const [isSubmitShow, setSubmitShow] = useState(true);
   const [content, setContent] = useState("");
   const navigation = useNavigation();
@@ -111,15 +109,10 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
       width: 1080,
       minFiles: 1,
       maxFiles: 5,
-      headerLeft: () => (
-          <TouchableOpacity onPress={cancleCreate}>
-            <Entypo name="chevron-thin-left" size={20} color="black" />
-          </TouchableOpacity>
-      ),
     });
 
     if (images.length > 5) {
-      toast.show(`이미지는 3개까지 선택할 수 있습니다.`, {
+      toast.show(`이미지는 5개까지 선택할 수 있습니다.`, {
         type: "warning",
       });
       return;
@@ -134,6 +127,7 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
         height: 1080,
         cropperCancelText:"Cancle",
         cropperChooseText:"Check",
+        cropperToolbarTitle:"이미지를 크롭하세요",
       });
       url.push(croped.path);
     }
@@ -191,7 +185,8 @@ const ImageSelecter = (props: FeedCreateScreenProps) => {
         const splitedURI = String(imageURL[i]).split("/");
         if (requestData.image) {
           requestData.image.push({
-            uri: Platform.OS === "android" ? imageURL[i] : imageURL[i].replace("file://", ""),
+            uri: imageURL[i].replace("file://", ""),
+            // uri: Platform.OS === "android" ? imageURL[i] : imageURL[i].replace("file://", ""),
             type: "image/jpeg",
             name: splitedURI[splitedURI.length - 1],
           });

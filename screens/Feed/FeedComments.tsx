@@ -14,6 +14,7 @@ import { SwipeListView, SwipeRow } from "react-native-swipe-list-view";
 import { RootState } from "../../redux/store/reducers";
 import { useAppDispatch } from "../../redux/store";
 import feedSlice from "../../redux/slices/feed";
+import clubSlice from "../../redux/slices/club";
 
 const Loader = styled.SafeAreaView`
   flex: 1;
@@ -26,23 +27,32 @@ const Container = styled.SafeAreaView`
   flex: 1;
 `;
 
-const FooterView = styled.View<{ padding: number }>`
+const FooterView = styled.SafeAreaView<{ padding: number }>`
   flex-direction: row;
   border-top-width: 1px;
   border-top-color: #c4c4c4;
-  justify-content: center;
-  align-items: center;
-  padding: 10px 20px;
-  top: ${Platform.OS === "ios" ? 20 : 5}px;
+  align-items: flex-end;
+  padding: 10px ${(props: any) => (props.padding ? props.padding : 0)}px;
+`;
+
+const RoundingView = styled.View`
+  flex-direction: row;
+  flex: 1;
+  height: 100%;
+  padding: 0px 10px;
+  border-width: 0.5px;
+  border-color: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
 `;
 const CommentInput = styled(CustomTextInput)`
   flex: 1;
-  margin-bottom: 2px;
+  margin: 1px 0px;
 `;
 const SubmitButton = styled.TouchableOpacity`
+  justify-content: center;
   align-items: center;
-  padding-left: 5px;
-  padding-bottom: 6px;
+  padding-left: 8px;
+  margin-bottom: 8px;
 `;
 const SubmitButtonText = styled(CustomText)<{ disabled: boolean }>`
   font-size: 14px;
@@ -80,11 +90,11 @@ const HiddenItemButton = styled.TouchableOpacity<{ width: number }>`
 `;
 
 const FeedComments = ({
-  navigation: { setOptions, navigate, goBack },
-  route: {
-    params: { feedIndex, feedId },
-  },
-}) => {
+                        navigation: { setOptions, navigate, goBack },
+                        route: {
+                          params: { feedIndex, feedId, clubId },
+                        },
+                      }) => {
   const token = useSelector((state: RootState) => state.auth.token);
   const me = useSelector((state: RootState) => state.auth.user);
   const dispatch = useAppDispatch();
@@ -99,7 +109,8 @@ const FeedComments = ({
   } = useQuery<FeedCommentsResponse>(["getFeedComments", token, feedId], FeedApi.getFeedComments, {
     onSuccess: (res) => {
       if (res.status === 200) {
-        dispatch(feedSlice.actions.updateCommentCount({ feedIndex, count: res.data.length }));
+        if (clubId) dispatch(clubSlice.actions.updateCommentCount({ feedIndex, count: res.data.length }));
+        else dispatch(feedSlice.actions.updateCommentCount({ feedIndex, count: res.data.length }));
       } else {
         console.log("--- Error getFeedComments ---");
         console.log(res);
@@ -123,9 +134,9 @@ const FeedComments = ({
   useLayoutEffect(() => {
     setOptions({
       headerLeft: () => (
-        <TouchableOpacity onPress={() => goBack()}>
-          <Entypo name="chevron-thin-left" size={20} color="black" />
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => goBack()}>
+            <Entypo name="chevron-thin-left" size={20} color="black" />
+          </TouchableOpacity>
       ),
     });
   }, []);
@@ -149,6 +160,7 @@ const FeedComments = ({
       onSuccess: (res) => {
         if (res.status === 200) {
           setComment("");
+          setValidation(false);
           commentsRefetch();
         } else {
           console.log("--- Error createFeedComment ---");
@@ -207,66 +219,62 @@ const FeedComments = ({
   };
 
   return commentsLoading ? (
-    <Loader>
-      <ActivityIndicator />
-    </Loader>
+      <Loader>
+        <ActivityIndicator />
+      </Loader>
   ) : (
       <Container>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={100} style={{ flex: 1 }}>
         <SwipeListView
-          contentContainerStyle={{ flexGrow: 1 }}
-          data={[...(comments?.data ?? [])].reverse()}
-          keyExtractor={(item: FeedComment, index: number) => String(index)}
-          ListFooterComponent={<View />}
-          ListFooterComponentStyle={{ marginBottom: 100 }}
-          renderItem={({ item, index }: { item: FeedComment; index: number }) => (
-            // 현재 타 유저의 댓글도 삭제 가능해서 테스트용으로 열어놓음.
-            // <SwipeRow disableRightSwipe={true} disableLeftSwipe={item.userId !== me?.id} rightOpenValue={-hiddenItemWidth}>
-            <SwipeRow disableRightSwipe={true} rightOpenValue={-hiddenItemWidth}>
-              {item.userId === me?.id ? (
+            contentContainerStyle={{ flexGrow: 1 }}
+            data={[...(comments?.data ?? [])].reverse()}
+            keyExtractor={(item: FeedComment, index: number) => String(index)}
+            ListFooterComponent={<View />}
+            ListFooterComponentStyle={{ marginBottom: 40 }}
+            renderItem={({ item, index }: { item: FeedComment; index: number }) => (
+                <SwipeRow disableRightSwipe={true} disableLeftSwipe={item.userId !== me?.id} rightOpenValue={-hiddenItemWidth}>
                   <HiddenItemContainer>
-                <HiddenItemButton width={hiddenItemWidth} onPress={() => deleteComment(item.commentId ?? -1)}>
-                  <AntDesign name="delete" size={20} color="white" />
-                </HiddenItemButton>
-              </HiddenItemContainer>):<></>
-              }
-              <Comment commentData={item} />
-            </SwipeRow>
-          )}
-          ListEmptyComponent={() => (
-            <EmptyView>
-              <EmptyText>{`아직 등록된 댓글이 없습니다.\n첫 댓글을 남겨보세요.`}</EmptyText>
-            </EmptyView>
-          )}
+                    <HiddenItemButton width={hiddenItemWidth} onPress={() => deleteComment(item.commentId ?? -1)}>
+                      <AntDesign name="delete" size={20} color="white" />
+                    </HiddenItemButton>
+                  </HiddenItemContainer>
+                  <Comment commentData={item} />
+                </SwipeRow>
+            )}
+            ListEmptyComponent={() => (
+                <EmptyView>
+                  <EmptyText>{`아직 등록된 댓글이 없습니다.\n첫 댓글을 남겨보세요.`}</EmptyText>
+                </EmptyView>
+            )}
         />
-        <FooterView>
+        <FooterView padding={20}>
           <CircleIcon uri={me?.thumbnail} size={35} kerning={10} />
-          <CommentInput
-            placeholder="댓글을 입력해보세요"
-            placeholderTextColor="#B0B0B0"
-            value={comment}
-            textAlign="left"
-            multiline={true}
-            maxLength={255}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="off"
-            returnKeyType="done"
-            returnKeyLabel="done"
-            onChangeText={(value: string) => {
-              setComment(value);
-              if (!validation && value !== "") setValidation(true);
-              if (validation && value === "") setValidation(false);
-            }}
-            includeFontPadding={false}
-          />
-
+          <RoundingView>
+            <CommentInput
+                placeholder="댓글을 입력해보세요"
+                placeholderTextColor="#B0B0B0"
+                value={comment}
+                textAlign="left"
+                multiline={true}
+                maxLength={255}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                returnKeyType="done"
+                returnKeyLabel="done"
+                onChangeText={(value: string) => {
+                  setComment(value);
+                  if (!validation && value.trim() !== "") setValidation(true);
+                  if (validation && value.trim() === "") setValidation(false);
+                }}
+                onEndEditing={() => setComment((prev) => prev.trim())}
+                includeFontPadding={false}
+            />
+          </RoundingView>
           <SubmitButton disabled={!validation} onPress={submit}>
             <SubmitButtonText disabled={!validation}>게시</SubmitButtonText>
           </SubmitButton>
         </FooterView>
-      </KeyboardAvoidingView>
-        </Container>
+      </Container>
   );
 };
 
